@@ -1,5 +1,12 @@
 # @sedge-hq/telegram
 
+## 0.2.1
+
+### Patch Changes
+
+- Updated dependencies [[`0e1ad34`](https://github.com/sedge-hq/sedge/commit/0e1ad34725d723fa8941b241e2f52ddb01997772)]:
+  - @sedge-hq/kit@0.3.1
+
 ## 0.2.0
 
 ### Minor Changes

@@ -1,5 +1,11 @@
 # @sedge-hq/kit
 
+## 0.3.1
+
+### Patch Changes
+
+- [`0e1ad34`](https://github.com/sedge-hq/sedge/commit/0e1ad34725d723fa8941b241e2f52ddb01997772) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - New official packages: `@sedge-hq/slack`, a second channel over Socket Mode (DMs, buttons, files, pairing by code); `@sedge-hq/github`, with `github-ci` for failing Actions runs and `github` for reviews asked of you, assignments and mentions; and `@sedge-hq/web`, with `web-page` for pages whose text changes and `feed` for new posts on RSS and Atom feeds. MCP servers that sign in with OAuth now work in the daemon too, using the sign-in you did in the TUI. A signal's `every` can depend on its settings.
+
 ## 0.3.0
 
 ### Minor Changes
