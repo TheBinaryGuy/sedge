@@ -7,6 +7,10 @@
 - Commit messages follow Conventional Commits: `type(scope): summary`, imperative, lowercase, no
   trailing period. Scopes are the package (`cli`, `daemon`, `agent`, `db`, `protocol`, `core`) or
   area (`release`, `ci`).
+- Anything users would notice also updates `docs/` in the same change: the page that covers it,
+  and `docs/commands.md` or `docs/configuration.md` for a new command, tool, setting or
+  environment variable (tests fail when one is missing). Pages are for people and agents alike:
+  one topic each, frontmatter `title` and `description`, plain Markdown.
 - Anything that changes what users get needs a changeset (`bun run changeset`), describing the
   change for the `sedge` package.
 - Four spaces. Oxfmt owns formatting; Oxlint owns linting.

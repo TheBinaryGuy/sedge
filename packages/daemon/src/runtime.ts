@@ -15,7 +15,13 @@ import {
     Schedule,
 } from 'effect';
 import { Connections } from './connections';
+import { DREAM_PROMPT } from './memory';
+import { Settings } from './settings';
 import { supervise } from './supervise';
+
+/** The conversation dreaming happens in, apart from the user's. */
+export const DREAM_THREAD = 'dream';
+const DREAM_CRON = '30 3 * * *';
 
 /** One message on the daemon's internal bus, for the inbox events it concerns. */
 export type BusMessage =
@@ -96,6 +102,27 @@ export class Runtime extends Context.Service<
             const bus = yield* PubSub.unbounded<BusMessage>();
             const running = yield* Ref.make<string | null>(null);
             const publish = (message: BusMessage) => PubSub.publish(bus, message);
+
+            // Dreaming: once a night the agent reads back over its recent conversations and tidies
+            // its memory. `"dreaming": false` in the config turns it off.
+            const { paths, config } = yield* Settings;
+            const dreams = (yield* timers.list(DREAM_THREAD)).filter((t) => t.name === 'dream');
+            if (config.dreaming === false) {
+                for (const dream of dreams) yield* timers.cancel(dream.id);
+            } else if (dreams.length === 0) {
+                const cron = Cron.parse(DREAM_CRON);
+                if (Result.isSuccess(cron)) {
+                    yield* timers.create({
+                        kind: 'schedule',
+                        thread: DREAM_THREAD,
+                        name: 'dream',
+                        cron: DREAM_CRON,
+                        prompt: DREAM_PROMPT,
+                        cwd: paths.memory,
+                        nextRunAt: Cron.next(cron.success, new Date()).getTime(),
+                    });
+                }
+            }
 
             const recovered = yield* inbox.recoverInterrupted;
             if (recovered > 0) {

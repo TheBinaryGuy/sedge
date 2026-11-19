@@ -25,6 +25,8 @@ export const SedgeConfig = Schema.Struct({
      * their values are in the OS keychain.
      */
     connections: Schema.optional(Schema.Record(Schema.String, Connection)),
+    /** Nightly dreaming, when the agent reviews its conversations and tidies its memory. On by default. */
+    dreaming: Schema.optional(Schema.Boolean),
     /**
      * What runs nobody is watching (Telegram, timers) may do without asking. `ask` defers the call:
      * the user gets an approve/deny message and the agent retries after an approval.

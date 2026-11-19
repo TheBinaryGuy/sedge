@@ -10,12 +10,15 @@ import {
 } from '@earendil-works/pi-durable';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
 import { openNodeSqliteStorage } from '@earendil-works/pi-durable/storage/sqlite/node';
+import { createToolSearchExtension } from '@earendil-works/pi-durable/tool-search';
 import { createCodingTools } from '@earendil-works/pi-durable/tools';
 import type { AgentEvent } from '@sedge-hq/protocol';
 import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { dirname } from 'node:path';
 import type { AgentHost, RunContext } from './host';
-import { searchTools, sedgeExtension } from './tools';
+import { type McpServerState, openMcp } from './mcp';
+import { recallExtension } from './recall';
+import { searchTools, sedgeExtension, skillsExtension } from './tools';
 
 export interface ModelChoice {
     readonly provider: string;
@@ -33,6 +36,10 @@ export interface DurableOptions {
     readonly model: (cwd: string) => Promise<ModelChoice | undefined>;
     readonly host: AgentHost;
     readonly report: (message: string) => void;
+    /** Your MCP servers: the mcp.json to read, and the version sedge introduces itself with. */
+    readonly mcp?: { readonly file: string; readonly version: string };
+    /** Your skills, as the prompt lists them, for a run in `cwd`. */
+    readonly skills?: (cwd: string) => string | undefined;
 }
 
 export interface Item {
@@ -78,6 +85,11 @@ export const openDurable = async (options: DurableOptions) => {
     registry.install(createCodingTools());
     registry.install(searchTools);
     registry.install(sedgeExtension(options.host, runFor));
+    registry.install(createToolSearchExtension());
+    if (options.skills) {
+        const skills = options.skills;
+        registry.install(skillsExtension((id) => skills(runFor(id).cwd)));
+    }
 
     await mkdir(dirname(options.file), { recursive: true });
     const storage = await openNodeSqliteStorage(options.file);
@@ -96,6 +108,32 @@ export const openDurable = async (options: DurableOptions) => {
         ctx,
     );
     harness.resume();
+    threads.set(MAIN, (await harness.root(ctx)).id as number);
+    registry.install(
+        recallExtension({
+            threads: () => [...threads.entries()],
+            conversation: (id) => harness.conversation(id as never, ctx),
+        }),
+    );
+
+    // MCP servers connect in the background; their tools join the registry when they are up, so a
+    // slow server never holds up a run.
+    let mcpStates: ReadonlyArray<McpServerState> = [];
+    const mcp = options.mcp
+        ? openMcp({ ...options.mcp, cwd: options.workspace }).then(
+              (servers) => {
+                  registry.install(servers.extension);
+                  mcpStates = servers.states;
+                  for (const state of servers.states)
+                      options.report(`mcp ${state.name}: ${state.status}`);
+                  return servers;
+              },
+              (error: unknown) => {
+                  options.report(`mcp: ${error instanceof Error ? error.message : String(error)}`);
+                  return undefined;
+              },
+          )
+        : Promise.resolve(undefined);
 
     const conversationFor = async (thread: string): Promise<Conversation> => {
         if (thread === MAIN) {
@@ -136,6 +174,8 @@ export const openDurable = async (options: DurableOptions) => {
         input: RunContext & { readonly items: ReadonlyArray<Item> },
         onEvent: (event: AgentEvent) => void,
     ): Promise<string> => {
+        // The first run after a start waits a little for MCP servers, so their tools are there.
+        await Promise.race([mcp, new Promise((done) => setTimeout(done, 10_000).unref())]);
         const conversation = await conversationFor(input.thread);
         await prepare(conversation, input.cwd);
         runs.set(input.thread, input);
@@ -223,7 +263,15 @@ export const openDurable = async (options: DurableOptions) => {
         abort: async () => {
             await active?.abort(ctx);
         },
-        close: () => harness.close(ctx),
+        /** How each MCP server is doing, once they have connected. */
+        mcp: async () => {
+            await mcp;
+            return mcpStates;
+        },
+        close: async () => {
+            await (await mcp)?.close();
+            await harness.close(ctx);
+        },
     };
 };
 

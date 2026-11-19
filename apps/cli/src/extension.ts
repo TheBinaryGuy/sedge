@@ -10,6 +10,7 @@ import { Effect, Fiber, ManagedRuntime, Schedule, Stream } from 'effect';
 import { Daemon, DaemonLive, waitUntil } from './client';
 import { sedgeGuide } from './guide';
 import { registerConnectionTools } from './connection-tools';
+import { registerTheme } from './theme';
 
 /** A tuft of sedge, three rows tall, beside the name and the keys worth knowing. */
 const headerLines = (theme: Theme) => {
@@ -79,6 +80,7 @@ export const sedgeExtension = (paths: SedgePaths): InlineExtension => ({
         };
 
         registerConnectionTools(pi, withDaemon);
+        registerTheme(pi, paths);
 
         // The agent here knows pi; this is what it needs to know about sedge.
         const guide = sedgeGuide(paths);

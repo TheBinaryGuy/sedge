@@ -22,6 +22,16 @@ const run = async (cmd: Array<string>, cwd = root) => {
     if ((await proc.exited) !== 0) throw new Error(`${cmd[0]} exited with an error`);
 };
 
+/** The section `changeset version` wrote for `version` in the CLI's changelog. */
+const changelogFor = async (version: string) => {
+    const changelog = await Bun.file(join(root, 'apps/cli/CHANGELOG.md')).text();
+    const start = changelog.indexOf(`\n## ${version}\n`);
+    if (start === -1) return '';
+    const body = changelog.slice(start + `\n## ${version}\n`.length);
+    const end = body.search(/\n## /);
+    return (end === -1 ? body : body.slice(0, end)).trim();
+};
+
 const out = join(root, 'dist/npm');
 // Provenance needs the OIDC token GitHub Actions provides; skip it for a manual local publish.
 const provenance = process.env.GITHUB_ACTIONS ? ['--provenance'] : [];
@@ -49,6 +59,8 @@ if (onNpm(CLI_PACKAGE, version)) {
         }
         await run(['git', 'tag', tag]);
         await run(['git', 'push', 'origin', tag]);
+        // This version's changelog (each entry links its commit or PR and its author), followed by
+        // GitHub's own notes: the merged PRs and a link to the full diff since the last release.
         await run([
             'gh',
             'release',
@@ -56,7 +68,9 @@ if (onNpm(CLI_PACKAGE, version)) {
             tag,
             '--title',
             tag,
-            '--notes-from-tag',
+            '--notes',
+            await changelogFor(version),
+            '--generate-notes',
             '--verify-tag',
             ...archives,
         ]);

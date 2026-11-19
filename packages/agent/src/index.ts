@@ -1,5 +1,6 @@
 import type * as PiModule from '@earendil-works/pi-coding-agent';
 import type { Models } from '@earendil-works/pi-ai';
+import { VERSION } from '@sedge-hq/core';
 import { AgentRunError, type AgentEvent } from '@sedge-hq/protocol';
 import { Context, Effect, Layer, Semaphore } from 'effect';
 import { join } from 'node:path';
@@ -29,6 +30,8 @@ export interface AgentConfig {
     readonly models?: () => Promise<{
         readonly models: Models;
         readonly choose: (cwd: string) => Promise<ModelChoice | undefined>;
+        readonly skills?: (cwd: string) => string | undefined;
+        readonly mcp?: { readonly file: string; readonly version: string };
     }>;
 }
 
@@ -73,7 +76,24 @@ const piModels = async (config: AgentConfig) => {
         const [first] = await models.getAvailable();
         return first ? { provider: first.provider, modelId: first.id, ...level } : undefined;
     };
-    return { models: models as unknown as Models, choose };
+    // Skills as pi finds them (yours in the agent directory, the project's), listed the way pi
+    // lists them; the agent reads one with its read tool.
+    const skills = (cwd: string) => {
+        const { skills: found } = pi.loadSkills({
+            cwd,
+            agentDir,
+            skillPaths: [],
+            includeDefaults: true,
+        });
+        const listed = found.filter((skill) => !skill.disableModelInvocation);
+        return listed.length > 0 ? pi.formatSkillsForPrompt(listed, 'read') : undefined;
+    };
+    return {
+        models: models as unknown as Models,
+        choose,
+        skills,
+        mcp: { file: join(agentDir, 'mcp.json'), version: VERSION },
+    };
 };
 
 /**
@@ -100,7 +120,7 @@ export class Agent extends Context.Service<
                 const open = () =>
                     (opening ??= (async () => {
                         const { openDurable } = await import('./durable');
-                        const { models, choose } = await (
+                        const { models, choose, skills, mcp } = await (
                             config.models ?? (() => piModels(config))
                         )();
                         return openDurable({
@@ -108,6 +128,8 @@ export class Agent extends Context.Service<
                             workspace: config.workspace,
                             models,
                             model: choose,
+                            ...(skills ? { skills } : {}),
+                            ...(mcp ? { mcp } : {}),
                             host: config.host,
                             report: (message) => console.error(`[agent] ${message}`),
                         });

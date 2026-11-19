@@ -43,6 +43,9 @@ durable ([pi-durable](https://github.com/earendil-works/pi/tree/main/packages/du
 restart cuts short picks up where it stopped. The agent is [pi](https://github.com/earendil-works/pi),
 bundled; your logins are in `~/.pi/agent`.
 
+**[Read the docs](docs/index.md)**: getting started, how it works, channels and signals, memory,
+MCP and skills, security, configuration, and writing your own.
+
 ## Develop
 
 ```sh

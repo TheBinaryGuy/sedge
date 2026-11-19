@@ -13,8 +13,9 @@ The user may ask you about sedge itself, or to set things up in it; this is how 
 
 ## The daemon
 - It has its own agent and its own durable conversations, separate from this TUI chat. Everything the user writes on a channel goes to its "main" conversation, and it answers there.
-- Its always-on parts: an inbox of events (one run per conversation at a time; events that arrive meanwhile are answered together), timers it sets for itself, memory files loaded into every run, an outbox for everything it tells the user, and approvals: in runs nobody watches, risky tool calls (shell) go to the user with approve/deny buttons first.
-- Its memory is ${paths.memory}: instructions.md (standing instructions), notes/ and tasks/ (each with an INDEX.md). You may read and edit these when the user asks to change what it remembers.
+- Its always-on parts: an inbox of events (one run per conversation at a time; events that arrive meanwhile are answered together), timers it sets for itself, memory, an outbox for everything it tells the user, and approvals: in runs nobody watches, risky tool calls (shell, MCP) go to the user with approve/deny buttons first. Its runs also get your skills and the MCP servers in your global mcp.json (servers that sign in with OAuth only work here in the TUI for now).
+- Its memory is the folder ${paths.memory}. MEMORY.md there is loaded into every run and indexes the other files, which it organizes itself. Each night it dreams: reads back over its conversations and tidies its memory (\`"dreaming": false\` in the config turns that off). You may read and edit memory when the user asks to change what it remembers.
+- Docs: https://github.com/sedge-hq/sedge/tree/main/docs
 - Status: the /sedge command. Its log: ${paths.logs}/daemon.log. Commands: \`sedge start|stop|update|install\`.
 
 ## Channels and signals

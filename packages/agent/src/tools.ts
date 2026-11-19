@@ -104,6 +104,13 @@ export const sedgeExtension = (host: AgentHost, runFor: (conversationId: number)
         ],
     });
 
+/** Your skills, listed so the agent reads one with `read` when a task calls for it. */
+export const skillsExtension = (render: (conversationId: number) => string | undefined) =>
+    defineExtension({
+        name: 'skills',
+        sections: [section('skills', (input) => render(input.conversationId), { tag: false })],
+    });
+
 // ── Read-only search, which durable's coding tools leave to bash ───────────────────────────────
 
 const SKIP = new Set(['node_modules', '.git']);
