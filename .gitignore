@@ -25,3 +25,6 @@ Thumbs.db
 # Claude Code local settings and session files
 .claude/
 .sedge-dev/
+
+# Wrangler local dev state
+.wrangler/
