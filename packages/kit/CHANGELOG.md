@@ -1,5 +1,11 @@
 # @sedge-hq/kit
 
+## 0.1.1
+
+### Patch Changes
+
+- [`1e6f7ca`](https://github.com/sedge-hq/sedge/commit/1e6f7ca8cf86ca52efb50a7c16d497cc19b4a5c7) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - The npm pages show the logo, the diagram and working links, point at sedge.sh, and the kit and Telegram packages have READMEs of their own.
+
 ## 0.1.0
 
 ### Minor Changes
