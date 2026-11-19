@@ -2,7 +2,8 @@
 
 - Bun only (`bun install`, `bun run …`, `bunx`); never npm or pnpm in this repo.
 - Before finishing a change, run `bun run format`, `bun run lint`, `bun run typecheck` and
-  `bun run test`, and fix what they report.
+  `bun run test`, and fix what they report. The pre-push hook (`.githooks/pre-push`, set up by
+  `bun install`) runs the same checks and refuses a push that fails them.
 - Never commit or push unless asked in the current request.
 - Commit messages follow Conventional Commits: `type(scope): summary`, imperative, lowercase, no
   trailing period. Scopes are the package (`cli`, `daemon`, `agent`, `db`, `protocol`, `core`) or

@@ -1,0 +1,9 @@
+#!/bin/sh
+# Runs what CI runs before anything leaves this machine. `bun install` points git here
+# (core.hooksPath); skip once with `git push --no-verify` if you must.
+set -e
+echo "pre-push: format, lint, typecheck, test"
+bun run format:check >/dev/null || { echo "pre-push: formatting is off; run bun run format"; exit 1; }
+bun run lint
+bun run typecheck >/dev/null || { bun run typecheck; exit 1; }
+bun run test >/dev/null || { bun run test; exit 1; }

@@ -23,7 +23,8 @@
         "changeset": "changeset",
         "version": "changeset version && bun install --lockfile-only",
         "release": "bun scripts/release.ts",
-        "e2e:telegram": "bun apps/cli/scripts/e2e-telegram.ts"
+        "e2e:telegram": "bun apps/cli/scripts/e2e-telegram.ts",
+        "prepare": "git config core.hooksPath .githooks 2>/dev/null || true"
     },
     "devDependencies": {
         "@changesets/changelog-github": "1.0.1",
