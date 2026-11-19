@@ -71,7 +71,7 @@ bun run dev       # the site with hot reload
 bun run preview   # the built site through the Worker
 ```
 
-Pushing to `main` deploys it (`.github/workflows/site.yml`).
+Pushing to `main` deploys it: Cloudflare Workers Builds builds `apps/site` from the repository.
 
 ## Releases
 
