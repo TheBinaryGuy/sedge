@@ -14,6 +14,8 @@ description: Commands for the terminal and the TUI, and the tools the agents use
 | `sedge stop`                | Stop the daemon after its current run, and remove the login service.                       |
 | `sedge update`              | Update now. `--check` only says whether there's a new version.                             |
 | `sedge install <package>`   | Install channels and signals: `telegram`, an npm name, or a folder.                        |
+| `sedge uninstall <package>` | Remove a package you installed. Disconnect what uses it first.                             |
+| `sedge uninstall`           | Remove sedge from this machine; asks first. `--keep-data` keeps `~/.sedge`.                |
 | `sedge pi <command>`        | pi's own commands: `install`, `remove`, `list`, `config`, `mcp`, …                         |
 | `sedge --version`, `--help` |                                                                                            |
 
@@ -37,23 +39,24 @@ All of pi's commands work too (`/login`, `/model`, `/mcp`, …).
 
 Ask in your own words; these are what it uses.
 
-| Tool            | What it does                                                               |
-| --------------- | -------------------------------------------------------------------------- |
-| `channels`      | What sedge talks to you on, and the channel kinds installed.               |
-| `signals`       | What wakes sedge, what it does for each, and the signal kinds installed.   |
-| `find_packages` | Search npm for channels and signals, official and community (`sedge-kit`). |
-| `install`       | Install a package of channels and signals (you confirm).                   |
-| `connect`       | Connect a channel or signal; asks for secrets in a hidden field.           |
-| `invite`        | A new one-time pairing link for a channel.                                 |
-| `disconnect`    | Stop one and delete its settings and secrets (you confirm).                |
-| `create_signal` | Register a signal or channel module it wrote (you review it first).        |
-| `agents`        | The daemon's agents, what each handles, and how each is doing.             |
-| `create_agent`  | Create or change an agent: its purpose and what it handles (you confirm).  |
-| `remove_agent`  | Remove an agent (you confirm).                                             |
-| `tell_agent`    | Hand an agent a task and wait for its answer.                              |
-| `inbox`         | What woke which agent, from where, and how it went.                        |
-| `outbox`        | What the agents sent you, and whether it arrived.                          |
-| `timers`        | The follow-ups and schedules the agents set.                               |
+| Tool            | What it does                                                                 |
+| --------------- | ---------------------------------------------------------------------------- |
+| `channels`      | What sedge talks to you on, and the channel kinds installed.                 |
+| `signals`       | What wakes sedge, what it does for each, and the signal kinds installed.     |
+| `find_packages` | Search npm for channels and signals, official and community (`sedge-kit`).   |
+| `install`       | Install a package of channels and signals (you confirm).                     |
+| `uninstall`     | Remove a package; what it provides must be disconnected first (you confirm). |
+| `connect`       | Connect a channel or signal; asks for secrets in a hidden field.             |
+| `invite`        | A new one-time pairing link for a channel.                                   |
+| `disconnect`    | Stop one and delete its settings and secrets (you confirm).                  |
+| `create_signal` | Register a signal or channel module it wrote (you review it first).          |
+| `agents`        | The daemon's agents, what each handles, and how each is doing.               |
+| `create_agent`  | Create or change an agent: its purpose and what it handles (you confirm).    |
+| `remove_agent`  | Remove an agent (you confirm).                                               |
+| `tell_agent`    | Hand an agent a task and wait for its answer.                                |
+| `inbox`         | What woke which agent, from where, and how it went.                          |
+| `outbox`        | What the agents sent you, and whether it arrived.                            |
+| `timers`        | The follow-ups and schedules the agents set.                                 |
 
 ## Tools the daemon's agent has
 

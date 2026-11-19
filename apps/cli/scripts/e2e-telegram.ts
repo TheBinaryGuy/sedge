@@ -257,10 +257,26 @@ try {
     }
     pass(`helper answered "${answer}", and main's tell reached its inbox`);
 
+    step('uninstall waits until nothing of the package is connected');
+    const early = sedge('uninstall', 'telegram');
+    const refusal = await new Response(early.stderr).text();
+    if ((await early.exited) === 0) fail('uninstalled a package that is still connected');
+    if (!refusal.includes('Disconnect')) fail(`unexpected refusal: ${refusal}`);
+    pass('refused while connected');
+
     step('disconnect; the token leaves the keychain');
     await withDaemon(({ client }) => client.Disconnect({ name: 'telegram' }));
     if ((await store.get('telegram.token')) !== undefined) fail('the token is still stored');
     pass('gone');
+
+    step('sedge uninstall the Telegram package');
+    const uninstall = sedge('uninstall', 'telegram');
+    const uninstalled = (await new Response(uninstall.stdout).text()).trim();
+    if ((await uninstall.exited) !== 0)
+        fail(`uninstall failed: ${await new Response(uninstall.stderr).text()}`);
+    const left = await withDaemon(({ client }) => client.Kinds());
+    if (left.some((k) => k.name === 'telegram')) fail('the telegram kind is still there');
+    pass(uninstalled);
 } catch (error) {
     failed = true;
     if (!(error instanceof Error && error.message.startsWith('timed out'))) console.error(error);

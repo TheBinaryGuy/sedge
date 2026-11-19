@@ -8,6 +8,7 @@ import { sedgePaths, VERSION } from '@sedge-hq/core';
  *   sedge [pi flags] [message]   the TUI (pi's interactive mode, Sedge's extension)
  *   sedge -p "…"                 print mode
  *   sedge start|stop|update      the daemon
+ *   sedge install|uninstall      packages of channels and signals
  *   sedge pi …                   pi's own commands
  */
 const HELP = `sedge ${VERSION}: an always-on agent that lives on your machine
@@ -20,6 +21,8 @@ Usage
   sedge stop                    stop the daemon and remove the login service
   sedge update [--check]        update sedge
   sedge install <package>       add channels and signals, e.g. sedge install telegram
+  sedge uninstall <package>     remove a package you installed
+  sedge uninstall               remove sedge from this machine (--keep-data keeps ~/.sedge)
   sedge pi <command>            pi's commands: install, remove, list, config, mcp, update --extensions
 
 In the TUI, ask for what you want ("set up telegram", "tell me when my CI fails"): sedge
@@ -29,7 +32,7 @@ The TUI and -p also take --model, --continue, --resume, --thinking and the rest 
 options; see them with: sedge pi --help`;
 
 /** pi subcommands that only exist under `sedge pi`. */
-const PI_COMMANDS = new Set(['remove', 'uninstall', 'list', 'config', 'mcp', 'auth']);
+const PI_COMMANDS = new Set(['remove', 'list', 'config', 'mcp', 'auth']);
 
 const args = process.argv.slice(2);
 const [first = ''] = args;
@@ -42,7 +45,7 @@ if (first === '--version' || first === '-v') {
 } else if (first === 'dash') {
     const { runDash } = await import('./dash');
     runDash(paths, args.slice(1));
-} else if (['start', 'stop', 'update', 'install'].includes(first)) {
+} else if (['start', 'stop', 'update', 'install', 'uninstall'].includes(first)) {
     const { runSedgeCommand } = await import('./commands');
     runSedgeCommand();
 } else if (first === 'pi') {

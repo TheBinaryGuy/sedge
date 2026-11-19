@@ -1,14 +1,23 @@
 import { BunRuntime, BunServices } from '@effect/platform-bun';
 import { sedgePaths, VERSION } from '@sedge-hq/core';
-import { installService, runDaemon, spawnDetachedDaemon, uninstallService } from '@sedge-hq/daemon';
-import { Console, Effect } from 'effect';
+import {
+    detectInstallMethod,
+    installService,
+    openSecretStore,
+    runDaemon,
+    spawnDetachedDaemon,
+    uninstallService,
+} from '@sedge-hq/daemon';
+import { Console, Effect, Option } from 'effect';
 import { Argument, Command, Flag } from 'effect/cli';
-import { copyFile, mkdir, mkdtemp, readFile, rename, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readFile, rename, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { basename, dirname, join, resolve } from 'node:path';
+import { createInterface } from 'node:readline/promises';
 import { Daemon, DaemonLive, isListening, waitUntil } from './client';
 import { loadPi } from './load-pi';
 import { packageSpec } from './connection-tools';
+import { isSedgeHome } from './sedge-home';
 
 const paths = sedgePaths();
 
@@ -20,6 +29,10 @@ const withDaemon = <A, E, R>(
     Effect.gen(function* () {
         return yield* use(yield* Daemon);
     }).pipe(Effect.provide(DaemonLive(paths, options)));
+
+/** Says why on stderr and exits non-zero, without a stack trace. */
+const refuse = (message: string) =>
+    Console.error(message).pipe(Effect.andThen(Effect.sync(() => void (process.exitCode = 1))));
 
 const sedge = Command.make('sedge').pipe(
     Command.withDescription('An always-on agent that lives on your machine.'),
@@ -204,7 +217,7 @@ const install = Command.make(
             });
             return proc.exited;
         });
-        if (code !== 0) return yield* Effect.fail(new Error(`Could not install ${spec}`));
+        if (code !== 0) return yield* refuse(`Could not install ${spec}`);
         if (yield* isListening(paths)) {
             const types = yield* withDaemon(({ client }) =>
                 client.ReloadKinds().pipe(Effect.andThen(client.Kinds())),
@@ -216,6 +229,159 @@ const install = Command.make(
         yield* Console.log(`Installed ${spec}.`);
     }),
 ).pipe(Command.withDescription('Install a package of channels and signals (e.g. telegram)'));
+
+/**
+ * `sedge uninstall telegram`: removes a package `sedge install` added. A package whose kinds are
+ * still connected stays: disconnecting them first is what deletes their settings and secrets.
+ */
+const uninstallPackage = Effect.fn(function* (name: string) {
+    const manifest = yield* Effect.promise(() =>
+        readJson<Manifest>(join(paths.packages, 'package.json')),
+    );
+    const installed = Object.keys(manifest?.dependencies ?? {});
+    const dependency = [packageSpec(name), name].find((n) => installed.includes(n));
+    if (!dependency) {
+        return yield* refuse(
+            `${name} isn't installed. Installed: ${installed.join(', ') || 'nothing'}.`,
+        );
+    }
+    const [kinds, connections] = yield* withDaemon(({ client }) =>
+        Effect.all([client.Kinds(), client.Connections()]),
+    );
+    const provided = new Set(kinds.filter((k) => k.origin === dependency).map((k) => k.name));
+    const inUse = connections.filter((c) => provided.has(c.kind)).map((c) => c.name);
+    if (inUse.length > 0) {
+        return yield* refuse(
+            `${dependency} is still connected as ${inUse.join(', ')}. Disconnect ${inUse.length === 1 ? 'it' : 'them'} first.`,
+        );
+    }
+    const code = yield* Effect.promise(async () => {
+        const proc = Bun.spawn([process.execPath, 'remove', dependency], {
+            cwd: paths.packages,
+            env: { ...process.env, BUN_BE_BUN: '1' },
+            stdout: 'ignore',
+            stderr: 'inherit',
+        });
+        return proc.exited;
+    });
+    if (code !== 0) return yield* refuse(`Could not uninstall ${dependency}.`);
+    yield* withDaemon(({ client }) => client.ReloadKinds());
+    yield* Console.log(
+        `Uninstalled ${dependency}${provided.size > 0 ? ` (${[...provided].join(', ')})` : ''}.`,
+    );
+});
+
+const ask = async (question: string) => {
+    const rl = createInterface({ input: process.stdin, output: process.stdout });
+    try {
+        return /^y(es)?$/i.test((await rl.question(question)).trim());
+    } finally {
+        rl.close();
+    }
+};
+
+/**
+ * `sedge uninstall`: removes sedge from this machine. It stops the daemon and the login service,
+ * deletes the secrets it kept in the keychain, and deletes the sedge home (memory, conversations,
+ * settings, logs, packages, and the binary of a standalone install). pi's own folder, with your
+ * model logins, MCP servers and skills, stays. A package manager's install is removed with the
+ * package manager.
+ */
+const uninstallSedge = Effect.fn(function* (options: {
+    readonly yes: boolean;
+    readonly keepData: boolean;
+}) {
+    const method = detectInstallMethod(paths);
+    const config = yield* Effect.promise(() =>
+        readJson<{
+            connections?: Record<string, { secrets?: ReadonlyArray<string> }>;
+        }>(paths.config),
+    );
+    const secretNames = Object.entries(config?.connections ?? {}).flatMap(([name, entry]) =>
+        (entry.secrets ?? []).map((field) => `${name}.${field}`),
+    );
+    const deletable = yield* Effect.promise(() => isSedgeHome(paths.home));
+    const removed = [
+        'the daemon, and starting it at login',
+        ...(options.keepData
+            ? method === 'standalone'
+                ? [`the sedge binary (${paths.bin})`]
+                : []
+            : [
+                  ...(secretNames.length > 0
+                      ? [`${secretNames.length} secret(s) in your keychain`]
+                      : []),
+                  deletable
+                      ? `${paths.home}: memory, conversations, settings, logs, packages${method === 'standalone' ? ', and the sedge binary' : ''}`
+                      : `nothing in ${paths.home}: it doesn't look like a sedge home`,
+              ]),
+    ];
+    yield* Console.log(
+        `This removes:\n${removed.map((line) => `  - ${line}`).join('\n')}\n\nIt keeps pi's folder (model logins, MCP servers, skills).`,
+    );
+    if (!options.yes) {
+        if (!process.stdin.isTTY) {
+            return yield* refuse('Run it in a terminal to confirm, or pass --yes.');
+        }
+        if (!(yield* Effect.promise(() => ask('Uninstall sedge? [y/N] ')))) {
+            return yield* Console.log('Nothing was removed.');
+        }
+    }
+
+    yield* uninstallService;
+    if (yield* isListening(paths)) {
+        yield* withDaemon(({ client }) => client.Shutdown({ restart: false }), {
+            autostart: false,
+        }).pipe(Effect.ignore);
+        yield* waitUntil(paths, false);
+    }
+    if (options.keepData) {
+        if (method === 'standalone') {
+            yield* Effect.promise(() => rm(paths.bin, { recursive: true, force: true }));
+        }
+    } else {
+        if (secretNames.length > 0) {
+            const store = yield* Effect.promise(() => openSecretStore(paths));
+            for (const name of secretNames) {
+                yield* Effect.promise(() => store.delete(name).catch(() => undefined));
+            }
+        }
+        if (deletable) {
+            yield* Effect.promise(() => rm(paths.home, { recursive: true, force: true }));
+        }
+    }
+
+    const manager = method === 'npm' || method === 'bun' || method === 'pnpm' ? method : undefined;
+    yield* Console.log(
+        manager
+            ? `Done. Remove the command itself with: ${manager} rm -g @sedge-hq/sedge`
+            : method === 'standalone'
+              ? `Done. If you added ${paths.bin} to your PATH, remove that line from your shell's startup file.`
+              : 'Done.',
+    );
+});
+
+const uninstall = Command.make(
+    'uninstall',
+    {
+        name: Argument.String('package').pipe(
+            Argument.withDescription(
+                'An installed package ("telegram" or its npm name). Leave it out to uninstall sedge.',
+            ),
+            Argument.optional,
+        ),
+        yes: Flag.Boolean('yes').pipe(
+            Flag.withDescription("Don't ask before uninstalling sedge"),
+            Flag.withDefault(false),
+        ),
+        keepData: Flag.Boolean('keep-data').pipe(
+            Flag.withDescription('Keep the sedge home: memory, conversations, settings, secrets'),
+            Flag.withDefault(false),
+        ),
+    },
+    ({ name, yes, keepData }) =>
+        Option.isSome(name) ? uninstallPackage(name.value) : uninstallSedge({ yes, keepData }),
+).pipe(Command.withDescription('Uninstall a package of channels and signals, or sedge itself'));
 
 const update = Command.make(
     'update',
@@ -245,7 +411,7 @@ const update = Command.make(
 /** `sedge start|stop|update`, parsed and run by Effect's CLI. */
 export const runSedgeCommand = () =>
     sedge.pipe(
-        Command.withSubcommands([start, stop, update, install]),
+        Command.withSubcommands([start, stop, update, install, uninstall]),
         Command.run({ version: VERSION }),
         Effect.provide(BunServices.layer),
         BunRuntime.runMain,

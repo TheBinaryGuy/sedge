@@ -287,6 +287,34 @@ export const registerConnectionTools = (pi: ExtensionAPI, withDaemon: WithDaemon
     });
 
     pi.registerTool({
+        name: 'uninstall',
+        label: 'Uninstall',
+        description:
+            'Uninstall a package of channels and signals that install added: "telegram" or its full npm name. Its kinds must not be connected: disconnect those first. The user confirms first.',
+        parameters: Type.Object({
+            name: Type.String({ description: 'e.g. "telegram" or an npm name.' }),
+        }),
+        execute: async (_id, params, _signal, _update, ctx) => {
+            const ok = await ctx.ui.confirm(
+                `Uninstall ${packageSpec(params.name)}?`,
+                'Its channels and signals can no longer be connected until you install it again.',
+            );
+            if (!ok) return text('The user declined; nothing was uninstalled.');
+            const proc = Bun.spawn(selfCommand('uninstall', params.name), {
+                stdout: 'pipe',
+                stderr: 'pipe',
+            });
+            const [code, out, err] = await Promise.all([
+                proc.exited,
+                new Response(proc.stdout).text(),
+                new Response(proc.stderr).text(),
+            ]);
+            if (code !== 0) return text(`Uninstalling failed:\n${(err || out).trim()}`);
+            return text(out.trim());
+        },
+    });
+
+    pi.registerTool({
         name: 'find_packages',
         label: 'Find packages',
         description:

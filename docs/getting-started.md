@@ -64,6 +64,20 @@ sedge start --service
 
 `sedge stop` stops it and removes the login service.
 
+## Uninstall
+
+```sh
+sedge uninstall
+```
+
+It lists what it will remove and asks first. It stops the daemon and the login service, deletes
+the secrets it kept in your keychain, and deletes `~/.sedge`: memory, conversations, settings,
+logs, packages, and the binary if you installed with `curl`. `--keep-data` keeps `~/.sedge` for
+a later reinstall.
+
+pi's folder (`~/.pi/agent`, with your model logins, MCP servers and skills) stays. If you
+installed with npm, finish with `npm rm -g @sedge-hq/sedge`.
+
 ## Next
 
 - Get woken when something happens: [Channels and signals](./channels-and-signals.md).

@@ -24,7 +24,7 @@ libsecret on Linux, Windows Credential Manager); the config file only names them
 no keychain, an owner-only file in `~/.sedge` stands in.
 
 The tools it uses, if you want to ask for them by name: `channels`, `signals`,
-`find_packages`, `install`, `connect`, `disconnect`, `invite`, `create_signal`. See [Commands](./commands.md).
+`find_packages`, `install`, `uninstall`, `connect`, `disconnect`, `invite`, `create_signal`. See [Commands](./commands.md).
 
 ## Pairing a channel
 
@@ -66,6 +66,8 @@ into the `main` conversation, so a follow-up question on Telegram has the contex
 Install a package with `sedge install <name>` (a short name means `@sedge-hq/<name>`), a full npm
 name, or the path of a package folder. A folder is packed the way it would be published, along
 with the workspace packages it depends on, so you can try a package before it's on npm.
+
+To remove one, disconnect what uses it, then `sedge uninstall <name>`.
 
 ## Slack
 
