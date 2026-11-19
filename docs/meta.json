@@ -2,14 +2,18 @@
     "title": "sedge",
     "pages": [
         "index",
+        "---Use it---",
         "getting-started",
-        "how-it-works",
         "channels-and-signals",
         "memory",
         "mcp-and-skills",
+        "---Understand it---",
+        "how-it-works",
         "security",
-        "configuration",
+        "---Look things up---",
         "commands",
+        "configuration",
+        "---Build on it---",
         "kit",
         "development"
     ]

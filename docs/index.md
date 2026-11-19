@@ -19,17 +19,19 @@ It has two halves:
   timers, keeps memory, asks before risky actions, and sends you messages. Its conversations are
   durable: a run cut short by a restart picks up where it stopped.
 
-## Read next
+## Use it
 
-| If you want to…                               | Read                                              |
-| --------------------------------------------- | ------------------------------------------------- |
-| Install it and talk to it from your phone     | [Getting started](./getting-started.md)           |
-| Understand what happens when an event arrives | [How it works](./how-it-works.md)                 |
-| Connect Telegram, or get woken by your CI     | [Channels and signals](./channels-and-signals.md) |
-| Know what it remembers, and how               | [Memory](./memory.md)                             |
-| Give it your MCP servers and skills           | [MCP and skills](./mcp-and-skills.md)             |
-| Know what it can and can't do without you     | [Security](./security.md)                         |
-| Change a setting                              | [Configuration](./configuration.md)               |
-| Look up a command or tool                     | [Commands](./commands.md)                         |
-| Write a channel or signal of your own         | [The kit](./kit.md)                               |
-| Work on sedge itself                          | [Development](./development.md)                   |
+[Getting started](./getting-started.md) · [Channels and signals](./channels-and-signals.md) ·
+[Memory](./memory.md) · [MCP and skills](./mcp-and-skills.md)
+
+## Understand it
+
+[How it works](./how-it-works.md) · [Security](./security.md)
+
+## Look things up
+
+[Commands](./commands.md) · [Configuration](./configuration.md)
+
+## Build on it
+
+[The kit](./kit.md) · [Development](./development.md)
