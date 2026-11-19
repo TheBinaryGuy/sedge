@@ -6,7 +6,7 @@ import {
     wrapTextWithAnsi,
 } from '@earendil-works/pi-tui';
 import { LOGO } from '@sedge-hq/core';
-import type { AgentInfo, DaemonStatus } from '@sedge-hq/protocol';
+import type { AgentInfo, DaemonStatus, LogEntry, StatsInfo } from '@sedge-hq/protocol';
 import type { Effect } from 'effect';
 import { readdir, readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
@@ -15,7 +15,7 @@ import type { Daemon } from './client';
 
 type WithDaemon = <A, E>(use: (daemon: Daemon['Service']) => Effect.Effect<A, E>) => Promise<A>;
 
-export const TABS = ['agents', 'inbox', 'outbox', 'timers', 'memory'] as const;
+export const TABS = ['agents', 'inbox', 'runs', 'outbox', 'timers', 'memory', 'logs'] as const;
 export type Tab = (typeof TABS)[number];
 
 /** Colours: the chat's theme inside pi, sedge's own palette in `sedge dash`. */
@@ -65,12 +65,24 @@ const filesUnder = async (dir: string, root = dir): Promise<Array<string>> => {
     return nested.flat().sort();
 };
 
+const seconds = (ms: number) =>
+    ms < 1000
+        ? `${ms}ms`
+        : ms < 60_000
+          ? `${(ms / 1000).toFixed(1)}s`
+          : `${Math.floor(ms / 60_000)}m${Math.round((ms % 60_000) / 1000)}s`;
+const clock = (ms: number) =>
+    new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+export const LEVELS = [undefined, 'info', 'warn', 'error'] as const;
+type LogLevel = (typeof LEVELS)[number];
+
 const loadRows = async (
     tab: Tab,
     agent: string | undefined,
     agents: ReadonlyArray<AgentInfo>,
     withDaemon: WithDaemon,
     paint: Paint,
+    level?: LogLevel,
 ): Promise<Array<Row>> => {
     const status = (text: string) =>
         text === 'failed'
@@ -101,6 +113,54 @@ const loadRows = async (
                 '',
                 item.prompt,
                 ...(item.error ? ['', paint.error(item.error)] : []),
+            ],
+        }));
+    }
+    if (tab === 'runs') {
+        const runs = await withDaemon(({ client }) => client.Runs({ agent: filter, limit: 200 }));
+        return runs.map((run) => {
+            const took = run.finishedAt - run.startedAt;
+            const byTool = new Map<string, number>();
+            for (const tool of run.tools) byTool.set(tool.name, (byTool.get(tool.name) ?? 0) + 1);
+            const tools = [...byTool]
+                .map(([name, n]) => (n > 1 ? `${name} ×${n}` : name))
+                .join(', ');
+            return {
+                line: `${paint.dim(when(run.startedAt))}  ${paint.bold(owner(run.thread).padEnd(10))} ${run.ok ? paint.success('ok    ') : paint.error('failed')} ${paint.muted(seconds(took).padStart(7))}  ${paint.muted(run.sources.join(', ').padEnd(12))} ${paint.dim(tools || 'no tools')}`,
+                detail: [
+                    `${paint.dim('started')} ${when(run.startedAt)} ${paint.dim('· took')} ${seconds(took)} ${paint.dim('·')} ${run.events} event${run.events === 1 ? '' : 's'} ${paint.dim('from')} ${run.sources.join(', ')}`,
+                    ...(run.error ? ['', paint.error(run.error)] : []),
+                    ...(run.tools.length
+                        ? [
+                              '',
+                              ...run.tools.map(
+                                  (tool) =>
+                                      `${tool.error ? paint.error('✗') : paint.success('✓')} ${tool.name.padEnd(24)} ${paint.muted(seconds(tool.ms).padStart(7))}  ${paint.accent('▇'.repeat(Math.max(1, Math.round((tool.ms / Math.max(1, took)) * 30))))}`,
+                              ),
+                          ]
+                        : []),
+                ],
+            };
+        });
+    }
+    if (tab === 'logs') {
+        const logs: ReadonlyArray<LogEntry> = await withDaemon(({ client }) =>
+            client.Logs({ level: level ?? null, limit: 500 }),
+        );
+        const mark = (l: LogEntry['level']) =>
+            l === 'error'
+                ? paint.error('error')
+                : l === 'warn'
+                  ? paint.warning('warn ')
+                  : l === 'debug'
+                    ? paint.dim('debug')
+                    : paint.muted('info ');
+        return logs.map((record) => ({
+            line: `${paint.dim(clock(record.t))}  ${mark(record.level)}  ${paint.dim(record.from.padEnd(8))} ${oneLine(record.message)}`,
+            detail: [
+                `${paint.dim(new Date(record.t).toLocaleString())} ${paint.dim('·')} ${record.level} ${paint.dim('·')} ${record.from}`,
+                '',
+                ...record.message.split('\n'),
             ],
         }));
     }
@@ -153,6 +213,8 @@ const EMPTY: Record<Tab, string> = {
     inbox: 'Nothing has arrived yet.',
     outbox: 'Nothing has been sent yet.',
     timers: 'No timers.',
+    runs: 'No runs yet.',
+    logs: 'Nothing logged yet.',
     memory: 'No memory yet.',
 };
 
@@ -166,6 +228,8 @@ export class DashboardView implements Component {
     private agent: string | undefined;
     private agents: ReadonlyArray<AgentInfo> = [];
     private status: DaemonStatus | undefined;
+    private stats: StatsInfo | undefined;
+    private level: LogLevel = undefined;
     private rows: ReadonlyArray<Row> = [];
     private selected = 0;
     private top = 0;
@@ -201,13 +265,15 @@ export class DashboardView implements Component {
     private async refresh() {
         const { withDaemon, paint } = this.options;
         try {
-            const [status, agents] = await Promise.all([
+            const [status, agents, stats] = await Promise.all([
                 withDaemon(({ client }) => client.Status()),
                 withDaemon(({ client }) => client.Agents()),
+                withDaemon(({ client }) => client.Stats()),
             ]);
             this.status = status;
             this.agents = agents;
-            this.rows = await loadRows(this.tab, this.agent, agents, withDaemon, paint);
+            this.stats = stats;
+            this.rows = await loadRows(this.tab, this.agent, agents, withDaemon, paint, this.level);
             this.problem = undefined;
         } catch (error) {
             this.problem = `The daemon didn't answer (${error instanceof Error ? error.message : String(error)}). Start it with sedge start.`;
@@ -224,6 +290,22 @@ export class DashboardView implements Component {
         this.expanded = false;
         this.loading = true;
         void this.refresh();
+    }
+
+    /** Effect's metrics since the daemon started: runs, failures, and how long they take. */
+    private statsLine() {
+        const { paint } = this.options;
+        const st = this.stats;
+        if (this.status?.update)
+            return paint.dim(`${this.status.update} installed, applies on restart`);
+        if (!st || st.runs === 0) return paint.dim('the daemon, live');
+        return (
+            paint.dim(`since ${when(st.since)}: ${st.runs} run${st.runs === 1 ? '' : 's'} · `) +
+            (st.failed ? paint.error(`${st.failed} failed`) : paint.success('none failed')) +
+            paint.dim(
+                `${st.averageSeconds !== null ? ` · ${st.averageSeconds.toFixed(1)}s on average` : ''}${st.slowestSeconds !== null ? ` · slowest ${Math.round(st.slowestSeconds)}s` : ''}`,
+            )
+        );
     }
 
     handleInput(data: string) {
@@ -245,6 +327,10 @@ export class DashboardView implements Component {
             return this.show(this.tab);
         }
         if (data === 'r') return void this.refresh();
+        if (data === 'l' && this.tab === 'logs') {
+            this.level = LEVELS[(LEVELS.indexOf(this.level) + 1) % LEVELS.length];
+            return this.show('logs');
+        }
         if (matchesKey(data, 'enter')) this.expanded = !this.expanded;
         const last = Math.max(0, this.rows.length - 1);
         if (matchesKey(data, 'down') || data === 'j')
@@ -271,9 +357,7 @@ export class DashboardView implements Component {
                 s
                     ? `${s.running.length ? paint.warning(`working: ${s.running.map(owner).join(', ')}`) : paint.success('idle')}${paint.dim(` · ${s.pending} queued · ${plural(s.timers, 'timer')} · pid ${s.info.pid}`)}`
                     : paint.dim('connecting…'),
-                paint.dim(
-                    s?.update ? `${s.update} installed, applies on restart` : 'the daemon, live',
-                ),
+                this.statsLine(),
             ];
             out.push(
                 '',
@@ -294,7 +378,18 @@ export class DashboardView implements Component {
                 return name === this.agent ? paint.accent(`[${label}]`) : paint.dim(label);
             })
             .join(paint.dim(' · '));
-        out.push(pad(`${paint.dim('agent')}  ${who}`), pad(rule));
+        const levels = LEVELS.map((l) => {
+            const label = l ?? 'all';
+            return l === this.level ? paint.accent(`[${label}]`) : paint.dim(label);
+        }).join(paint.dim(' · '));
+        out.push(
+            pad(
+                this.tab === 'logs'
+                    ? `${paint.dim('level')}  ${levels}`
+                    : `${paint.dim('agent')}  ${who}`,
+            ),
+            pad(rule),
+        );
 
         // Room for the list and the detail pane, whatever the terminal's height.
         const height = Math.max(10, this.options.rows() - out.length - 3);
@@ -338,7 +433,7 @@ export class DashboardView implements Component {
             '',
             pad(
                 paint.dim(
-                    `← → or 1–5 tabs · a agent · ↑ ↓ select · enter ${this.expanded ? 'less' : 'more'} · r refresh · q ${this.options.header ? 'quit' : 'close'}`,
+                    `← → or 1–7 tabs · ${this.tab === 'logs' ? 'l level' : 'a agent'} · ↑ ↓ select · enter ${this.expanded ? 'less' : 'more'} · r refresh · q ${this.options.header ? 'quit' : 'close'}`,
                 ),
             ),
         );

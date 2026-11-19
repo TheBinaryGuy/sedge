@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 973 678" width="973" height="678" role="img" aria-label="sedge dash · runs">
+<title>sedge dash · runs</title>
+<style>text { font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 13.5px; white-space: pre; }</style>
+<rect width="973" height="678" rx="12" fill="#0d1117" stroke="#30363d"/>
+<circle cx="20" cy="17" r="5.5" fill="#30363d"/><circle cx="38" cy="17" r="5.5" fill="#30363d"/><circle cx="56" cy="17" r="5.5" fill="#30363d"/>
+<text x="486.5" y="21" fill="#8b949e" text-anchor="middle" style="font-size:12px">sedge dash · runs</text>
+<text x="24.4" y="81" fill="#3fb950" textLength="50.400000000000006" lengthAdjust="spacingAndGlyphs">▗ ▖ ▗ </text>
+<text x="91.60000000000001" y="81" fill="#e6edf3" font-weight="700" textLength="42" lengthAdjust="spacingAndGlyphs">sedge</text>
+<text x="142" y="81" fill="#6e7681" textLength="50.400000000000006" lengthAdjust="spacingAndGlyphs">v0.3.1</text>
+<text x="24.4" y="99" fill="#3fb950" textLength="50.400000000000006" lengthAdjust="spacingAndGlyphs">▐▖▐▗▞ </text>
+<text x="91.60000000000001" y="99" fill="#3fb950" textLength="33.6" lengthAdjust="spacingAndGlyphs">idle</text>
+<text x="125.2" y="99" fill="#6e7681" textLength="285.6" lengthAdjust="spacingAndGlyphs"> · 0 queued · 3 timers · pid 54665</text>
+<text x="24.4" y="117" fill="#3fb950" textLength="50.400000000000006" lengthAdjust="spacingAndGlyphs"> ▜█▛  </text>
+<text x="91.60000000000001" y="117" fill="#6e7681" textLength="134.4" lengthAdjust="spacingAndGlyphs">the daemon, live</text>
+<text x="24.4" y="153" fill="#8b949e" textLength="84" lengthAdjust="spacingAndGlyphs"> 1 agents </text>
+<text x="116.80000000000001" y="153" fill="#8b949e" textLength="75.60000000000001" lengthAdjust="spacingAndGlyphs"> 2 inbox </text>
+<rect x="200.8" y="140" width="67.2" height="18" fill="#3fb950"/>
+<text x="200.8" y="153" fill="#0d1117" textLength="67.2" lengthAdjust="spacingAndGlyphs"> 3 runs </text>
+<text x="276.40000000000003" y="153" fill="#8b949e" textLength="84" lengthAdjust="spacingAndGlyphs"> 4 outbox </text>
+<text x="368.8" y="153" fill="#8b949e" textLength="84" lengthAdjust="spacingAndGlyphs"> 5 timers </text>
+<text x="461.20000000000005" y="153" fill="#8b949e" textLength="84" lengthAdjust="spacingAndGlyphs"> 6 memory </text>
+<text x="553.6" y="153" fill="#8b949e" textLength="67.2" lengthAdjust="spacingAndGlyphs"> 7 logs </text>
+<text x="24.4" y="171" fill="#6e7681" textLength="42" lengthAdjust="spacingAndGlyphs">agent</text>
+<text x="83.2" y="171" fill="#3fb950" textLength="42" lengthAdjust="spacingAndGlyphs">[all]</text>
+<text x="125.2" y="171" fill="#6e7681" textLength="100.80000000000001" lengthAdjust="spacingAndGlyphs"> · main · ci</text>
+<text x="24.4" y="189" fill="#6e7681" textLength="924" lengthAdjust="spacingAndGlyphs">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</text>
+<text x="32.8" y="207" fill="#6e7681" textLength="151.20000000000002" lengthAdjust="spacingAndGlyphs">Nov 19 at 03:04 PM</text>
+<text x="200.8" y="207" fill="#e6edf3" font-weight="700" textLength="84" lengthAdjust="spacingAndGlyphs">main      </text>
+<text x="293.2" y="207" fill="#f85149" textLength="50.400000000000006" lengthAdjust="spacingAndGlyphs">failed</text>
+<text x="352" y="207" fill="#8b949e" textLength="58.800000000000004" lengthAdjust="spacingAndGlyphs">   2.1s</text>
+<text x="427.6" y="207" fill="#8b949e" textLength="100.80000000000001" lengthAdjust="spacingAndGlyphs">timer       </text>
+<text x="536.8000000000001" y="207" fill="#6e7681" textLength="67.2" lengthAdjust="spacingAndGlyphs">no tools</text>
+<text x="16" y="225" fill="#3fb950" textLength="8.4" lengthAdjust="spacingAndGlyphs">›</text>
+<text x="32.8" y="225" fill="#6e7681" textLength="151.20000000000002" lengthAdjust="spacingAndGlyphs">Nov 19 at 02:33 PM</text>
+<text x="200.8" y="225" fill="#e6edf3" font-weight="700" textLength="84" lengthAdjust="spacingAndGlyphs">main      </text>
+<text x="293.2" y="225" fill="#3fb950" textLength="50.400000000000006" lengthAdjust="spacingAndGlyphs">ok    </text>
+<text x="352" y="225" fill="#8b949e" textLength="58.800000000000004" lengthAdjust="spacingAndGlyphs">  38.7s</text>
+<text x="427.6" y="225" fill="#8b949e" textLength="100.80000000000001" lengthAdjust="spacingAndGlyphs">approval    </text>
+<text x="536.8000000000001" y="225" fill="#6e7681" textLength="151.20000000000002" lengthAdjust="spacingAndGlyphs">bash, send_message</text>
+<text x="32.8" y="243" fill="#6e7681" textLength="151.20000000000002" lengthAdjust="spacingAndGlyphs">Nov 19 at 02:00 PM</text>
+<text x="200.8" y="243" fill="#e6edf3" font-weight="700" textLength="84" lengthAdjust="spacingAndGlyphs">main      </text>
+<text x="293.2" y="243" fill="#3fb950" textLength="50.400000000000006" lengthAdjust="spacingAndGlyphs">ok    </text>
+<text x="352" y="243" fill="#8b949e" textLength="58.800000000000004" lengthAdjust="spacingAndGlyphs">   6.1s</text>
+<text x="427.6" y="243" fill="#8b949e" textLength="100.80000000000001" lengthAdjust="spacingAndGlyphs">agent:ci    </text>
+<text x="536.8000000000001" y="243" fill="#6e7681" textLength="151.20000000000002" lengthAdjust="spacingAndGlyphs">send_message, bash</text>
+<text x="32.8" y="261" fill="#6e7681" textLength="151.20000000000002" lengthAdjust="spacingAndGlyphs">Nov 19 at 01:59 PM</text>
+<text x="200.8" y="261" fill="#e6edf3" font-weight="700" textLength="84" lengthAdjust="spacingAndGlyphs">ci        </text>
+<text x="293.2" y="261" fill="#3fb950" textLength="50.400000000000006" lengthAdjust="spacingAndGlyphs">ok    </text>
+<text x="352" y="261" fill="#8b949e" textLength="58.800000000000004" lengthAdjust="spacingAndGlyphs">  21.3s</text>
+<text x="427.6" y="261" fill="#8b949e" textLength="100.80000000000001" lengthAdjust="spacingAndGlyphs">github-ci   </text>
+<text x="536.8000000000001" y="261" fill="#6e7681" textLength="260.40000000000003" lengthAdjust="spacingAndGlyphs">mcp__github__get_job_logs, tell</text>
+<text x="32.8" y="279" fill="#6e7681" textLength="151.20000000000002" lengthAdjust="spacingAndGlyphs">Nov 19 at 12:32 PM</text>
+<text x="200.8" y="279" fill="#e6edf3" font-weight="700" textLength="84" lengthAdjust="spacingAndGlyphs">main      </text>
+<text x="293.2" y="279" fill="#3fb950" textLength="50.400000000000006" lengthAdjust="spacingAndGlyphs">ok    </text>
+<text x="352" y="279" fill="#8b949e" textLength="58.800000000000004" lengthAdjust="spacingAndGlyphs">   9.4s</text>
+<text x="427.6" y="279" fill="#8b949e" textLength="100.80000000000001" lengthAdjust="spacingAndGlyphs">telegram    </text>
+<text x="536.8000000000001" y="279" fill="#6e7681" textLength="201.60000000000002" lengthAdjust="spacingAndGlyphs">read, grep, send_message</text>
+<text x="24.4" y="459" fill="#6e7681" textLength="882" lengthAdjust="spacingAndGlyphs">─ 2 of 5 ────────────────────────────────────────────────────────────────────────────────────────────────</text>
+<text x="32.8" y="477" fill="#6e7681" textLength="58.800000000000004" lengthAdjust="spacingAndGlyphs">started</text>
+<text x="91.60000000000001" y="477" fill="#e6edf3" textLength="168" lengthAdjust="spacingAndGlyphs"> Nov 19 at 02:33 PM </text>
+<text x="259.6" y="477" fill="#6e7681" textLength="50.400000000000006" lengthAdjust="spacingAndGlyphs">· took</text>
+<text x="310" y="477" fill="#e6edf3" textLength="58.800000000000004" lengthAdjust="spacingAndGlyphs"> 38.7s </text>
+<text x="368.8" y="477" fill="#6e7681" textLength="8.4" lengthAdjust="spacingAndGlyphs">·</text>
+<text x="377.2" y="477" fill="#e6edf3" textLength="75.60000000000001" lengthAdjust="spacingAndGlyphs"> 1 event </text>
+<text x="452.8" y="477" fill="#6e7681" textLength="33.6" lengthAdjust="spacingAndGlyphs">from</text>
+<text x="486.40000000000003" y="477" fill="#e6edf3" textLength="470.40000000000003" lengthAdjust="spacingAndGlyphs"> approval                                               </text>
+<text x="32.8" y="513" fill="#3fb950" textLength="8.4" lengthAdjust="spacingAndGlyphs">✓</text>
+<text x="41.2" y="513" fill="#e6edf3" textLength="218.4" lengthAdjust="spacingAndGlyphs"> bash                     </text>
+<text x="259.6" y="513" fill="#8b949e" textLength="58.800000000000004" lengthAdjust="spacingAndGlyphs">  31.2s</text>
+<text x="335.2" y="513" fill="#3fb950" textLength="201.60000000000002" lengthAdjust="spacingAndGlyphs">▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇▇</text>
+<text x="32.8" y="531" fill="#3fb950" textLength="8.4" lengthAdjust="spacingAndGlyphs">✓</text>
+<text x="41.2" y="531" fill="#e6edf3" textLength="218.4" lengthAdjust="spacingAndGlyphs"> send_message             </text>
+<text x="259.6" y="531" fill="#8b949e" textLength="58.800000000000004" lengthAdjust="spacingAndGlyphs">  240ms</text>
+<text x="335.2" y="531" fill="#3fb950" textLength="8.4" lengthAdjust="spacingAndGlyphs">▇</text>
+<text x="24.4" y="567" fill="#6e7681" textLength="604.8000000000001" lengthAdjust="spacingAndGlyphs">← → or 1–7 tabs · a agent · ↑ ↓ select · enter more · r refresh · q quit</text>
+</svg>

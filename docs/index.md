@@ -26,7 +26,7 @@ It has two halves:
 
 ## Understand it
 
-[How it works](./how-it-works.md) · [Security](./security.md)
+[How it works](./how-it-works.md) · [Logs and runs](./logs-and-runs.md) · [Security](./security.md)
 
 ## Look things up
 

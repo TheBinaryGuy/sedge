@@ -9,7 +9,10 @@ import {
     AgentRunError,
     DaemonStatus,
     InboxEntry,
+    LogEntry,
     OutboxEntry,
+    RunInfo,
+    StatsInfo,
     SedgeRpcs,
     TimerInfo,
     UpdateInfo,
@@ -19,6 +22,7 @@ import { RpcSerialization, RpcServer } from 'effect/rpc';
 import { Runtime, WorkerWake } from './runtime';
 import { Agents } from './agents';
 import { Connections } from './connections';
+import { metrics, Telemetry } from './telemetry';
 import { threadOf } from './threads';
 import { Updater } from './updater';
 
@@ -49,6 +53,7 @@ const HandlersLive = SedgeRpcs.toLayer(
         const connections = yield* Connections;
         const agents = yield* Agents;
         const outbox = yield* Outbox;
+        const telemetry = yield* Telemetry;
 
         return SedgeRpcs.of({
             Hello: () => Effect.succeed(control.info),
@@ -241,6 +246,57 @@ const HandlersLive = SedgeRpcs.toLayer(
                                 }),
                         ),
                     ),
+                ),
+            Runs: ({ agent, limit }) =>
+                telemetry.runs({ thread: agent ? threadOf(agent) : undefined, limit }).pipe(
+                    Effect.map((runs) =>
+                        runs.map(
+                            (run) =>
+                                new RunInfo({
+                                    ...run,
+                                    error: run.error ?? null,
+                                    sources: [...run.sources],
+                                    tools: [...run.tools],
+                                }),
+                        ),
+                    ),
+                ),
+            Logs: ({ level, limit }) =>
+                telemetry
+                    .logs({ level: level ?? undefined, limit })
+                    .pipe(Effect.map((logs) => logs.map((record) => new LogEntry(record)))),
+            Stats: () =>
+                telemetry.snapshot.pipe(
+                    Effect.map((snapshot) => {
+                        const find = (metric: { readonly id: string }) =>
+                            snapshot.find((s) => s.id === metric.id);
+                        const counts = (metric: { readonly id: string }) => {
+                            const found = find(metric);
+                            return found?.type === 'Frequency'
+                                ? [...found.state.occurrences]
+                                      .map(([name, count]) => ({ name, count }))
+                                      .sort((a, b) => b.count - a.count)
+                                : [];
+                        };
+                        const runs = counts(metrics.runs);
+                        const seconds = find(metrics.runSeconds);
+                        const histogram =
+                            seconds?.type === 'Histogram' && seconds.state.count > 0
+                                ? seconds.state
+                                : undefined;
+                        return new StatsInfo({
+                            since: control.info.startedAt,
+                            runs: runs.reduce((sum, r) => sum + r.count, 0),
+                            failed: runs
+                                .filter((r) => r.name.endsWith(':failed'))
+                                .reduce((sum, r) => sum + r.count, 0),
+                            averageSeconds: histogram ? histogram.sum / histogram.count : null,
+                            slowestSeconds: histogram ? histogram.max : null,
+                            tools: counts(metrics.tools),
+                            events: counts(metrics.events),
+                            deliveries: counts(metrics.deliveries),
+                        });
+                    }),
                 ),
             Connections: () => connections.list,
             Kinds: () => connections.kinds,

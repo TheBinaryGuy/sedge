@@ -49,6 +49,11 @@ What a signal reports is framed as data from outside, so instructions inside it 
 Project MCP config (`.pi/mcp.json`) isn't read by the daemon, so a repository can't add tools to
 unwatched runs.
 
+## Nothing leaves your machine
+
+sedge sends no telemetry. Its [logs and runs](./logs-and-runs.md) stay in `~/.sedge/logs`, for
+you to read in `sedge dash`.
+
 ## Code you add
 
 Packages you install and signals you register run inside the daemon with your rights, outside any

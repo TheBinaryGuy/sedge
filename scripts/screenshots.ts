@@ -56,6 +56,117 @@ const COLS = 112;
 const MODEL = 'anthropic/claude-sonnet-5-5';
 const ROWS = 34;
 
+// ── Runs and logs from earlier, which the daemon reads back when it starts ─────────────────────
+const t = Date.now();
+const m = 60_000;
+await mkdir(join(home, 'logs'), { recursive: true });
+const sampleRuns = [
+    {
+        id: 'r1',
+        thread: 'main',
+        sources: ['telegram'],
+        events: 1,
+        startedAt: t - 182 * m,
+        finishedAt: t - 182 * m + 9_400,
+        ok: true,
+        tools: [
+            { name: 'read', ms: 40, error: false },
+            { name: 'grep', ms: 120, error: false },
+            { name: 'send_message', ms: 210, error: false },
+        ],
+    },
+    {
+        id: 'r2',
+        thread: 'agent:ci',
+        sources: ['github-ci'],
+        events: 1,
+        startedAt: t - 95 * m,
+        finishedAt: t - 95 * m + 21_300,
+        ok: true,
+        tools: [
+            { name: 'mcp__github__get_job_logs', ms: 2_800, error: false },
+            { name: 'tell', ms: 30, error: false },
+        ],
+    },
+    {
+        id: 'r3',
+        thread: 'main',
+        sources: ['agent:ci'],
+        events: 1,
+        startedAt: t - 94 * m,
+        finishedAt: t - 94 * m + 6_100,
+        ok: true,
+        tools: [
+            { name: 'send_message', ms: 190, error: false },
+            { name: 'bash', ms: 15, error: true },
+        ],
+    },
+    {
+        id: 'r4',
+        thread: 'main',
+        sources: ['approval'],
+        events: 1,
+        startedAt: t - 61 * m,
+        finishedAt: t - 61 * m + 38_700,
+        ok: true,
+        tools: [
+            { name: 'bash', ms: 31_200, error: false },
+            { name: 'send_message', ms: 240, error: false },
+        ],
+    },
+    {
+        id: 'r5',
+        thread: 'main',
+        sources: ['timer'],
+        events: 1,
+        startedAt: t - 30 * m,
+        finishedAt: t - 30 * m + 2_100,
+        ok: false,
+        error: 'model_error: 529 overloaded',
+        tools: [],
+    },
+];
+await writeFile(
+    join(home, 'logs/runs.jsonl'),
+    `${sampleRuns.map((r) => JSON.stringify(r)).join('\n')}\n`,
+);
+const sampleLogs = [
+    {
+        t: t - 183 * m,
+        level: 'info',
+        message: `sedge ${version} listening on ~/.sedge/sedge.sock`,
+        from: 'daemon',
+    },
+    {
+        t: t - 183 * m + 900,
+        level: 'info',
+        message: '[agent] mcp github: ready (41 tools)',
+        from: 'console',
+    },
+    {
+        t: t - 94 * m,
+        level: 'warn',
+        message: 'Outbox 4f1c failed (429 Too Many Requests: retry after 3); retrying',
+        from: 'daemon',
+    },
+    {
+        t: t - 30 * m,
+        level: 'error',
+        message: 'Run for main failed: model_error: 529 overloaded',
+        from: 'daemon',
+    },
+    {
+        t: t - 12 * m,
+        level: 'warn',
+        message: '[connections] github-ci: failed, retrying in 4s: 502 Bad Gateway',
+        from: 'console',
+    },
+];
+await writeFile(
+    join(home, 'logs/sedge.jsonl'),
+    `${sampleLogs.map((l) => JSON.stringify(l)).join('\n')}\n`,
+);
+
 // ── A daemon with something to show ────────────────────────────────────────────────────────────
 const daemon = Bun.spawn([...sedge, 'start', '--foreground'], {
     env,
@@ -386,11 +497,21 @@ try {
     await dash.until('3 of');
     await dash.shot('dash-inbox', 'sedge dash · inbox');
     dash.type('3');
+    await dash.until('model_error');
+    dash.type('\u001b[B');
+    await dash.until('2 of');
+    await dash.shot('dash-runs', 'sedge dash · runs');
+    dash.type('4');
     await dash.until('Morning!');
     await dash.shot('dash-outbox', 'sedge dash · outbox');
-    dash.type('5');
+    dash.type('6');
     await dash.until('Works on sedge');
     await dash.shot('dash-memory', 'sedge dash · memory');
+    dash.type('7');
+    await dash.until('listening');
+    dash.type('ll');
+    await dash.until('[warn]');
+    await dash.shot('dash-logs', 'sedge dash · logs');
     dash.type('q');
     dash.close();
 

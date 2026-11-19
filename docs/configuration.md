@@ -40,18 +40,18 @@ handles it (default `main`), and `enabled: false` to pause it.
 
 Everything lives in `~/.sedge` (or `SEDGE_HOME`):
 
-| Path                   | What                                                                                                       |
-| ---------------------- | ---------------------------------------------------------------------------------------------------------- |
-| `config.json`          | The settings above.                                                                                        |
-| `memory/`              | `main`'s [memory](./memory.md), with `MEMORY.md` as its index; each agent's is in `memory/agents/<name>/`. |
-| `workspace/`           | Where unwatched runs work.                                                                                 |
-| `sedge.db`             | Inbox, timers, outbox, approvals.                                                                          |
-| `agent/durable.sqlite` | The agent's conversations.                                                                                 |
-| `packages/`            | Installed packages of channels and signals.                                                                |
-| `kinds/`               | Signals and channels you registered.                                                                       |
-| `logs/daemon.log`      | The daemon's log (kept under 10 MB).                                                                       |
-| `bin/`                 | The standalone install.                                                                                    |
-| `secrets.json`         | Secrets, only on machines without a keychain.                                                              |
+| Path                   | What                                                                                                            |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------- |
+| `config.json`          | The settings above.                                                                                             |
+| `memory/`              | `main`'s [memory](./memory.md), with `MEMORY.md` as its index; each agent's is in `memory/agents/<name>/`.      |
+| `workspace/`           | Where unwatched runs work.                                                                                      |
+| `sedge.db`             | Inbox, timers, outbox, approvals.                                                                               |
+| `agent/durable.sqlite` | The agent's conversations.                                                                                      |
+| `packages/`            | Installed packages of channels and signals.                                                                     |
+| `kinds/`               | Signals and channels you registered.                                                                            |
+| `logs/`                | The daemon's log, and the [logs and runs](./logs-and-runs.md) `sedge dash` shows (`sedge.jsonl`, `runs.jsonl`). |
+| `bin/`                 | The standalone install.                                                                                         |
+| `secrets.json`         | Secrets, only on machines without a keychain.                                                                   |
 
 Model logins, `models.json`, `mcp.json` and skills are pi's, in `~/.pi/agent`.
 

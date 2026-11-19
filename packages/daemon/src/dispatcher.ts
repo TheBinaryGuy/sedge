@@ -1,5 +1,6 @@
 import { Outbox, type OutboxMessage } from '@sedge-hq/db';
-import { Effect, Layer, Queue } from 'effect';
+import { Effect, Layer, Metric, Queue } from 'effect';
+import { metrics } from './telemetry';
 import { DispatcherWake } from './host';
 import { Connections } from './connections';
 import { supervise } from './supervise';
@@ -43,7 +44,10 @@ export const DispatcherLive = Layer.effect(
                     Effect.matchEffect({
                         // A thread nothing reaches (a terminal task) has nowhere to deliver; the
                         // TUI shows its result itself.
-                        onSuccess: () => outbox.markSent(message.id),
+                        onSuccess: () =>
+                            outbox
+                                .markSent(message.id)
+                                .pipe(Effect.andThen(Metric.update(metrics.deliveries, 'sent'))),
                         onFailure: (error) => {
                             const retryAt =
                                 message.attempts + 1 >= MAX_ATTEMPTS
@@ -51,6 +55,14 @@ export const DispatcherLive = Layer.effect(
                                     : Date.now() + 5_000 * 2 ** message.attempts;
                             return outbox
                                 .markFailed(message, error.message, retryAt)
+                                .pipe(
+                                    Effect.andThen(
+                                        Metric.update(
+                                            metrics.deliveries,
+                                            retryAt ? 'retrying' : 'failed',
+                                        ),
+                                    ),
+                                )
                                 .pipe(
                                     Effect.andThen(
                                         Effect.logWarning(

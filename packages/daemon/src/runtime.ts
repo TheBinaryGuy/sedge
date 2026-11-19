@@ -15,6 +15,7 @@ import {
     Schedule,
 } from 'effect';
 import { Connections } from './connections';
+import { Telemetry, type ToolTiming } from './telemetry';
 import { DREAM_PROMPT } from './memory';
 import { Settings } from './settings';
 import { supervise } from './supervise';
@@ -102,6 +103,7 @@ export class Runtime extends Context.Service<
             const agent = yield* Agent;
             const worker = yield* WorkerWake;
             const connections = yield* Connections;
+            const telemetry = yield* Telemetry;
             const bus = yield* PubSub.unbounded<BusMessage>();
             const running = yield* Ref.make<ReadonlySet<string>>(new Set());
             const scope = yield* Effect.scope;
@@ -152,6 +154,22 @@ export class Runtime extends Context.Service<
                             .working(first.thread)
                             .pipe(Effect.repeat(Schedule.spaced('4 seconds'))),
                     );
+                    // Each tool call's timing, for the run's record.
+                    const startedAt = Date.now();
+                    const open = new Map<string, number>();
+                    const tools: Array<ToolTiming> = [];
+                    const timeTools = (event: AgentEvent) => {
+                        if (event._tag === 'ToolStart') open.set(event.toolCallId, Date.now());
+                        if (event._tag === 'ToolEnd') {
+                            const start = open.get(event.toolCallId) ?? Date.now();
+                            open.delete(event.toolCallId);
+                            tools.push({
+                                name: event.name,
+                                ms: Date.now() - start,
+                                error: event.isError,
+                            });
+                        }
+                    };
                     const outcome = yield* agent
                         .run(
                             {
@@ -163,7 +181,10 @@ export class Runtime extends Context.Service<
                                     text: formatItem(item),
                                 })),
                             },
-                            (event) => publish({ _tag: 'Event', itemIds, event }),
+                            (event) => {
+                                timeTools(event);
+                                return publish({ _tag: 'Event', itemIds, event });
+                            },
                         )
                         .pipe(
                             Effect.ensuring(Fiber.interrupt(typing)),
@@ -177,6 +198,17 @@ export class Runtime extends Context.Service<
                         itemIds,
                         outcome.ok ? { result: outcome.text } : { error: outcome.text },
                     );
+                    yield* telemetry.recordRun({
+                        id: first.id,
+                        thread: first.thread,
+                        sources: [...new Set(batch.map((item) => item.source))],
+                        events: batch.length,
+                        startedAt,
+                        finishedAt: Date.now(),
+                        ok: outcome.ok,
+                        ...(outcome.ok ? {} : { error: outcome.text }),
+                        tools,
+                    });
                     if (outcome.ok) {
                         for (const itemId of itemIds) {
                             yield* publish({

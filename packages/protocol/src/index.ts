@@ -138,6 +138,43 @@ export class TimerInfo extends Schema.Class<TimerInfo>('sedge/protocol/TimerInfo
     nextRunAt: Schema.Number,
 }) {}
 
+/** A finished run: what woke it, how long it took, how it ended, and its tool calls. */
+export class RunInfo extends Schema.Class<RunInfo>('sedge/protocol/RunInfo')({
+    id: Schema.String,
+    thread: Schema.String,
+    sources: Schema.Array(Schema.String),
+    events: Schema.Number,
+    startedAt: Schema.Number,
+    finishedAt: Schema.Number,
+    ok: Schema.Boolean,
+    error: Schema.NullOr(Schema.String),
+    tools: Schema.Array(
+        Schema.Struct({ name: Schema.String, ms: Schema.Number, error: Schema.Boolean }),
+    ),
+}) {}
+
+/** One line of the daemon's log. */
+export class LogEntry extends Schema.Class<LogEntry>('sedge/protocol/LogEntry')({
+    t: Schema.Number,
+    level: Schema.Literals(['debug', 'info', 'warn', 'error']),
+    message: Schema.String,
+    from: Schema.String,
+}) {}
+
+const Count = Schema.Struct({ name: Schema.String, count: Schema.Number });
+
+/** The daemon's metrics since it started. */
+export class StatsInfo extends Schema.Class<StatsInfo>('sedge/protocol/StatsInfo')({
+    since: Schema.Number,
+    runs: Schema.Number,
+    failed: Schema.Number,
+    averageSeconds: Schema.NullOr(Schema.Number),
+    slowestSeconds: Schema.NullOr(Schema.Number),
+    tools: Schema.Array(Count),
+    events: Schema.Array(Count),
+    deliveries: Schema.Array(Count),
+}) {}
+
 export class AgentError extends Schema.TaggedError<AgentError>()('AgentError', {
     message: Schema.String,
 }) {}
@@ -186,6 +223,20 @@ export class SedgeRpcs extends RpcGroup.make(
         payload: { agent: Schema.NullOr(Schema.String) },
         success: Schema.Array(TimerInfo),
     }),
+    /** Finished runs, newest first: one agent's (by name), or all. */
+    Rpc.make('Runs', {
+        payload: { agent: Schema.NullOr(Schema.String), limit: Schema.Number },
+        success: Schema.Array(RunInfo),
+    }),
+    /** The daemon's log, newest first, at `level` and above. */
+    Rpc.make('Logs', {
+        payload: {
+            level: Schema.NullOr(Schema.Literals(['debug', 'info', 'warn', 'error'])),
+            limit: Schema.Number,
+        },
+        success: Schema.Array(LogEntry),
+    }),
+    Rpc.make('Stats', { success: StatsInfo }),
     Rpc.make('Connections', { success: Schema.Array(ConnectionInfo) }),
     Rpc.make('Kinds', { success: Schema.Array(KindInfo) }),
     /** Checks settings against a kind without connecting anything: a problem, or null. */

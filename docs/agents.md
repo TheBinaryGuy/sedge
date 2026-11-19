@@ -46,17 +46,19 @@ forget: `/sedge tell ci check the last three runs`.
 `sedge dash` opens the dashboard full screen, and `/sedge` opens the same one inside the TUI.
 Either way there's a tab for each of these:
 
-| Tab      | Shows                                                                   |
-| -------- | ----------------------------------------------------------------------- |
-| `agents` | Each agent's purpose, what it handles, whether it's working, its queue. |
-| `inbox`  | The events that woke each agent, from where, and how the run went.      |
-| `outbox` | What each agent sent you, and whether it arrived.                       |
-| `timers` | Follow-ups and schedules, by agent.                                     |
-| `memory` | Each agent's `MEMORY.md` and the files beside it.                       |
+| Tab      | Shows                                                                                                    |
+| -------- | -------------------------------------------------------------------------------------------------------- |
+| `agents` | Each agent's purpose, what it handles, whether it's working, its queue.                                  |
+| `inbox`  | The events that woke each agent, from where, and how the run went.                                       |
+| `runs`   | Each finished run: how long it took, how it ended, its tool calls ([Logs and runs](./logs-and-runs.md)). |
+| `outbox` | What each agent sent you, and whether it arrived.                                                        |
+| `timers` | Follow-ups and schedules, by agent.                                                                      |
+| `memory` | Each agent's `MEMORY.md` and the files beside it.                                                        |
+| `logs`   | The daemon's log; `l` steps through levels.                                                              |
 
 ![sedge dash: the agents tab, with main and ci](./screenshots/dash-agents.svg)
 
-← and → (or 1 to 5) switch tabs, `a` picks an agent, ↑ and ↓ select, Enter shows all of the
+← and → (or 1 to 7) switch tabs, `a` picks an agent, ↑ and ↓ select, Enter shows all of the
 selected item, `r` refreshes (it also does every two seconds), and `q` closes.
 `sedge dash inbox ci` and `/sedge inbox ci` open one tab for one agent.
 

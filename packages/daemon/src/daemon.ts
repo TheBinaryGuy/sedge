@@ -7,6 +7,7 @@ import { mkdir, open, rename, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { acquireDaemonLock, waitForExit } from './lock';
 import { Agents } from './agents';
+import { openTelemetry } from './telemetry';
 import { Connections } from './connections';
 import { DispatcherLive } from './dispatcher';
 import { makeHost } from './host';
@@ -85,6 +86,8 @@ export const runDaemon = (
         });
 
         const config = yield* Effect.promise(() => loadConfig(paths));
+        // Logs, run records and metrics, kept locally for `sedge dash`.
+        const telemetry = yield* Effect.promise(() => openTelemetry(paths));
         yield* Effect.promise(() => ensureMemory(paths.memory));
         // Runs that don't come from a terminal work here; tools refuse a directory that's missing.
         yield* Effect.promise(() =>
@@ -94,6 +97,7 @@ export const runDaemon = (
         // Stores and the worker wake-up first; channels, signals and the dispatcher on top of them;
         // the agent gets a host made of all of those; the runtime drives the agent.
         const base = Layer.mergeAll(
+            telemetry,
             StoresLive(paths.database),
             WorkerWake.layer,
             Settings.layer(paths, config),
@@ -122,12 +126,14 @@ export const runDaemon = (
         );
 
         yield* Layer.build(app);
-        yield* Effect.logInfo(
-            `sedge ${VERSION}${isDevBuild ? ' (dev)' : ''} listening on ${paths.socket}`,
-        );
-        const request = yield* Deferred.await(shutdown);
-        yield* Effect.logInfo(request.restart ? 'Restarting' : 'Stopping');
-        return request.restart;
+        return yield* Effect.gen(function* () {
+            yield* Effect.logInfo(
+                `sedge ${VERSION}${isDevBuild ? ' (dev)' : ''} listening on ${paths.socket}`,
+            );
+            const request = yield* Deferred.await(shutdown);
+            yield* Effect.logInfo(request.restart ? 'Restarting' : 'Stopping');
+            return request.restart;
+        }).pipe(Effect.provide(telemetry));
     }).pipe(Effect.scoped);
 
 /** Starts a detached daemon whose output goes to `logs/daemon.log`, and returns immediately. */

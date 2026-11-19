@@ -22,14 +22,14 @@ The TUI and `-p` also take the agent's options (`--model`, `--continue`, `--resu
 
 ## In the TUI
 
-| Command                      | What it does                                                                  |
-| ---------------------------- | ----------------------------------------------------------------------------- |
-| `/sedge`                     | The dashboard: agents, inbox, outbox, timers, memory ([Agents](./agents.md)). |
-| `/sedge <tab> [agent]`       | Open the dashboard on a tab (`inbox`, `outbox`, …), or on one agent's share.  |
-| `/sedge status`              | The daemon's version and what it's doing.                                     |
-| `/sedge bg <task>`           | Hand a task to the daemon; a note appears when it's done.                     |
-| `/sedge tell <agent> <task>` | The same, for one agent.                                                      |
-| `/sedge stop`                | Stop the daemon after its current run.                                        |
+| Command                      | What it does                                                                              |
+| ---------------------------- | ----------------------------------------------------------------------------------------- |
+| `/sedge`                     | The dashboard: agents, inbox, runs, outbox, timers, memory, logs ([Agents](./agents.md)). |
+| `/sedge <tab> [agent]`       | Open the dashboard on a tab (`inbox`, `outbox`, …), or on one agent's share.              |
+| `/sedge status`              | The daemon's version and what it's doing.                                                 |
+| `/sedge bg <task>`           | Hand a task to the daemon; a note appears when it's done.                                 |
+| `/sedge tell <agent> <task>` | The same, for one agent.                                                                  |
+| `/sedge stop`                | Stop the daemon after its current run.                                                    |
 
 All of pi's commands work too (`/login`, `/model`, `/mcp`, …).
 
