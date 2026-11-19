@@ -1,6 +1,6 @@
 ---
 title: Channels and signals
-description: Talk to sedge from Telegram, and wake it when something happens elsewhere.
+description: Talk to sedge from Telegram or Slack, and wake it when something happens elsewhere.
 ---
 
 - A **channel** is a conversation between you and sedge: Telegram today, others as packages.

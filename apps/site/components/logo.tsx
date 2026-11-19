@@ -1,3 +1,4 @@
+import type { CSSProperties } from 'react';
 import { LOGO } from '../../../packages/core/src/logo';
 
 // Each character is a 2×2 cell of quadrants: [top-left, top-right, bottom-left, bottom-right].
@@ -33,16 +34,28 @@ const minY = Math.min(...pixels.map(([, y]) => y));
 const width = (Math.max(...pixels.map(([x]) => x)) - minX + 1) * PX;
 const height = (Math.max(...pixels.map(([, y]) => y)) - minY + 1) * PY;
 
+/** Width over height, for sizing it where CSS can't (the social images). */
+export const LOGO_RATIO = width / height;
+
 /** The sedge tuft, drawn from the same glyphs as the TUI header, in the current colour. */
-export function Logo({ className }: { className?: string }) {
+export function Logo({
+    className,
+    style,
+    fill = 'currentColor',
+}: {
+    className?: string;
+    style?: CSSProperties;
+    fill?: string;
+}) {
     return (
         <svg
             viewBox={`0 0 ${width} ${height}`}
             className={className}
+            style={style}
             shapeRendering="crispEdges"
             aria-hidden="true"
         >
-            <g fill="currentColor">
+            <g fill={fill}>
                 {pixels.map(([x, y]) => (
                     <rect
                         key={`${x}-${y}`}

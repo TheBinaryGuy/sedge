@@ -2,7 +2,7 @@ import Link from 'next/link';
 import { CopyCommand } from '@/components/copy-command';
 import { Diagram } from '@/components/diagram';
 import { Logo } from '@/components/logo';
-import { repositoryUrl } from '@/lib/shared';
+import { repositoryUrl, tagline } from '@/lib/shared';
 
 const POINTS = [
     {
@@ -33,12 +33,9 @@ export default function HomePage() {
             <div className="relative w-full max-w-xl">
                 <Logo className="mb-7 h-11 w-auto text-fd-primary" />
                 <h1 className="mb-2 text-[28px] leading-tight font-semibold tracking-tight text-balance">
-                    An always-on agent that lives on your machine.
+                    {tagline.title}
                 </h1>
-                <p className="mb-8 text-fd-muted-foreground text-pretty">
-                    sedge is a coding agent with a daemon behind it that keeps working after you
-                    close the terminal.
-                </p>
+                <p className="mb-8 text-fd-muted-foreground text-pretty">{tagline.description}</p>
                 <CopyCommand command="curl -fsSL sedge.sh | sh" />
                 <p className="mt-3 mb-10 text-sm text-fd-muted-foreground">
                     or{' '}
