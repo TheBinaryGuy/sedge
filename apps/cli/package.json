@@ -1,11 +1,11 @@
 {
-    "name": "sedge",
+    "name": "@sedge-hq/sedge",
     "version": "0.0.1",
     "description": "An always-on agent that lives on your machine, built on pi.",
     "license": "MIT",
     "repository": {
         "type": "git",
-        "url": "git+https://github.com/TheBinaryGuy/sedge.git",
+        "url": "git+https://github.com/sedge-hq/sedge.git",
         "directory": "apps/cli"
     },
     "bin": {

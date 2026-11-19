@@ -1,4 +1,12 @@
-import { compareVersions, isDevBuild, type SedgePaths, VERSION } from '@repo/core';
+import {
+    CLI_PACKAGE,
+    compareVersions,
+    hostPlatformPackage,
+    isDevBuild,
+    registryPath,
+    type SedgePaths,
+    VERSION,
+} from '@repo/core';
 import { Context, Effect, Layer, Schema } from 'effect';
 import { createHash } from 'node:crypto';
 import { chmod, cp, mkdtemp, readdir, rename, rm } from 'node:fs/promises';
@@ -20,10 +28,6 @@ export const detectInstallMethod = (paths: SedgePaths): InstallMethod => {
     }
     return exe.startsWith(paths.bin) ? 'standalone' : 'source';
 };
-
-/** The npm package holding this platform's compiled binary, as `scripts/build.ts` names them. */
-export const platformPackage = () =>
-    `sedge-${process.platform === 'win32' ? 'windows' : process.platform}-${process.arch}`;
 
 export class UpdateError extends Schema.TaggedError<UpdateError>()('UpdateError', {
     message: Schema.String,
@@ -68,7 +72,9 @@ const run = (cmd: Array<string>) =>
  */
 const replaceStandalone = (version: string) =>
     Effect.gen(function* () {
-        const manifest = yield* fetchJson(`${REGISTRY}/${platformPackage()}/${version}`).pipe(
+        const manifest = yield* fetchJson(
+            `${REGISTRY}/${registryPath(hostPlatformPackage())}/${version}`,
+        ).pipe(
             Effect.flatMap(Schema.decodeUnknownEffect(PlatformManifest)),
             Effect.mapError((e) => new UpdateError({ message: String(e) })),
         );
@@ -131,7 +137,7 @@ export class Updater extends Context.Service<
             const canUpdate = !isDevBuild && installMethod !== 'source';
 
             const check = canUpdate
-                ? fetchJson(`${REGISTRY}/sedge/latest`).pipe(
+                ? fetchJson(`${REGISTRY}/${registryPath(CLI_PACKAGE)}/latest`).pipe(
                       Effect.flatMap(Schema.decodeUnknownEffect(LatestManifest)),
                       Effect.mapError((e) => new UpdateError({ message: String(e) })),
                       Effect.map(({ version }) =>
@@ -143,11 +149,11 @@ export class Updater extends Context.Service<
             const apply = Effect.fn('Updater.apply')(function* (version: string) {
                 switch (installMethod) {
                     case 'npm':
-                        return yield* run(['npm', 'install', '-g', `sedge@${version}`]);
+                        return yield* run(['npm', 'install', '-g', `${CLI_PACKAGE}@${version}`]);
                     case 'bun':
-                        return yield* run(['bun', 'add', '-g', `sedge@${version}`]);
+                        return yield* run(['bun', 'add', '-g', `${CLI_PACKAGE}@${version}`]);
                     case 'pnpm':
-                        return yield* run(['pnpm', 'add', '-g', `sedge@${version}`]);
+                        return yield* run(['pnpm', 'add', '-g', `${CLI_PACKAGE}@${version}`]);
                     case 'standalone':
                         return yield* replaceStandalone(version);
                     case 'source':

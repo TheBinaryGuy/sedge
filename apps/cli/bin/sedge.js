@@ -5,7 +5,7 @@ const { spawnSync } = require('node:child_process');
 const { dirname, join } = require('node:path');
 
 const os = process.platform === 'win32' ? 'windows' : process.platform;
-const pkg = `sedge-${os}-${process.arch}`;
+const pkg = `@sedge-hq/sedge-${os}-${process.arch}`;
 const exe = process.platform === 'win32' ? 'sedge.exe' : 'sedge';
 
 let binary;

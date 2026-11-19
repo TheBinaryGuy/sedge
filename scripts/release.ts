@@ -1,6 +1,7 @@
 import { readdir } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { CLI_PACKAGE } from '../packages/core/src/packages';
 
 /*
  * Publishes the version in apps/cli/package.json, which `changeset version` has just bumped.
@@ -21,11 +22,11 @@ const run = async (cmd: Array<string>, cwd = root) => {
     if ((await proc.exited) !== 0) throw new Error(`${cmd[0]} exited with an error`);
 };
 
-const published = Bun.spawnSync(['npm', 'view', `sedge@${version}`, 'version'], {
+const published = Bun.spawnSync(['npm', 'view', `${CLI_PACKAGE}@${version}`, 'version'], {
     stderr: 'ignore',
 });
 if (published.stdout.toString().trim() === version) {
-    console.log(`sedge@${version} is already on npm; nothing to release.`);
+    console.log(`${CLI_PACKAGE}@${version} is already on npm; nothing to release.`);
     process.exit(0);
 }
 
@@ -62,4 +63,4 @@ if (process.env.GITHUB_ACTIONS) {
     ]);
 }
 
-console.log(`Released sedge@${version}`);
+console.log(`Released ${CLI_PACKAGE}@${version}`);

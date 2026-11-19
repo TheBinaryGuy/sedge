@@ -5,7 +5,7 @@
 <p align="center">An always-on agent that lives on your machine, built on <a href="https://github.com/earendil-works/pi">pi</a>.</p>
 
 ```sh
-npm i -g sedge
+npm i -g @sedge-hq/sedge
 ```
 
 ```sh

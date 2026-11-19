@@ -1,5 +1,5 @@
 #!/bin/sh
-# Installs sedge without npm: curl -fsSL https://raw.githubusercontent.com/TheBinaryGuy/sedge/main/scripts/install.sh | sh
+# Installs sedge without npm: curl -fsSL https://raw.githubusercontent.com/sedge-hq/sedge/main/scripts/install.sh | sh
 # The binary goes to ~/.sedge/bin, which `sedge update` (and the daemon's auto-update) replace in place.
 set -eu
 
@@ -14,9 +14,9 @@ case "$(uname -m)" in
     *) echo "sedge: unsupported CPU $(uname -m)" >&2; exit 1 ;;
 esac
 
-pkg="sedge-$os-$cpu"
+pkg="@sedge-hq/sedge-$os-$cpu"
 home="${SEDGE_HOME:-$HOME/.sedge}"
-tarball=$(curl -fsSL "https://registry.npmjs.org/$pkg/latest" | sed -n 's/.*"tarball":"\([^"]*\)".*/\1/p')
+tarball=$(curl -fsSL "https://registry.npmjs.org/@sedge-hq%2fsedge-$os-$cpu/latest" | sed -n 's/.*"tarball":"\([^"]*\)".*/\1/p')
 [ -n "$tarball" ] || { echo "sedge: could not find $pkg on npm" >&2; exit 1; }
 
 tmp=$(mktemp -d)

@@ -1,6 +1,7 @@
 import { cp, mkdir, realpath, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { CLI_PACKAGE, platformPackage } from '../packages/core/src/packages';
 
 /*
  * Compiles `sedge` into one self-contained binary per platform and lays each out as an npm
@@ -50,8 +51,8 @@ const resolvePackageFile = (spec: string) => Bun.resolveSync(spec, join(pi, 'pac
 await rm(out, { recursive: true, force: true });
 
 for (const { os, cpu } of targets) {
-    const name = `sedge-${os}-${cpu}`;
-    const dir = join(out, name);
+    const name = platformPackage(os, cpu);
+    const dir = join(out, `sedge-${os}-${cpu}`);
     const bin = join(dir, 'bin');
     await mkdir(bin, { recursive: true });
     console.log(`\n→ ${name}@${version}`);
@@ -131,7 +132,7 @@ await writeFile(
     join(launcher, 'package.json'),
     `${JSON.stringify(
         {
-            name: 'sedge',
+            name: CLI_PACKAGE,
             version,
             description: manifest.description,
             license: manifest.license,
@@ -140,7 +141,7 @@ await writeFile(
             files: ['bin', 'docs'],
             engines: { node: '>=18' },
             optionalDependencies: Object.fromEntries(
-                TARGETS.map(({ os, cpu }) => [`sedge-${os}-${cpu}`, version]),
+                TARGETS.map(({ os, cpu }) => [platformPackage(os, cpu), version]),
             ),
         },
         null,
