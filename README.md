@@ -32,44 +32,10 @@ elsewhere, and you say what it should do then: "tell me when my CI fails". Both 
 (`sedge install telegram`), and sedge can write a signal for anything else
 ([`@sedge-hq/kit`](packages/kit)).
 
-```mermaid
-%%{init: {"theme": "base", "themeVariables": {"fontFamily": "ui-monospace, monospace", "primaryColor": "#f4f7ef", "primaryBorderColor": "#4f7a28", "primaryTextColor": "#1f2a14", "lineColor": "#6b8f47", "clusterBkg": "#fbfcf8", "clusterBorder": "#a9c08c"}}}%%
-flowchart LR
-    phone["Telegram<br/>on your phone"]
-    world["CI, feeds,<br/>anything"]
-    tui["sedge<br/>the TUI"]
-
-    subgraph daemon ["sedge daemon"]
-        direction LR
-        channels["channels"]
-        signals["signals"]
-        timers["timers"]
-        inbox[("inbox")]
-        agent["agent<br/>pi-durable"]
-        memory[("memory")]
-        approvals["approvals"]
-        outbox[("outbox")]
-    end
-
-    phone <-->|"paired by invite link"| channels
-    world --> signals
-    tui -->|"RPC, Unix socket"| inbox
-    channels --> inbox
-    signals --> inbox
-    timers --> inbox
-    inbox -->|"one run per conversation"| agent
-    memory --> agent
-    agent -->|"set_timer"| timers
-    agent -->|"risky tool call"| approvals
-    approvals --> outbox
-    agent -->|"send_message"| outbox
-    outbox -->|"retries"| channels
-
-    classDef outside fill:#1f2a14,stroke:#1f2a14,color:#f4f7ef
-    classDef store fill:#dfe9cf,stroke:#4f7a28,color:#1f2a14
-    class phone,world,tui outside
-    class inbox,memory,outbox store
-```
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.svg">
+  <img src="docs/architecture-light.svg" alt="How sedge works: channels, signals, timers and the terminal put events into the inbox; a durable run works with memory, skills, MCP servers, tools and approvals; what it sends leaves through the outbox to you, and your reply comes back as an event." width="100%">
+</picture>
 
 Behind the TUI, a daemon keeps working after you close the terminal: an inbox of events, timers
 it sets itself, memory, approvals you answer from your phone, and updates. Its conversations are

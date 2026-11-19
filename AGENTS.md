@@ -50,6 +50,7 @@
 - Write Effect code the Effect 4 way: `Context.Service` classes with static `layer`s, `Effect.fn`
   for service methods, `Schema` for anything crossing a boundary.
 - The logo is `LOGO` in `packages/core/src/logo.ts`; after changing it run `bun scripts/logo.ts`
-  to regenerate `docs/logo.svg`.
+  to regenerate `docs/logo.svg`. The README's diagram (`docs/architecture-dark.svg` and `-light.svg`) is
+  drawn by `scripts/architecture.ts` in the logo's colours; edit the script, not the SVGs.
 - The release build (`scripts/build.ts`) ships pi's assets beside the binary and a package.json
   naming the app `sedge`. If pi adds an asset or a worker entrypoint, mirror it there.
