@@ -1,6 +1,6 @@
 {
     "name": "@sedge-hq/telegram",
-    "version": "0.0.0",
+    "version": "0.1.0",
     "description": "Telegram for sedge: message your agent from anywhere, and it answers there.",
     "license": "MIT",
     "repository": {
