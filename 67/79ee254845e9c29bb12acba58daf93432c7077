@@ -1,0 +1,90 @@
+apps/cli/src/dash.ts
+  s_fe732417ee9cdb::t_b627b87836beeb 22-23
+  s_fe732417ee9cdb::t_f7bbf0bc952e54 1-21,24-62
+packages/daemon/src/secrets.ts
+  s_fe732417ee9cdb::t_823075c7ea1c6b 43-45
+package.json
+  s_fe732417ee9cdb::t_9036cfa429c088 34
+scripts/screenshots.ts
+  s_fe732417ee9cdb::t_13ed2271732afb 39,43,72-78
+  s_fe732417ee9cdb::t_f81448caa724f3 12,40-42
+  s_fe732417ee9cdb::t_b627b87836beeb 44-46,48-53,65-66,119-146,150-160,166-179,184-194,198-209,211-222,227-242,255-257,259-260,279-288,299-305,311-314,352-355,412-419
+  s_fe732417ee9cdb::t_4169a263e576e2 69,71,79-80,407-411,420
+  s_fe732417ee9cdb::t_6c1fc50cd8a97f 386
+  s_fe732417ee9cdb::t_823075c7ea1c6b 11,19-20,31-32
+  s_fe732417ee9cdb::t_a3f1b06bb21056 24-26,47,55-56,60,379,397-403
+  s_fe732417ee9cdb::t_0a2a16f1b4c8c9 18,21-23,29,340,427
+  s_fe732417ee9cdb::t_bef4ae2590ac06 1-10,13-17,27-28,30,33-38,54,57-59,61-64,67-68,70,81-118,147-149,161-165,180-183,195-197,210,223-226,243-254,258,261-278,289-298,306-310,315-339,341-351,356-378,380-385,387-396,404-406,421-426,428-429
+docs/development.md
+  s_fe732417ee9cdb::t_b627b87836beeb 56-61
+docs/screenshots/dash-inbox.svg
+  s_fe732417ee9cdb::t_6c1fc50cd8a97f 1-8,10-11,13-24,26-29,31,33-35,37-40,42-45,47-50,52-62,64-66
+  s_fe732417ee9cdb::t_a3f1b06bb21056 9,32
+  s_fe732417ee9cdb::t_196fc366c68b9c 12,25,30,36,41,46,51,63
+docs/screenshots/dash-memory.svg
+  s_fe732417ee9cdb::t_0a2a16f1b4c8c9 27-28,30-31
+  s_fe732417ee9cdb::t_6c1fc50cd8a97f 1-8,10-11,13-26,29,32-39
+  s_fe732417ee9cdb::t_196fc366c68b9c 12
+  s_fe732417ee9cdb::t_a3f1b06bb21056 9
+docs/screenshots/dash-outbox.svg
+  s_fe732417ee9cdb::t_196fc366c68b9c 12,26,30,35,39,48
+  s_fe732417ee9cdb::t_6c1fc50cd8a97f 1-8,10-11,13-25,27-29,31-34,36-38,40-47,49-51
+  s_fe732417ee9cdb::t_a3f1b06bb21056 9
+apps/cli/themes/sedge-dark.json
+  s_fe732417ee9cdb::t_823075c7ea1c6b 67-73
+apps/cli/themes/sedge-light.json
+  s_fe732417ee9cdb::t_823075c7ea1c6b 67-73
+docs/configuration.md
+  s_fe732417ee9cdb::t_b627b87836beeb 66
+AGENTS.md
+  s_fe732417ee9cdb::t_b627b87836beeb 59-61
+docs/agents.md
+  s_fe732417ee9cdb::t_b627b87836beeb 46-47,57-69
+docs/commands.md
+  s_fe732417ee9cdb::t_b627b87836beeb 8-18
+docs/memory.md
+  s_fe732417ee9cdb::t_b627b87836beeb 52-53
+docs/screenshots/dash-agents.svg
+  s_fe732417ee9cdb::t_bf7df089044df7 1-8,10-11,13-27,29-37,39-40
+  s_fe732417ee9cdb::t_196fc366c68b9c 12
+  s_fe732417ee9cdb::t_0a2a16f1b4c8c9 38
+  s_fe732417ee9cdb::t_a3f1b06bb21056 9,28
+docs/getting-started.md
+  s_fe732417ee9cdb::t_b627b87836beeb 27-30
+.changeset/dash.md
+  s_fe732417ee9cdb::t_b627b87836beeb 1-5
+docs/screenshots/tui.svg
+  s_fe732417ee9cdb::t_6c1fc50cd8a97f 1-8,10-20,22,26
+  s_fe732417ee9cdb::t_196fc366c68b9c 21,23-24
+  s_fe732417ee9cdb::t_f81448caa724f3 9,25
+README.md
+  s_fe732417ee9cdb::t_b627b87836beeb 21
+apps/cli/src/main.ts
+  s_fe732417ee9cdb::t_f7bbf0bc952e54 18,42-44
+apps/cli/src/dashboard.ts
+  s_fe732417ee9cdb::t_398dc66c8fb1fa 1,8-9,21-38,68,71,73-74,77,79-80,82,85-88,90,92-93,96-105,111-119,122-123,125-130,132-133,137-138,140-147,149-156,160-162,164-249,252-271,273,277,283-285,289-300,304-329,333-351,359-374,376-377
+  s_fe732417ee9cdb::t_0a2a16f1b4c8c9 12,47,50,91,139,272
+  s_fe732417ee9cdb::t_b627b87836beeb 2-7,48-49,108-109,124,134-136,250-251,274-276,278-282,286-288,301-303,330-332,355
+docs/screenshots/tui-sedge-inbox.svg
+  s_fe732417ee9cdb::t_4169a263e576e2 1-8,10-31,33-36,38,40-41,43-46,48-51,53-56,58-70,73
+  s_fe732417ee9cdb::t_196fc366c68b9c 32,37,42,47,52,57,71
+  s_fe732417ee9cdb::t_f81448caa724f3 9,39,72
+bun.lock
+  s_fe732417ee9cdb::t_5c62eb1661305d 12,833-834
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6779ee254845e9c29bb12acba58daf93432c7077",
+  "prompts": {},
+  "sessions": {
+    "s_fe732417ee9cdb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b6666194-df82-46a7-a1ef-33e06788ffe9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "TheBinaryGuy <hello@thebinary.dev>"
+    }
+  }
+}
