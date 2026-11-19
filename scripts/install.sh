@@ -30,7 +30,7 @@ home="${SEDGE_HOME:-$HOME/.sedge}"
 tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
-echo "Downloading $asset…"
+echo "Downloading ${asset}..."
 curl -fsSL "$url" -o "$tmp/$asset"
 tar -xzf "$tmp/$asset" -C "$tmp"
 mkdir -p "$home/bin"
