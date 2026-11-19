@@ -1,0 +1,22 @@
+{
+    "$schema": "https://turborepo.dev/schema.json",
+    "globalDependencies": ["tsconfig.base.json", "packages/config/**"],
+    "globalPassThroughEnv": ["CI", "NODE_ENV", "SEDGE_HOME", "SEDGE_LOG_LEVEL", "SEDGE_NO_UPDATE"],
+    "tasks": {
+        "dev": {
+            "cache": false,
+            "persistent": true
+        },
+        "build": {
+            "dependsOn": ["^build"],
+            "outputs": ["dist/**"]
+        },
+        "typecheck": {
+            "dependsOn": ["^typecheck"],
+            "outputs": []
+        },
+        "test": {
+            "outputs": []
+        }
+    }
+}

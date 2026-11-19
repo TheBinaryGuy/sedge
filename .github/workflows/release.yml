@@ -1,0 +1,46 @@
+name: Release
+
+on:
+    push:
+        branches: [main]
+
+concurrency:
+    group: release
+    cancel-in-progress: false
+
+permissions:
+    contents: write # version PR, tag, GitHub release
+    pull-requests: write # the "Version Packages" PR
+    id-token: write # npm provenance and trusted publishing
+
+jobs:
+    release:
+        runs-on: ubuntu-latest
+        timeout-minutes: 30
+        steps:
+            - uses: actions/checkout@v5
+              with:
+                  fetch-depth: 0
+            - uses: oven-sh/setup-bun@v2
+              with:
+                  bun-version-file: package.json
+            # npm 11.5+ for trusted publishing; setup-node writes the registry auth config.
+            - uses: actions/setup-node@v5
+              with:
+                  node-version: 24
+                  registry-url: https://registry.npmjs.org
+            - run: npm install -g npm@latest
+            - run: bun install --frozen-lockfile
+            # With pending changesets this opens or updates the "Version Packages" PR. Once that PR
+            # is merged there are none left, so it runs `bun run release`, which publishes the new
+            # version (and does nothing when that version is already on npm).
+            - uses: changesets/action@v1
+              with:
+                  version: bun run version
+                  publish: bun run release
+                  title: 'chore: release'
+                  commit: 'chore: release'
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+                  # Only needed until trusted publishing is configured for each package on npmjs.com.
+                  NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}

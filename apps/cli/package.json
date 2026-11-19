@@ -1,0 +1,38 @@
+{
+    "name": "sedge",
+    "version": "0.0.0",
+    "description": "An always-on agent that lives on your machine, built on pi.",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/TheBinaryGuy/sedge.git",
+        "directory": "apps/cli"
+    },
+    "bin": {
+        "sedge": "./bin/sedge.js"
+    },
+    "files": [
+        "bin"
+    ],
+    "type": "module",
+    "scripts": {
+        "dev": "SEDGE_HOME=../../.sedge-dev bun src/main.ts",
+        "build": "bun ../../scripts/build.ts",
+        "typecheck": "tsc --noEmit",
+        "test": "bun --bun vitest run --passWithNoTests",
+        "prepublishOnly": "echo 'Publish with `bun run release` from the repo root.' && exit 1"
+    },
+    "devDependencies": {
+        "@earendil-works/pi-coding-agent": "1.5.2",
+        "@earendil-works/pi-tui": "1.5.2",
+        "@effect/platform-bun": "4.1.4",
+        "@repo/config": "workspace:*",
+        "@repo/core": "workspace:*",
+        "@repo/daemon": "workspace:*",
+        "@repo/protocol": "workspace:*",
+        "@types/bun": "1.4.4",
+        "effect": "4.1.4",
+        "typescript": "7.0.2",
+        "vitest": "5.1.1"
+    }
+}

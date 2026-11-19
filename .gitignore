@@ -1,0 +1,27 @@
+node_modules/
+.turbo/
+dist/
+coverage/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+.DS_Store
+.vitest/
+.cache/
+*.log
+
+# Local SQLite files from development runs
+*.db
+*.db-shm
+*.db-wal
+
+# Editors and OS scratch files
+Thumbs.db
+*.swp
+*~
+.idea/
+
+# Claude Code local settings and session files
+.claude/
+.sedge-dev/

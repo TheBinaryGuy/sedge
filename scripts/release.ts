@@ -1,0 +1,65 @@
+import { readdir } from 'node:fs/promises';
+import { dirname, join, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+/*
+ * Publishes the version in apps/cli/package.json, which `changeset version` has just bumped.
+ * The release workflow runs this on every push to main; when that version is already on npm it
+ * does nothing, so only merging the "Version Packages" PR actually ships.
+ *
+ * Order matters: platform packages first, the `sedge` launcher last, so nobody can install a
+ * launcher whose binaries aren't on the registry yet. Then a git tag and a GitHub release.
+ */
+const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
+const { version } = (await Bun.file(join(root, 'apps/cli/package.json')).json()) as {
+    version: string;
+};
+
+const run = async (cmd: Array<string>, cwd = root) => {
+    console.log(`$ ${cmd.join(' ')}`);
+    const proc = Bun.spawn(cmd, { cwd, stdout: 'inherit', stderr: 'inherit' });
+    if ((await proc.exited) !== 0) throw new Error(`${cmd[0]} exited with an error`);
+};
+
+const published = Bun.spawnSync(['npm', 'view', `sedge@${version}`, 'version'], {
+    stderr: 'ignore',
+});
+if (published.stdout.toString().trim() === version) {
+    console.log(`sedge@${version} is already on npm; nothing to release.`);
+    process.exit(0);
+}
+
+await run(['bun', 'scripts/build.ts', '--all']);
+
+const out = join(root, 'dist/npm');
+const platforms = (await readdir(out)).filter((name) => name !== 'sedge');
+// Provenance needs the OIDC token GitHub Actions provides; skip it for a manual local publish.
+const provenance = process.env.GITHUB_ACTIONS ? ['--provenance'] : [];
+for (const name of [...platforms, 'sedge']) {
+    await run(['npm', 'publish', '--access', 'public', ...provenance], join(out, name));
+}
+
+if (process.env.GITHUB_ACTIONS) {
+    const tag = `v${version}`;
+    const archives: Array<string> = [];
+    for (const name of platforms) {
+        const archive = join(out, `${name}.tar.gz`);
+        await run(['tar', '-czf', archive, '-C', join(out, name), 'bin']);
+        archives.push(archive);
+    }
+    await run(['git', 'tag', tag]);
+    await run(['git', 'push', 'origin', tag]);
+    await run([
+        'gh',
+        'release',
+        'create',
+        tag,
+        '--title',
+        tag,
+        '--notes-from-tag',
+        '--verify-tag',
+        ...archives,
+    ]);
+}
+
+console.log(`Released sedge@${version}`);
