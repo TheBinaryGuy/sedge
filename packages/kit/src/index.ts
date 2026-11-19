@@ -1,16 +1,5 @@
-import {
-    Cause,
-    Duration,
-    Effect,
-    Exit,
-    Fiber,
-    Option,
-    Schedule,
-    Schema,
-    SchemaAST,
-    Stream,
-} from 'effect';
-import type { Scope } from 'effect';
+import { Cause, Effect, Exit, Fiber, Option, Schedule, Schema, SchemaAST, Stream } from 'effect';
+import type { Duration, Scope } from 'effect';
 
 /**
  * @sedge-hq/kit: build what connects sedge to the world.
