@@ -102,6 +102,18 @@ for (const dir of ['packages/kit', 'packages/telegram']) {
     });
     const tarball = pack.stdout.toString().trim().split('\n').pop()!;
     // bun prints the tarball's path, absolute in newer versions; resolve takes either.
-    await run(['npm', 'publish', resolve(out, tarball), '--access', 'public', ...provenance]);
+    const cmd = ['npm', 'publish', resolve(out, tarball), '--access', 'public', ...provenance];
+    console.log(`$ ${cmd.join(' ')}`);
+    const publish = Bun.spawnSync(cmd, { cwd: root, stdout: 'inherit', stderr: 'pipe' });
+    const stderr = publish.stderr.toString();
+    process.stderr.write(stderr);
+    // A version npm still holds for approval (staged publishing) doesn't show in `npm view`,
+    // but it is published: npm refuses it again, and that is not a failure.
+    if (
+        publish.exitCode !== 0 &&
+        !stderr.includes('cannot publish over the previously published')
+    ) {
+        throw new Error(`Publishing ${pkg.name}@${pkg.version} failed`);
+    }
     console.log(`Released ${pkg.name}@${pkg.version}`);
 }
