@@ -1,6 +1,6 @@
 ---
 title: Memory
-description: What sedge keeps between conversations, how it decides, and the nightly dream that keeps it accurate.
+description: What sedge remembers between conversations, and how it keeps that accurate.
 ---
 
 sedge's memory is a folder of files: `~/.sedge/memory`. It follows

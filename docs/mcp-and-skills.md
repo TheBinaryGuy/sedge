@@ -1,6 +1,6 @@
 ---
 title: MCP and skills
-description: Using your MCP servers and skills in the daemon's runs, not only in the TUI.
+description: Your MCP servers and skills, in the daemon's runs as well as the TUI.
 ---
 
 ## In the TUI

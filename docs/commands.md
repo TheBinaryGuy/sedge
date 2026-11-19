@@ -1,6 +1,6 @@
 ---
 title: Commands
-description: The sedge command line, the /sedge command in the TUI, and the tools the agents use.
+description: Commands for the terminal and the TUI, and the tools the agents use.
 ---
 
 ## Command line

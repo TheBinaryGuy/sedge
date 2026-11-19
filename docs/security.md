@@ -1,6 +1,6 @@
 ---
 title: Security
-description: What sedge may do without you, where secrets live, who can talk to it, and what stays off limits.
+description: What sedge does without asking, where your secrets go, and who can talk to it.
 ---
 
 sedge runs with your rights on your machine. These are the limits it keeps.

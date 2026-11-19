@@ -1,12 +1,10 @@
 ---
 title: How it works
-description: The daemon's loop. Events go into an inbox, a durable run handles them, and what it says leaves through an outbox.
+description: Events go into an inbox, a run handles them, and replies leave through an outbox.
 ---
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./architecture-dark.svg">
-  <img src="./architecture-light.svg" alt="How sedge works: channels, signals, timers and the terminal put events into the inbox; a durable run works with memory, skills, MCP servers, tools and approvals; what it sends leaves through the outbox to you, and your reply comes back as an event." width="100%">
-</picture>
+![How sedge works: events go into the inbox, a durable run handles them, and what it says leaves through the outbox](./architecture-light.svg#gh-light-mode-only)
+![How sedge works: events go into the inbox, a durable run handles them, and what it says leaves through the outbox](./architecture-dark.svg#gh-dark-mode-only)
 
 An always-on agent is not running all the time. It sleeps until something happens, wakes for a
 short run, and sleeps again. sedge follows the pattern in

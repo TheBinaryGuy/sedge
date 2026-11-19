@@ -1,6 +1,6 @@
 ---
 title: Development
-description: Working on sedge itself. The repository, running it from source, tests, and releases.
+description: Run sedge from source, test it, and ship a release.
 ---
 
 ## Setup
@@ -45,7 +45,7 @@ your logins. `SEDGE_BIN=dist/npm/sedge-<os>-<cpu>/bin/sedge` runs it against a c
 | `docs`              | These pages.                                                                |
 | `scripts`           | Build, release, and the generated pictures (`logo.ts`, `architecture.ts`).  |
 
-[`AGENTS.md`](../AGENTS.md) has the rules the code follows.
+[`AGENTS.md`](https://github.com/sedge-hq/sedge/blob/main/AGENTS.md) has the rules the code follows.
 
 ## Docs
 

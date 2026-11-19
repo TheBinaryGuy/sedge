@@ -4,13 +4,31 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "dev": "wrangler dev",
-        "deploy": "wrangler deploy",
-        "typecheck": "tsc --noEmit"
+        "dev": "bun run assets && next dev",
+        "build": "bun run assets && next build",
+        "preview": "bun run build && wrangler dev --var DEV:1",
+        "deploy": "bun run build && wrangler deploy",
+        "typecheck": "next typegen && tsc --noEmit && tsc --noEmit -p tsconfig.worker.json",
+        "assets": "rm -rf content && mkdir -p content public/docs && cp -R ../../docs content/docs && cp ../../docs/*.svg public/docs/ && cp ../../docs/*.svg public/"
+    },
+    "dependencies": {
+        "fumadocs-core": "16.19.4",
+        "fumadocs-mdx": "15.6.3",
+        "fumadocs-ui": "npm:@fumadocs/base-ui@16.19.4",
+        "next": "16.4.6",
+        "react": "19.3.1",
+        "react-dom": "19.3.1"
     },
     "devDependencies": {
         "@cloudflare/workers-types": "5.20261119.1",
         "@sedge-hq/config": "workspace:*",
+        "@tailwindcss/postcss": "4.3.5",
+        "@types/mdx": "2.0.14",
+        "@types/node": "26.6.6",
+        "@types/react": "19.3.0",
+        "@types/react-dom": "19.3.0",
+        "postcss": "8.5.32",
+        "tailwindcss": "4.3.5",
         "typescript": "7.0.2",
         "wrangler": "4.165.0"
     }

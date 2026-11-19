@@ -1,16 +1,14 @@
 ---
-title: sedge
-description: An always-on agent that lives on your machine. What it is, and where to read next.
+title: Introduction
+description: An always-on agent that lives on your machine.
 ---
 
 sedge is an agent that keeps working after you close the terminal. You talk to it in a TUI on
 your computer, or from your phone on Telegram. It wakes when something happens (a message, a
 timer, your CI failing), does the work, tells you what matters, and goes back to sleep.
 
-<picture>
-  <source media="(prefers-color-scheme: dark)" srcset="./architecture-dark.svg">
-  <img src="./architecture-light.svg" alt="How sedge works: channels, signals, timers and the terminal put events into the inbox; a durable run works with memory, skills, MCP servers, tools and approvals; what it sends leaves through the outbox to you, and your reply comes back as an event." width="100%">
-</picture>
+![How sedge works: events go into the inbox, a durable run handles them, and what it says leaves through the outbox](./architecture-light.svg#gh-light-mode-only)
+![How sedge works: events go into the inbox, a durable run handles them, and what it says leaves through the outbox](./architecture-dark.svg#gh-dark-mode-only)
 
 It has two halves:
 
@@ -35,9 +33,3 @@ It has two halves:
 | Look up a command or tool                     | [Commands](./commands.md)                         |
 | Write a channel or signal of your own         | [The kit](./kit.md)                               |
 | Work on sedge itself                          | [Development](./development.md)                   |
-
-## For agents
-
-These pages are plain Markdown, one topic each, and every page starts with a one-line
-description. The TUI's agent already knows sedge's basics and links here; the daemon's agent is
-sedge.

@@ -1,0 +1,80 @@
+@import 'tailwindcss';
+@import 'fumadocs-ui/css/neutral.css';
+@import 'fumadocs-ui/css/preset.css';
+
+/* sedge's colours: sedge.sh, the README diagram and the TUI theme share them. The logo is
+   #3fb950 on dark and #1a7f37 on light. */
+@theme {
+    --color-fd-background: #ffffff;
+    --color-fd-foreground: #1f2328;
+    --color-fd-muted: #f6f8fa;
+    --color-fd-muted-foreground: #59636e;
+    --color-fd-popover: #ffffff;
+    --color-fd-popover-foreground: #1f2328;
+    --color-fd-card: #f6f8fa;
+    --color-fd-card-foreground: #1f2328;
+    --color-fd-border: #d1d9e0;
+    --color-fd-primary: #1a7f37;
+    --color-fd-primary-foreground: #ffffff;
+    --color-fd-secondary: #f6f8fa;
+    --color-fd-secondary-foreground: #1f2328;
+    --color-fd-accent: #dafbe1;
+    --color-fd-accent-foreground: #1f2328;
+    --color-fd-ring: #1a7f37;
+}
+
+.dark {
+    --color-fd-background: #0d1117;
+    --color-fd-foreground: #e6edf3;
+    --color-fd-muted: #161b22;
+    --color-fd-muted-foreground: #8b949e;
+    --color-fd-popover: #161b22;
+    --color-fd-popover-foreground: #e6edf3;
+    --color-fd-card: #161b22;
+    --color-fd-card-foreground: #e6edf3;
+    --color-fd-border: #30363d;
+    --color-fd-primary: #3fb950;
+    --color-fd-primary-foreground: #0d1117;
+    --color-fd-secondary: #161b22;
+    --color-fd-secondary-foreground: #e6edf3;
+    --color-fd-accent: #14261a;
+    --color-fd-accent-foreground: #e6edf3;
+    --color-fd-ring: #3fb950;
+}
+
+.dark #nd-sidebar {
+    --color-fd-muted: #161b22;
+    --color-fd-secondary: #1c2128;
+    --color-fd-muted-foreground: #8b949e;
+}
+
+html {
+    scrollbar-gutter: stable;
+}
+
+html > body[data-scroll-locked] {
+    margin-right: 0px !important;
+    --removed-body-scroll-bar-size: 0px !important;
+}
+
+/* The field of faint dots behind the home page, as in the README diagram. */
+.dot-field {
+    background-image: radial-gradient(
+        circle at center,
+        color-mix(in srgb, var(--color-fd-foreground) 12%, transparent) 1.1px,
+        transparent 1.3px
+    );
+    background-size: 10px 10px;
+}
+
+/* A picture drawn for each theme comes as name-light.svg and name-dark.svg (GitHub picks with
+   #gh-light-mode-only and #gh-dark-mode-only); show the one that matches. */
+img[src*='-dark.'] {
+    display: none;
+}
+.dark img[src*='-dark.'] {
+    display: revert;
+}
+.dark img[src*='-light.'] {
+    display: none;
+}

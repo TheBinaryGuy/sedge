@@ -1,6 +1,6 @@
 ---
 title: Channels and signals
-description: How sedge reaches you (channels) and what wakes it up (signals). Connecting, pairing, and the kinds you can install or write.
+description: Talk to sedge from Telegram, and wake it when something happens elsewhere.
 ---
 
 - A **channel** is a conversation between you and sedge: Telegram today, others as packages.
@@ -54,9 +54,9 @@ into the `main` conversation, so a follow-up question on Telegram has the contex
 
 ## Kinds
 
-| Kind       | Type    | Package                                      |
-| ---------- | ------- | -------------------------------------------- |
-| `telegram` | channel | [`@sedge-hq/telegram`](../packages/telegram) |
+| Kind       | Type    | Package                                                                               |
+| ---------- | ------- | ------------------------------------------------------------------------------------- |
+| `telegram` | channel | [`@sedge-hq/telegram`](https://github.com/sedge-hq/sedge/blob/main/packages/telegram) |
 
 Install a package with `sedge install <name>` (a short name means `@sedge-hq/<name>`), a full npm
 name, or the path of a package folder. A folder is packed the way it would be published, along

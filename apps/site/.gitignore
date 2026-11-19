@@ -1,0 +1,5 @@
+# Copied from docs/ at build time.
+/public/docs/
+/public/*.svg
+!/public/favicon.svg
+/content/

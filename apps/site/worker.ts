@@ -2,6 +2,8 @@ import installer from '../../scripts/install.sh';
 
 interface Env {
     readonly ASSETS: Fetcher;
+    /** Set by `bun run preview`: wrangler dev hands the worker sedge.sh URLs over plain HTTP. */
+    readonly DEV?: string;
 }
 
 /** Command-line clients get the installer at `/`; browsers get the page. */
@@ -10,7 +12,8 @@ const CLI = /^(curl|wget|fetch|httpie|xh|powershell|libfetch|aria2)\b/i;
 export default {
     async fetch(request: Request, env: Env): Promise<Response> {
         const url = new URL(request.url);
-        const local = url.hostname === 'localhost' || url.hostname === '127.0.0.1';
+        const local =
+            Boolean(env.DEV) || url.hostname === 'localhost' || url.hostname === '127.0.0.1';
         // One canonical address: plain HTTP and www. both go to https://sedge.sh in one hop, the
         // installer included (`curl -fsSL sedge.sh` follows redirects with -L).
         if (!local && (url.protocol === 'http:' || url.hostname.startsWith('www.'))) {
@@ -38,5 +41,12 @@ async function serve(request: Request, url: URL, env: Env): Promise<Response> {
             },
         });
     }
-    return env.ASSETS.fetch(request);
+    const response = await env.ASSETS.fetch(request);
+    // The docs' search index is a JSON file without an extension.
+    if (url.pathname === '/api/search') {
+        const typed = new Response(response.body, response);
+        typed.headers.set('content-type', 'application/json; charset=utf-8');
+        return typed;
+    }
+    return response;
 }

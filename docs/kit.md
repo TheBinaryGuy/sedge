@@ -1,9 +1,9 @@
 ---
 title: The kit
-description: Write a channel or signal for sedge with @sedge-hq/kit. The API, with examples.
+description: Write your own channel or signal with @sedge-hq/kit.
 ---
 
-[`@sedge-hq/kit`](../packages/kit) is how channels and signals are written. It's
+[`@sedge-hq/kit`](https://github.com/sedge-hq/sedge/blob/main/packages/kit) is how channels and signals are written. It's
 [Effect](https://effect.website): settings are an Effect `Schema`, a signal is a `Stream`, a
 channel is a scoped `Effect`.
 
@@ -82,7 +82,7 @@ A channel must:
 - **Give events a `key`** (the platform's message id), so a message redelivered after a crash is
   answered once.
 
-[`packages/telegram`](../packages/telegram/src/telegram.ts) is the reference channel.
+[`packages/telegram`](https://github.com/sedge-hq/sedge/blob/main/packages/telegram/src/telegram.ts) is the reference channel.
 
 ## The kit
 

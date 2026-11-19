@@ -1,6 +1,6 @@
 ---
 title: Configuration
-description: The config file, every setting in it, the files under ~/.sedge, and environment variables.
+description: config.json, the files in ~/.sedge, and environment variables.
 ---
 
 Most things are set up by asking sedge in the TUI. The rest is `~/.sedge/config.json`. The daemon
