@@ -4,8 +4,15 @@
 
 <p align="center">An always-on agent that lives on your machine, built on <a href="https://github.com/earendil-works/pi">pi</a>.</p>
 
+<p align="center">
+  <a href="https://github.com/sedge-hq/sedge/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/sedge-hq/sedge/ci.yml?branch=main&label=ci"></a>
+  <a href="https://www.npmjs.com/package/@sedge-hq/sedge"><img alt="npm" src="https://img.shields.io/npm/v/@sedge-hq/sedge?label=npm"></a>
+  <a href="https://github.com/sedge-hq/sedge/releases/latest"><img alt="Release" src="https://img.shields.io/github/v/release/sedge-hq/sedge?label=release"></a>
+  <a href="LICENSE"><img alt="MIT license" src="https://img.shields.io/github/license/sedge-hq/sedge"></a>
+</p>
+
 ```sh
-npm i -g @sedge-hq/sedge
+curl -fsSL sedge.sh | sh      # or: npm i -g @sedge-hq/sedge
 ```
 
 ```sh
