@@ -4,14 +4,21 @@ import type { MigrationMeta } from 'drizzle-orm/migrator';
 export const migrations: Array<MigrationMeta> = [
     {
         "sql": [
-            "CREATE TABLE `inbox` (\n\t`id` text PRIMARY KEY,\n\t`source` text NOT NULL,\n\t`prompt` text NOT NULL,\n\t`cwd` text NOT NULL,\n\t`status` text DEFAULT 'pending' NOT NULL,\n\t`result` text,\n\t`error` text,\n\t`created_at` integer DEFAULT (unixepoch('subsec') * 1000) NOT NULL,\n\t`started_at` integer,\n\t`finished_at` integer\n);\n",
-            "\nCREATE TABLE `timers` (\n\t`id` text PRIMARY KEY,\n\t`name` text NOT NULL UNIQUE,\n\t`cron` text NOT NULL,\n\t`prompt` text NOT NULL,\n\t`cwd` text NOT NULL,\n\t`enabled` integer DEFAULT true NOT NULL,\n\t`next_run_at` integer NOT NULL,\n\t`last_run_at` integer,\n\t`created_at` integer DEFAULT (unixepoch('subsec') * 1000) NOT NULL\n);\n",
+            "CREATE TABLE `approvals` (\n\t`id` text PRIMARY KEY,\n\t`thread` text NOT NULL,\n\t`tool_name` text NOT NULL,\n\t`input_hash` text NOT NULL,\n\t`summary` text NOT NULL,\n\t`status` text DEFAULT 'pending' NOT NULL,\n\t`created_at` integer DEFAULT (unixepoch('subsec') * 1000) NOT NULL,\n\t`decided_at` integer\n);\n",
+            "\nCREATE TABLE `inbox` (\n\t`id` text PRIMARY KEY,\n\t`source` text NOT NULL,\n\t`external_id` text,\n\t`thread` text NOT NULL,\n\t`prompt` text NOT NULL,\n\t`cwd` text NOT NULL,\n\t`status` text DEFAULT 'pending' NOT NULL,\n\t`result` text,\n\t`error` text,\n\t`created_at` integer DEFAULT (unixepoch('subsec') * 1000) NOT NULL,\n\t`started_at` integer,\n\t`finished_at` integer\n);\n",
+            "\nCREATE TABLE `kv` (\n\t`key` text PRIMARY KEY,\n\t`value` text NOT NULL\n);\n",
+            "\nCREATE TABLE `outbox` (\n\t`id` text PRIMARY KEY,\n\t`thread` text NOT NULL,\n\t`kind` text DEFAULT 'message' NOT NULL,\n\t`text` text NOT NULL,\n\t`approval_id` text,\n\t`status` text DEFAULT 'pending' NOT NULL,\n\t`attempts` integer DEFAULT 0 NOT NULL,\n\t`next_attempt_at` integer NOT NULL,\n\t`error` text,\n\t`created_at` integer DEFAULT (unixepoch('subsec') * 1000) NOT NULL,\n\t`sent_at` integer\n);\n",
+            "\nCREATE TABLE `timers` (\n\t`id` text PRIMARY KEY,\n\t`kind` text NOT NULL,\n\t`thread` text NOT NULL,\n\t`name` text,\n\t`cron` text,\n\t`prompt` text NOT NULL,\n\t`cwd` text NOT NULL,\n\t`status` text DEFAULT 'active' NOT NULL,\n\t`next_run_at` integer NOT NULL,\n\t`last_run_at` integer,\n\t`created_at` integer DEFAULT (unixepoch('subsec') * 1000) NOT NULL\n);\n",
+            "\nCREATE INDEX `approvals_lookup_idx` ON `approvals` (`thread`,`input_hash`,`status`);",
             "\nCREATE INDEX `inbox_status_created_idx` ON `inbox` (`status`,`created_at`);",
-            "\nCREATE INDEX `timers_due_idx` ON `timers` (`enabled`,`next_run_at`);"
+            "\nCREATE UNIQUE INDEX `inbox_source_external_idx` ON `inbox` (`source`,`external_id`);",
+            "\nCREATE INDEX `outbox_due_idx` ON `outbox` (`status`,`next_attempt_at`);",
+            "\nCREATE INDEX `outbox_thread_idx` ON `outbox` (`thread`,`created_at`);",
+            "\nCREATE INDEX `timers_due_idx` ON `timers` (`status`,`next_run_at`);"
         ],
         "bps": true,
-        "folderMillis": 1795067214000,
-        "hash": "f5927fef75397c0fb39edc38fa3108f003794e7d140622ddfeb836447445e1ff",
-        "name": "20261119054654_init"
+        "folderMillis": 1795070002000,
+        "hash": "1b5cc358209e4c3c220326a3a22d5f87d2f01e4061ea0b7db6aca352b1a17fe0",
+        "name": "20261119063322_init"
     }
 ];

@@ -1,10 +1,14 @@
 import { BunRuntime, BunServices } from '@effect/platform-bun';
-import { sedgePaths, VERSION } from '@repo/core';
-import { installService, runDaemon, spawnDetachedDaemon, uninstallService } from '@repo/daemon';
+import { sedgePaths, VERSION } from '@sedge-hq/core';
+import { installService, runDaemon, spawnDetachedDaemon, uninstallService } from '@sedge-hq/daemon';
 import { Console, Effect } from 'effect';
-import { Command, Flag } from 'effect/cli';
+import { Argument, Command, Flag } from 'effect/cli';
+import { mkdir, mkdtemp, readFile, stat, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join, resolve } from 'node:path';
 import { Daemon, DaemonLive, isListening, waitUntil } from './client';
 import { loadPi } from './load-pi';
+import { packageSpec } from './source-tools';
 
 const paths = sedgePaths();
 
@@ -82,6 +86,81 @@ const stop = Command.make(
     Command.withDescription('Stop the daemon after its current run (and remove the login service)'),
 );
 
+/**
+ * A package folder (one you're writing, or one inside a monorepo) is packed first, the way it would
+ * be published: `workspace:` references become versions, and only its published files go in.
+ * Installing the folder directly would try to resolve those workspace references and fail.
+ */
+const localPackage = async (name: string): Promise<string | undefined> => {
+    const dir = resolve(name);
+    const isPackage = await stat(join(dir, 'package.json')).then(
+        (s) => s.isFile(),
+        () => false,
+    );
+    if (!isPackage) return undefined;
+    const destination = await mkdtemp(join(tmpdir(), 'sedge-pack-'));
+    const proc = Bun.spawn(
+        [process.execPath, 'pm', 'pack', '--destination', destination, '--quiet'],
+        {
+            cwd: dir,
+            env: { ...process.env, BUN_BE_BUN: '1' },
+            stdout: 'pipe',
+            stderr: 'inherit',
+        },
+    );
+    const [code, out] = await Promise.all([proc.exited, new Response(proc.stdout).text()]);
+    if (code !== 0) throw new Error(`Could not pack ${dir}`);
+    return resolve(destination, out.trim().split('\n').pop()!);
+};
+
+/**
+ * `sedge install telegram`: adds a package of source types to ~/.sedge/packages, a small npm
+ * project of its own. The binary installs it by running as Bun (`BUN_BE_BUN`), so neither npm nor
+ * Bun has to be on the machine. A running daemon picks the new types up straight away.
+ */
+const install = Command.make(
+    'install',
+    {
+        name: Argument.String('package').pipe(
+            Argument.withDescription('A source package: "telegram", a full npm name, or a path'),
+        ),
+    },
+    Effect.fn(function* ({ name }) {
+        const spec = yield* Effect.promise(() => localPackage(name)).pipe(
+            Effect.map((packed) => packed ?? packageSpec(name)),
+        );
+        const manifest = join(paths.packages, 'package.json');
+        yield* Effect.promise(async () => {
+            await mkdir(paths.packages, { recursive: true });
+            await readFile(manifest).catch(() =>
+                writeFile(
+                    manifest,
+                    `${JSON.stringify({ name: 'sedge-packages', private: true }, null, 4)}\n`,
+                ),
+            );
+        });
+        const code = yield* Effect.promise(async () => {
+            const proc = Bun.spawn([process.execPath, 'add', spec], {
+                cwd: paths.packages,
+                env: { ...process.env, BUN_BE_BUN: '1' },
+                stdout: 'ignore',
+                stderr: 'inherit',
+            });
+            return proc.exited;
+        });
+        if (code !== 0) return yield* Effect.fail(new Error(`Could not install ${spec}`));
+        if (yield* isListening(paths)) {
+            const types = yield* withDaemon(({ client }) =>
+                client.ReloadSourceTypes().pipe(Effect.andThen(client.SourceTypes())),
+            );
+            return yield* Console.log(
+                `Installed ${spec}. Source types: ${types.map((t) => t.name).join(', ')}`,
+            );
+        }
+        yield* Console.log(`Installed ${spec}.`);
+    }),
+).pipe(Command.withDescription('Install a package of event sources (e.g. telegram)'));
+
 const update = Command.make(
     'update',
     {
@@ -110,7 +189,7 @@ const update = Command.make(
 /** `sedge start|stop|update`, parsed and run by Effect's CLI. */
 export const runSedgeCommand = () =>
     sedge.pipe(
-        Command.withSubcommands([start, stop, update]),
+        Command.withSubcommands([start, stop, update, install]),
         Command.run({ version: VERSION }),
         Effect.provide(BunServices.layer),
         BunRuntime.runMain,

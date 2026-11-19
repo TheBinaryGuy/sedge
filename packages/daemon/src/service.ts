@@ -1,4 +1,4 @@
-import { selfCommand, type SedgePaths } from '@repo/core';
+import { selfCommand, type SedgePaths } from '@sedge-hq/core';
 import { Effect } from 'effect';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
 import { homedir } from 'node:os';

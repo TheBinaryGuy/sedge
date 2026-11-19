@@ -1,5 +1,5 @@
-import type { SedgePaths } from '@repo/core';
-import { spawnDetachedDaemon } from '@repo/daemon';
+import type { SedgePaths } from '@sedge-hq/core';
+import { spawnDetachedDaemon } from '@sedge-hq/daemon';
 import { Effect } from 'effect';
 import { isListening } from './client';
 import { sedgeExtension, sedgeHeader } from './extension';

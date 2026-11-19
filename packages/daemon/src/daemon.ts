@@ -1,13 +1,18 @@
-import { Agent, type AgentConfig, defaultAgentConfig } from '@repo/agent';
-import { isDevBuild, selfCommand, type SedgePaths, VERSION } from '@repo/core';
-import { Database, Inbox, Timers } from '@repo/db';
-import { DaemonInfo, PROTOCOL } from '@repo/protocol';
+import { Agent, type AgentConfig, defaultAgentConfig } from '@sedge-hq/agent';
+import { isDevBuild, loadConfig, selfCommand, type SedgePaths, VERSION } from '@sedge-hq/core';
+import { Inbox, StoresLive } from '@sedge-hq/db';
+import { DaemonInfo, PROTOCOL } from '@sedge-hq/protocol';
 import { Deferred, Duration, Effect, Layer, Ref, Schedule } from 'effect';
 import { mkdir, open, rename, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { acquireDaemonLock, waitForExit } from './lock';
-import { Runtime } from './runtime';
+import { DispatcherLive } from './dispatcher';
+import { makeHost } from './host';
+import { ensureMemory } from './memory';
+import { Runtime, WorkerWake } from './runtime';
 import { DaemonControl, ServerLive, type ShutdownRequest } from './server';
+import { Settings } from './settings';
+import { Sources } from './sources';
 import { Updater } from './updater';
 
 const UPDATE_INTERVAL = Duration.hours(6);
@@ -78,13 +83,32 @@ export const runDaemon = (
             pendingUpdate: yield* Ref.make<string | null>(null),
         });
 
-        const storage = Layer.mergeAll(Inbox.layer, Timers.layer).pipe(
-            Layer.provideMerge(Database.layer(paths.database)),
+        const config = yield* Effect.promise(() => loadConfig(paths));
+        yield* Effect.promise(() => ensureMemory(paths.memory));
+        // Runs that don't come from a terminal work here; tools refuse a directory that's missing.
+        yield* Effect.promise(() =>
+            mkdir(config.workspace ?? paths.workspace, { recursive: true }),
         );
-        const core = Runtime.layer.pipe(
-            Layer.provideMerge(storage),
-            Layer.provideMerge(Agent.layer(defaultAgentConfig(paths.home, options.loadPi))),
+
+        // Stores and the worker wake-up first; sources and the dispatcher on top of them; the
+        // agent gets a host made of all of those; the runtime drives the agent.
+        const base = Layer.mergeAll(
+            StoresLive(paths.database),
+            WorkerWake.layer,
+            Settings.layer(paths, config),
         );
+        const delivery = DispatcherLive.pipe(
+            Layer.provideMerge(Sources.layer),
+            Layer.provideMerge(base),
+        );
+        const agent = Layer.unwrap(
+            makeHost.pipe(
+                Effect.map((host) =>
+                    Agent.layer(defaultAgentConfig(paths.home, host, options.loadPi)),
+                ),
+            ),
+        ).pipe(Layer.provide(delivery));
+        const core = Runtime.layer.pipe(Layer.provideMerge(agent), Layer.provideMerge(delivery));
         const app = Layer.mergeAll(
             ServerLive(paths),
             Layer.effectDiscard(Effect.forkScoped(autoUpdate)),

@@ -1,5 +1,5 @@
 #!/usr/bin/env bun
-import { sedgePaths, VERSION } from '@repo/core';
+import { sedgePaths, VERSION } from '@sedge-hq/core';
 
 /*
  * The entry point stays tiny and imports only what the command needs: pi alone takes about a
@@ -18,13 +18,17 @@ Usage
   sedge start [--service]       run the daemon; --service also starts it at login
   sedge stop                    stop the daemon and remove the login service
   sedge update [--check]        update sedge
+  sedge install <package>       add event sources, e.g. sedge install telegram
   sedge pi <command>            pi's commands: install, remove, list, config, mcp, update --extensions
+
+In the TUI, ask for what you want ("set up telegram", "make a source that tells me when my CI
+fails"): sedge sets it up, and asks you for secrets in a hidden field.
 
 Options for the TUI and -p are pi's: --model, --continue, --resume, --thinking and the rest.
 See them with: sedge pi --help`;
 
 /** pi subcommands that only exist under `sedge pi`. */
-const PI_COMMANDS = new Set(['install', 'remove', 'uninstall', 'list', 'config', 'mcp', 'auth']);
+const PI_COMMANDS = new Set(['remove', 'uninstall', 'list', 'config', 'mcp', 'auth']);
 
 const args = process.argv.slice(2);
 const [first = ''] = args;
@@ -34,7 +38,7 @@ if (first === '--version' || first === '-v') {
     console.log(`sedge ${VERSION}`);
 } else if (first === '--help' || first === '-h' || first === 'help') {
     console.log(HELP);
-} else if (first === 'start' || first === 'stop' || first === 'update') {
+} else if (['start', 'stop', 'update', 'install'].includes(first)) {
     const { runSedgeCommand } = await import('./commands');
     runSedgeCommand();
 } else if (first === 'pi') {

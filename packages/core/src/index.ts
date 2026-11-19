@@ -10,3 +10,5 @@ export {
     registryPath,
     REPOSITORY,
 } from './packages';
+export { loadConfig, saveConfig, SedgeConfig, type Policy } from './config';
+export { ABOUT } from './about';

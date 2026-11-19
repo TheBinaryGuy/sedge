@@ -27,6 +27,17 @@
   session file.
 - The client and daemon talk only through `packages/protocol` (Effect RPC, NDJSON over a Unix
   socket). Adding or removing an RPC changes `PROTOCOL`, which makes clients replace older daemons.
+- The daemon follows the always-on primitives: events go into the inbox (`packages/db`), one
+  worker drains it per thread (`runtime.ts`), timers fire into it, memory lives in
+  `~/.sedge/memory` and is loaded by `host.ts`, risky tool calls are deferred to approvals, and
+  everything the user is told goes through the outbox and `dispatcher.ts`.
+- Sources (`packages/daemon/src/sources.ts`) are config entries of a type from an installed
+  package (`"sedge": { "sources": … }` in its package.json) or a registered module. Types are
+  bundled before loading: a compiled binary can't resolve npm packages for modules from disk.
+  Secrets go to `~/.sedge/.env` as `${NAME}` references; never put one in the config. The public
+  contract is `@sedge-hq/source`; `@sedge-hq/telegram` is the reference source.
+- `bun run e2e:telegram` walks install, setup, pairing, a reply and an approval against a fake
+  Bot API (`SEDGE_BIN=…` for a compiled binary). Run it after changing sources or the daemon.
 - All agent work in the daemon goes through the inbox (`packages/db/src/inbox.ts`); never call the
   agent directly from an RPC handler.
 - Schema changes: edit `packages/db/src/schema`, run `bun run db:generate -- --name <what>`, commit

@@ -1,5 +1,5 @@
 {
-    "name": "@repo/agent",
+    "name": "@sedge-hq/agent",
     "version": "0.0.0",
     "private": true,
     "type": "module",
@@ -12,13 +12,14 @@
     },
     "dependencies": {
         "@earendil-works/pi-coding-agent": "1.5.2",
-        "@repo/core": "workspace:*",
-        "@repo/protocol": "workspace:*",
-        "effect": "4.1.4"
+        "@sedge-hq/core": "workspace:*",
+        "@sedge-hq/protocol": "workspace:*",
+        "effect": "4.1.4",
+        "typebox": "1.3.27"
     },
     "devDependencies": {
         "@effect/vitest": "4.1.4",
-        "@repo/config": "workspace:*",
+        "@sedge-hq/config": "workspace:*",
         "@types/bun": "1.4.4",
         "typescript": "7.0.2",
         "vitest": "5.1.1"

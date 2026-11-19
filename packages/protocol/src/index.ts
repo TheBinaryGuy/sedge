@@ -61,6 +61,40 @@ export class UpdateInfo extends Schema.Class<UpdateInfo>('sedge/protocol/UpdateI
     applied: Schema.Boolean,
 }) {}
 
+/** A configured source and how it is doing. */
+export class SourceInfo extends Schema.Class<SourceInfo>('sedge/protocol/SourceInfo')({
+    name: Schema.String,
+    type: Schema.String,
+    description: Schema.String,
+    status: Schema.String,
+    running: Schema.Boolean,
+}) {}
+
+/** A kind of source that can be set up, with the options it takes (a JSON schema). */
+export class SourceTypeInfo extends Schema.Class<SourceTypeInfo>('sedge/protocol/SourceTypeInfo')({
+    name: Schema.String,
+    summary: Schema.String,
+    options: Schema.Unknown,
+    talks: Schema.Boolean,
+    sends: Schema.NullOr(Schema.String),
+    /** The npm package it comes from, or `custom` for a module you registered. */
+    origin: Schema.String,
+}) {}
+
+/** A source asking the user something at their computer, such as a pairing code. */
+export class Question extends Schema.Class<Question>('sedge/protocol/Question')({
+    id: Schema.String,
+    source: Schema.String,
+    title: Schema.String,
+    detail: Schema.NullOr(Schema.String),
+}) {}
+
+export class SourceError extends Schema.TaggedError<SourceError>()('SourceError', {
+    message: Schema.String,
+}) {}
+
+const Options = Schema.Record(Schema.String, Schema.Unknown);
+
 export class SedgeRpcs extends RpcGroup.make(
     Rpc.make('Hello', { success: DaemonInfo }),
     Rpc.make('Status', { success: DaemonStatus }),
@@ -73,6 +107,41 @@ export class SedgeRpcs extends RpcGroup.make(
     Rpc.make('Abort'),
     /** Every background run as it finishes, for the TUI's notifications. */
     Rpc.make('Watch', { success: Completion, stream: true }),
+    Rpc.make('Sources', { success: Schema.Array(SourceInfo) }),
+    Rpc.make('SourceTypes', { success: Schema.Array(SourceTypeInfo) }),
+    /** Checks options against the type and says what the source would do, without setting it up. */
+    Rpc.make('PlanSource', {
+        payload: { type: Schema.String, options: Options },
+        success: Schema.Struct({
+            does: Schema.Array(Schema.String),
+            tell: Schema.NullOr(Schema.String),
+        }),
+        error: SourceError,
+    }),
+    /** Secrets are passed separately: they go to ~/.sedge/.env and the config only names them. */
+    Rpc.make('AddSource', {
+        payload: {
+            name: Schema.String,
+            type: Schema.String,
+            description: Schema.String,
+            options: Options,
+            secrets: Schema.Record(Schema.String, Schema.String),
+        },
+        success: Schema.Struct({ tell: Schema.NullOr(Schema.String) }),
+        error: SourceError,
+    }),
+    Rpc.make('RemoveSource', { payload: { name: Schema.String }, error: SourceError }),
+    /** Registers a source type module (its source code), after the user reviewed it. */
+    Rpc.make('AddSourceType', {
+        payload: { name: Schema.String, code: Schema.String },
+        success: SourceTypeInfo,
+        error: SourceError,
+    }),
+    /** Picks up source packages installed since the daemon started. */
+    Rpc.make('ReloadSourceTypes'),
+    /** Questions sources are waiting on: those already open, then each new one. */
+    Rpc.make('Questions', { success: Question, stream: true }),
+    Rpc.make('Answer', { payload: { id: Schema.String, answer: Schema.NullOr(Schema.String) } }),
     Rpc.make('CheckUpdate', { payload: { apply: Schema.Boolean }, success: UpdateInfo }),
     /** Stops the daemon once the current run finishes; `restart` re-launches the current binary. */
     Rpc.make('Shutdown', { payload: { restart: Schema.Boolean } }),

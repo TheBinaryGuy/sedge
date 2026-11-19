@@ -1,7 +1,7 @@
 import { BunSocket } from '@effect/platform-bun';
-import { isDevBuild, type SedgePaths, VERSION } from '@repo/core';
-import { spawnDetachedDaemon } from '@repo/daemon';
-import { type DaemonInfo, PROTOCOL, SedgeRpcs } from '@repo/protocol';
+import { isDevBuild, type SedgePaths, VERSION } from '@sedge-hq/core';
+import { spawnDetachedDaemon } from '@sedge-hq/daemon';
+import { type DaemonInfo, PROTOCOL, SedgeRpcs } from '@sedge-hq/protocol';
 import { Context, Effect, Layer, Schema } from 'effect';
 import { RpcClient, RpcSerialization } from 'effect/rpc';
 import { createConnection } from 'node:net';

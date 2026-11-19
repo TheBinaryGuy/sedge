@@ -5,9 +5,11 @@ import type {
     Theme,
 } from '@earendil-works/pi-coding-agent';
 import { Text, truncateToWidth } from '@earendil-works/pi-tui';
-import { LOGO, type SedgePaths, VERSION } from '@repo/core';
+import { LOGO, type SedgePaths, VERSION } from '@sedge-hq/core';
 import { Effect, Fiber, ManagedRuntime, Schedule, Stream } from 'effect';
 import { Daemon, DaemonLive, waitUntil } from './client';
+import { sedgeGuide } from './guide';
+import { registerSourceTools, watchQuestions } from './source-tools';
 
 /** A tuft of sedge, three rows tall, beside the name and the keys worth knowing. */
 const headerLines = (theme: Theme) => {
@@ -67,6 +69,7 @@ export const sedgeExtension = (paths: SedgePaths): InlineExtension => ({
         const runtime = ManagedRuntime.make(DaemonLive(paths, { autostart: false }));
         const ready = Effect.runPromise(waitUntil(paths, true));
         let watcher: Fiber.Fiber<unknown, unknown> | undefined;
+        let questions: Fiber.Fiber<unknown, unknown> | undefined;
 
         const withDaemon = async <A, E>(
             use: (daemon: Daemon['Service']) => Effect.Effect<A, E>,
@@ -78,6 +81,14 @@ export const sedgeExtension = (paths: SedgePaths): InlineExtension => ({
                 }),
             );
         };
+
+        registerSourceTools(pi, withDaemon);
+
+        // The agent here knows pi; this is what it needs to know about sedge.
+        const guide = sedgeGuide(paths);
+        pi.on('before_agent_start', (event) => ({
+            systemPrompt: `${event.systemPrompt}\n\n${guide}`,
+        }));
 
         const showStatus = async (ctx: ExtensionContext) => {
             try {
@@ -107,11 +118,24 @@ export const sedgeExtension = (paths: SedgePaths): InlineExtension => ({
             ctx.ui.setHeader(sedgeHeader);
             // Never hold up pi's startup: status and the watcher fill in once the daemon answers.
             void showStatus(ctx);
+            // A source waiting on the user (a Telegram pairing code) asks here.
+            questions ??= runtime.runFork(
+                Effect.gen(function* () {
+                    yield* Effect.promise(() => ready);
+                    yield* watchQuestions(ctx)(yield* Daemon);
+                }).pipe(
+                    Effect.retry({ schedule: Schedule.spaced('2 seconds'), times: 30 }),
+                    Effect.ignore,
+                ),
+            );
             watcher ??= runtime.runFork(
                 Effect.gen(function* () {
                     yield* Effect.promise(() => ready);
                     const { client } = yield* Daemon;
                     yield* client.Watch().pipe(
+                        // Conversations elsewhere (Telegram) are not news here; finished
+                        // terminal tasks and timers are.
+                        Stream.filter((done) => done.source === 'cli' || done.source === 'timer'),
                         Stream.runForEach((done) =>
                             Effect.promise(async () => {
                                 const label = done.source === 'timer' ? 'Timer' : 'Background task';
@@ -164,7 +188,9 @@ export const sedgeExtension = (paths: SedgePaths): InlineExtension => ({
         );
 
         pi.on('session_shutdown', async () => {
-            if (watcher) await Effect.runPromise(Fiber.interrupt(watcher));
+            for (const fiber of [watcher, questions]) {
+                if (fiber) await Effect.runPromise(Fiber.interrupt(fiber));
+            }
             await runtime.dispose();
         });
 

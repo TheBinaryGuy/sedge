@@ -1,0 +1,43 @@
+{
+    "name": "@sedge-hq/telegram",
+    "version": "0.0.0",
+    "description": "Telegram for sedge: message your agent from anywhere, and it answers there.",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/sedge-hq/sedge.git",
+        "directory": "packages/telegram"
+    },
+    "files": [
+        "src",
+        "!src/**/*.test.ts"
+    ],
+    "type": "module",
+    "exports": {
+        ".": "./src/source.ts",
+        "./bot": "./src/bot.ts"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "typecheck": "tsc --noEmit",
+        "test": "bun --bun vitest run --passWithNoTests"
+    },
+    "dependencies": {
+        "effect": "4.1.4"
+    },
+    "devDependencies": {
+        "@effect/vitest": "4.1.4",
+        "@sedge-hq/config": "workspace:*",
+        "@sedge-hq/source": "workspace:*",
+        "@types/bun": "1.4.4",
+        "typescript": "7.0.2",
+        "vitest": "5.1.1"
+    },
+    "sedge": {
+        "sources": {
+            "telegram": "./src/source.ts"
+        }
+    }
+}

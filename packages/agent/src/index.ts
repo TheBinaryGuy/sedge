@@ -1,6 +1,10 @@
 import type * as PiModule from '@earendil-works/pi-coding-agent';
 import type { AgentSession, AgentSessionEvent } from '@earendil-works/pi-coding-agent';
-import { AgentRunError, type AgentEvent } from '@repo/protocol';
+import { AgentRunError, type AgentEvent } from '@sedge-hq/protocol';
+import { alwaysOnExtension } from './extension';
+import type { AgentHost, RunContext } from './host';
+
+export type { AgentHost, RunContext, TimerSpec, ToolDecision } from './host';
 import { Context, Effect, Layer, Semaphore } from 'effect';
 import { createHash } from 'node:crypto';
 import { basename, join } from 'node:path';
@@ -17,20 +21,23 @@ export interface AgentConfig {
      * of the time. The CLI passes one that runs pi's Bun setup first.
      */
     readonly loadPi: () => Promise<Pi>;
+    /** Memory, outbox, timers and permissions, provided by the daemon. */
+    readonly host: AgentHost;
 }
 
 export const defaultAgentConfig = (
     home: string,
+    host: AgentHost,
     loadPi: () => Promise<Pi> = () => import('@earendil-works/pi-coding-agent'),
 ): AgentConfig => ({
     agentDir: process.env.SEDGE_AGENT_DIR,
     sessionsDir: join(home, 'sessions'),
     loadPi,
+    host,
 });
 
-export interface RunInput {
+export interface RunInput extends RunContext {
     readonly prompt: string;
-    readonly cwd: string;
 }
 
 /**
@@ -56,6 +63,8 @@ export class Agent extends Context.Service<
                 const sessions = new Map<string, AgentSession>();
                 const lock = yield* Semaphore.make(1);
                 let active: AgentSession | undefined;
+                // The run in progress, read by the always-on extension's tools and hooks.
+                let current: RunContext | undefined;
 
                 yield* Effect.addFinalizer(() =>
                     Effect.sync(() => {
@@ -64,10 +73,12 @@ export class Agent extends Context.Service<
                     }),
                 );
 
-                const sessionFor = (cwd: string) =>
+                // One pi session per thread: a Telegram chat keeps its conversation across runs and
+                // daemon restarts, and never shares one with a terminal task.
+                const sessionFor = (thread: string, cwd: string) =>
                     Effect.tryPromise({
                         try: async () => {
-                            const existing = sessions.get(cwd);
+                            const existing = sessions.get(thread);
                             if (existing) return existing;
                             const pi = await config.loadPi();
                             const agentDir = config.agentDir ?? pi.getAgentDir();
@@ -81,6 +92,10 @@ export class Agent extends Context.Service<
                                     pi.createCodemodeExtension({ mode: 'on' }),
                                     pi.createToolSearchExtension(),
                                     pi.createMcpExtension(),
+                                    {
+                                        name: 'sedge',
+                                        factory: alwaysOnExtension(config.host, () => current),
+                                    },
                                 ],
                             });
                             await resourceLoader.reload();
@@ -92,12 +107,12 @@ export class Agent extends Context.Service<
                                 settingsManager,
                                 sessionManager: pi.SessionManager.continueRecent(
                                     cwd,
-                                    sessionDirFor(config.sessionsDir, cwd),
+                                    sessionDirFor(config.sessionsDir, thread),
                                 ),
                             });
                             // Emits session_start, which connects MCP servers in the background.
                             await session.bindExtensions({});
-                            sessions.set(cwd, session);
+                            sessions.set(thread, session);
                             return session;
                         },
                         catch: (cause) =>
@@ -110,7 +125,7 @@ export class Agent extends Context.Service<
                     input: RunInput,
                     onEvent: (event: AgentEvent) => Effect.Effect<void>,
                 ) {
-                    const session = yield* sessionFor(input.cwd);
+                    const session = yield* sessionFor(input.thread, input.cwd);
                     const services = yield* Effect.context<never>();
                     const emit = (event: AgentEvent) =>
                         Effect.runForkWith(services)(onEvent(event));
@@ -123,6 +138,11 @@ export class Agent extends Context.Service<
                     return yield* Effect.tryPromise({
                         try: async () => {
                             active = session;
+                            current = {
+                                thread: input.thread,
+                                sources: input.sources,
+                                cwd: input.cwd,
+                            };
                             await session.prompt(input.prompt);
                             return session.getLastAssistantText() ?? '';
                         },
@@ -131,6 +151,7 @@ export class Agent extends Context.Service<
                         Effect.ensuring(
                             Effect.sync(() => {
                                 active = undefined;
+                                current = undefined;
                                 unsubscribe();
                             }),
                         ),
@@ -169,11 +190,15 @@ const toProtocolEvent = (event: AgentSessionEvent): AgentEvent | undefined => {
     }
 };
 
-/** pi's custom session dirs don't separate projects, so each working directory gets its own. */
-const sessionDirFor = (root: string, cwd: string) =>
+/** A readable, collision-free directory name per thread (`telegram_12345-1a2b3c4d`). */
+const sessionDirFor = (root: string, thread: string) =>
     join(
         root,
-        `${basename(cwd).replace(/[^\w.-]/g, '_') || 'root'}-${createHash('sha256').update(cwd).digest('hex').slice(0, 8)}`,
+        `${
+            basename(thread)
+                .replace(/[^\w.-]/g, '_')
+                .slice(-40) || 'thread'
+        }-${createHash('sha256').update(thread).digest('hex').slice(0, 8)}`,
     );
 
 const describe = (cause: unknown): string =>

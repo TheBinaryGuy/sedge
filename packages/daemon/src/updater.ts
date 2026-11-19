@@ -6,7 +6,7 @@ import {
     REPOSITORY,
     type SedgePaths,
     VERSION,
-} from '@repo/core';
+} from '@sedge-hq/core';
 import { Context, Effect, Layer, Schema } from 'effect';
 import { createHash } from 'node:crypto';
 import { chmod, cp, mkdtemp, readdir, rename, rm } from 'node:fs/promises';

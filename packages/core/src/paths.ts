@@ -21,6 +21,18 @@ export interface SedgePaths {
     readonly agent: string;
     /** Where the standalone installer puts the binary. */
     readonly bin: string;
+    /** Settings and secrets (the Telegram token); owner-only, never readable by the agent. */
+    readonly config: string;
+    /** The agent's memory: instructions, notes and task progress, as files. */
+    readonly memory: string;
+    /** Default working directory for runs that don't come from a terminal (Telegram, timers). */
+    readonly workspace: string;
+    /** Secrets for sources (`NAME=value` lines), referenced from the config as `${NAME}`. */
+    readonly env: string;
+    /** Installed source packages (`sedge install …`), a small npm project of its own. */
+    readonly packages: string;
+    /** Source type modules you registered; copied here so nothing can change them afterwards. */
+    readonly sourceTypes: string;
 }
 
 export const sedgePaths = (home: string = sedgeHome()): SedgePaths => ({
@@ -34,4 +46,10 @@ export const sedgePaths = (home: string = sedgeHome()): SedgePaths => ({
     logs: join(home, 'logs'),
     agent: join(home, 'agent'),
     bin: join(home, 'bin'),
+    config: join(home, 'config.json'),
+    memory: join(home, 'memory'),
+    workspace: join(home, 'workspace'),
+    env: join(home, '.env'),
+    packages: join(home, 'packages'),
+    sourceTypes: join(home, 'source-types'),
 });

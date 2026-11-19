@@ -1,12 +1,13 @@
 import { BunSocketServer } from '@effect/platform-bun';
-import { Agent } from '@repo/agent';
-import { type SedgePaths, VERSION } from '@repo/core';
-import { Inbox, Timers } from '@repo/db';
-import type { DaemonInfo } from '@repo/protocol';
-import { AgentRunError, DaemonStatus, SedgeRpcs, UpdateInfo } from '@repo/protocol';
+import { Agent } from '@sedge-hq/agent';
+import { type SedgePaths, VERSION } from '@sedge-hq/core';
+import { Inbox, Timers } from '@sedge-hq/db';
+import type { DaemonInfo } from '@sedge-hq/protocol';
+import { AgentRunError, DaemonStatus, SedgeRpcs, UpdateInfo } from '@sedge-hq/protocol';
 import { Context, Deferred, Effect, Layer, PubSub, Ref, Result, Stream } from 'effect';
 import { RpcSerialization, RpcServer } from 'effect/rpc';
-import { Runtime } from './runtime';
+import { Runtime, WorkerWake } from './runtime';
+import { Sources } from './sources';
 import { Updater } from './updater';
 
 export interface ShutdownRequest {
@@ -32,6 +33,8 @@ const HandlersLive = SedgeRpcs.toLayer(
         const timers = yield* Timers;
         const agent = yield* Agent;
         const updater = yield* Updater;
+        const worker = yield* WorkerWake;
+        const sources = yield* Sources;
 
         return SedgeRpcs.of({
             Hello: () => Effect.succeed(control.info),
@@ -52,10 +55,16 @@ const HandlersLive = SedgeRpcs.toLayer(
                 Stream.unwrap(
                     Effect.gen(function* () {
                         const subscription = yield* PubSub.subscribe(runtime.bus);
-                        const item = yield* inbox.enqueue({ source: 'cli', prompt: text, cwd });
+                        const item = yield* inbox.enqueue({
+                            source: 'cli',
+                            thread: `cli:${cwd}`,
+                            prompt: text,
+                            cwd,
+                        });
+                        if (!item) return yield* new AgentRunError({ message: 'Not queued' });
                         const ahead =
                             (yield* inbox.pendingCount) - 1 + ((yield* runtime.running) ? 1 : 0);
-                        yield* runtime.wake;
+                        yield* worker.wake;
                         return Stream.make({
                             _tag: 'Queued' as const,
                             itemId: item.id,
@@ -65,7 +74,7 @@ const HandlersLive = SedgeRpcs.toLayer(
                                 Stream.fromSubscription(subscription).pipe(
                                     Stream.filter(
                                         (message) =>
-                                            message.itemId === item.id &&
+                                            message.itemIds.includes(item.id) &&
                                             message._tag !== 'Completed',
                                     ),
                                     Stream.mapEffect((message) =>
@@ -129,6 +138,16 @@ const HandlersLive = SedgeRpcs.toLayer(
                         applied,
                     });
                 }),
+
+            Sources: () => sources.list,
+            SourceTypes: () => sources.types,
+            PlanSource: ({ type, options }) => sources.plan(type, options),
+            AddSource: (input) => sources.add(input),
+            RemoveSource: ({ name }) => sources.remove(name),
+            AddSourceType: ({ name, code }) => sources.addType(name, code),
+            ReloadSourceTypes: () => sources.reloadTypes,
+            Questions: () => sources.questions,
+            Answer: ({ id, answer }) => sources.answer(id, answer),
 
             // Answer first, then stop: the reply must leave before the socket closes.
             Shutdown: ({ restart }) =>

@@ -1,5 +1,5 @@
 {
-    "name": "@repo/db",
+    "name": "@sedge-hq/db",
     "version": "0.0.0",
     "private": true,
     "type": "module",
@@ -20,7 +20,7 @@
     },
     "devDependencies": {
         "@effect/vitest": "4.1.4",
-        "@repo/config": "workspace:*",
+        "@sedge-hq/config": "workspace:*",
         "@types/bun": "1.4.4",
         "drizzle-kit": "1.0.0-rc.5",
         "typescript": "7.0.2",

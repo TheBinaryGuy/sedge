@@ -24,6 +24,9 @@ sedge update
 sedge pi …             # pi's own commands (install, mcp, config, …)
 ```
 
+Reach it from your phone: in `sedge`, say "set up telegram". Sources like Telegram are packages
+(`sedge install telegram`), and you can ask sedge to write one for anything else.
+
 `sedge` is pi's TUI, with a daemon behind it that keeps working after you close the terminal:
 it holds an inbox, fires timers, and updates itself. pi comes bundled; credentials and extensions
 are pi's (`~/.pi/agent`).

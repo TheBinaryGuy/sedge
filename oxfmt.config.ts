@@ -1,3 +1,3 @@
-import config from '@repo/config/oxfmt';
+import config from '@sedge-hq/config/oxfmt';
 
 export default config;

@@ -1,30 +1,37 @@
-import { and, asc, count, eq, sql } from 'drizzle-orm';
+import { and, asc, count, eq, inArray, sql } from 'drizzle-orm';
 import { Context, Effect, Layer } from 'effect';
 import { Database } from './database';
 import { inbox, type InboxItem } from './schema';
 
-export interface NewInboxItem {
-    readonly source: InboxItem['source'];
+export interface NewEvent {
+    readonly source: string;
+    /** The source's own id for this event; a second event with the same one is dropped. */
+    readonly externalId?: string | undefined;
+    readonly thread: string;
     readonly prompt: string;
     readonly cwd: string;
 }
 
+export type Outcome = { readonly result: string } | { readonly error: string };
+
 /**
- * The durable queue in front of the agent. `claimNext` and `finish` are the only way an item
- * changes state, and only the daemon's single worker calls them.
+ * The durable queue in front of the agent. Only the daemon's single worker claims and finishes
+ * events, so two runs never compete for a thread.
  */
 export class Inbox extends Context.Service<
     Inbox,
     {
-        readonly enqueue: (item: NewInboxItem) => Effect.Effect<InboxItem>;
-        readonly claimNext: Effect.Effect<InboxItem | undefined>;
+        /** Appends an event; `undefined` when the source already delivered it. */
+        readonly enqueue: (event: NewEvent) => Effect.Effect<InboxItem | undefined>;
+        /**
+         * Claims every pending event of the thread whose oldest event is next in line, so several
+         * messages sent in a row become one run and one reply.
+         */
+        readonly claimBatch: Effect.Effect<ReadonlyArray<InboxItem>>;
         readonly get: (id: string) => Effect.Effect<InboxItem | undefined>;
-        readonly finish: (
-            id: string,
-            outcome: { readonly result: string } | { readonly error: string },
-        ) => Effect.Effect<void>;
+        readonly finish: (ids: ReadonlyArray<string>, outcome: Outcome) => Effect.Effect<void>;
         readonly pendingCount: Effect.Effect<number>;
-        /** Items left `running` by a crash go back to the front of the queue. */
+        /** Events left `running` by a crash go back to the front of the queue. */
         readonly recoverInterrupted: Effect.Effect<number>;
     }
 >()('sedge/db/Inbox') {
@@ -33,38 +40,53 @@ export class Inbox extends Context.Service<
         Effect.gen(function* () {
             const db = yield* Database;
 
-            const enqueue = Effect.fn('Inbox.enqueue')(function* (item: NewInboxItem) {
+            const enqueue = Effect.fn('Inbox.enqueue')(function* (event: NewEvent) {
                 const [row] = yield* db
                     .insert(inbox)
-                    .values({ id: crypto.randomUUID(), ...item })
+                    .values({ id: crypto.randomUUID(), ...event })
+                    .onConflictDoNothing()
                     .returning();
-                return row!;
+                return row;
             }, Effect.orDie);
 
-            const claimNext = db
+            const claimBatch = db
                 .transaction((tx) =>
                     Effect.gen(function* () {
                         const [next] = yield* tx
-                            .select()
+                            .select({ thread: inbox.thread })
                             .from(inbox)
                             .where(eq(inbox.status, 'pending'))
                             .orderBy(asc(inbox.createdAt), sql`rowid`)
                             .limit(1);
-                        if (!next) return undefined;
-                        const [claimed] = yield* tx
+                        if (!next) return [];
+                        return yield* tx
                             .update(inbox)
                             .set({ status: 'running', startedAt: Date.now() })
-                            .where(and(eq(inbox.id, next.id), eq(inbox.status, 'pending')))
+                            .where(and(eq(inbox.thread, next.thread), eq(inbox.status, 'pending')))
                             .returning();
-                        return claimed;
                     }),
                 )
-                .pipe(Effect.orDie, Effect.withSpan('Inbox.claimNext'));
+                .pipe(
+                    Effect.map((rows) => [...rows].sort((a, b) => a.createdAt - b.createdAt)),
+                    Effect.orDie,
+                    Effect.withSpan('Inbox.claimBatch'),
+                );
+
+            const get = (id: string) =>
+                db
+                    .select()
+                    .from(inbox)
+                    .where(eq(inbox.id, id))
+                    .pipe(
+                        Effect.map((rows) => rows[0]),
+                        Effect.orDie,
+                    );
 
             const finish = Effect.fn('Inbox.finish')(function* (
-                id: string,
-                outcome: { readonly result: string } | { readonly error: string },
+                ids: ReadonlyArray<string>,
+                outcome: Outcome,
             ) {
+                if (ids.length === 0) return;
                 yield* db
                     .update(inbox)
                     .set({
@@ -73,7 +95,7 @@ export class Inbox extends Context.Service<
                         error: 'error' in outcome ? outcome.error : null,
                         finishedAt: Date.now(),
                     })
-                    .where(eq(inbox.id, id));
+                    .where(inArray(inbox.id, [...ids]));
             }, Effect.orDie);
 
             const pendingCount = db
@@ -95,17 +117,7 @@ export class Inbox extends Context.Service<
                     Effect.orDie,
                 );
 
-            const get = (id: string) =>
-                db
-                    .select()
-                    .from(inbox)
-                    .where(eq(inbox.id, id))
-                    .pipe(
-                        Effect.map((rows) => rows[0]),
-                        Effect.orDie,
-                    );
-
-            return Inbox.of({ enqueue, claimNext, get, finish, pendingCount, recoverInterrupted });
+            return Inbox.of({ enqueue, claimBatch, get, finish, pendingCount, recoverInterrupted });
         }),
     );
 }

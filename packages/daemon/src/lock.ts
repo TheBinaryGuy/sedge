@@ -1,4 +1,4 @@
-import { isProcessAlive, type SedgePaths } from '@repo/core';
+import { isProcessAlive, type SedgePaths } from '@sedge-hq/core';
 import { Effect, Schema } from 'effect';
 import { mkdir, open, readFile, rm } from 'node:fs/promises';
 
