@@ -3,7 +3,7 @@ import { isDevBuild, selfCommand, type SedgePaths, VERSION } from '@repo/core';
 import { Database, Inbox, Timers } from '@repo/db';
 import { DaemonInfo, PROTOCOL } from '@repo/protocol';
 import { Deferred, Duration, Effect, Layer, Ref, Schedule } from 'effect';
-import { mkdir, open } from 'node:fs/promises';
+import { mkdir, open, rename, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { acquireDaemonLock, waitForExit } from './lock';
 import { Runtime } from './runtime';
@@ -107,7 +107,14 @@ export const runDaemon = (
 export const spawnDetachedDaemon = (paths: SedgePaths, env: Record<string, string> = {}) =>
     Effect.promise(async () => {
         await mkdir(paths.logs, { recursive: true });
-        const log = await open(join(paths.logs, 'daemon.log'), 'a');
+        const file = join(paths.logs, 'daemon.log');
+        // Keep one previous log and start fresh past 10 MB, so the log can never fill a disk.
+        const size = await stat(file).then(
+            (s) => s.size,
+            () => 0,
+        );
+        if (size > 10 * 1024 * 1024) await rename(file, `${file}.1`);
+        const log = await open(file, 'a');
         const child = Bun.spawn(selfCommand('start', '--foreground'), {
             stdin: 'ignore',
             stdout: log.fd,

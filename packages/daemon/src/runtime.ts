@@ -1,8 +1,9 @@
 import { Agent } from '@repo/agent';
+import { supervise } from './supervise';
 import { Inbox, Timers } from '@repo/db';
 import type { AgentRunError } from '@repo/protocol';
 import { Completion, type AgentEvent } from '@repo/protocol';
-import { Context, Cron, Effect, Layer, PubSub, Queue, Ref, Result, Schedule } from 'effect';
+import { Context, Cron, Effect, Layer, PubSub, Queue, Ref, Result } from 'effect';
 
 /** One message on the daemon's internal bus, scoped to the inbox item it belongs to. */
 export type BusMessage =
@@ -98,14 +99,12 @@ export class Runtime extends Context.Service<
             });
 
             // Drain everything pending, then sleep until woken or the next poll.
-            const worker = Effect.gen(function* () {
-                while (yield* processNext) {}
-                yield* Queue.take(wakeups).pipe(Effect.timeoutOption('5 seconds'));
-            }).pipe(
-                Effect.catchCause((cause) =>
-                    Effect.logError('Inbox worker crashed; restarting', cause),
-                ),
-                Effect.forever,
+            const worker = supervise(
+                'Inbox worker',
+                Effect.gen(function* () {
+                    while (yield* processNext) {}
+                    yield* Queue.take(wakeups).pipe(Effect.timeoutOption('5 seconds'));
+                }),
             );
 
             const tickTimers = Effect.gen(function* () {
@@ -126,10 +125,10 @@ export class Runtime extends Context.Service<
                     );
                 }
                 yield* Queue.offer(wakeups, undefined);
-            }).pipe(Effect.repeat(Schedule.spaced('15 seconds')));
+            }).pipe(Effect.andThen(Effect.sleep('15 seconds')));
 
             yield* Effect.forkScoped(worker);
-            yield* Effect.forkScoped(tickTimers);
+            yield* Effect.forkScoped(supervise('Scheduler', tickTimers));
 
             return Runtime.of({
                 bus,
