@@ -1,7 +1,7 @@
 import type { Outgoing } from '@sedge-hq/agent';
 import { type ConnectionEntry, loadConfig, saveConfig } from '@sedge-hq/core';
 import { Approvals, Inbox, Kv } from '@sedge-hq/db';
-import type { Happening, Message, Picked, Running } from '@sedge-hq/kit';
+import type { Happening, Message, Picked, Running } from '@sedge-hq/kit/effect';
 import { ConnectionError, ConnectionInfo, FieldInfo, KindInfo } from '@sedge-hq/protocol';
 import { Context, Effect, Layer } from 'effect';
 import { randomBytes } from 'node:crypto';

@@ -3,21 +3,24 @@ title: The kit
 description: Write your own channel or signal with @sedge-hq/kit.
 ---
 
-[`@sedge-hq/kit`](https://github.com/sedge-hq/sedge/blob/main/packages/kit) is how channels and signals are written, and the only import they need. It's
-[Effect](https://effect.website) inside: settings are Schemas, a signal is a `Stream`, a channel is
-a scoped `Effect`. The kit hands you the Effect pieces you use (`Effect`, `Stream`, `Schedule`,
-`Schema`, `Option`, `Redacted`, `Duration`), so your package doesn't depend on `effect` itself and
-always runs on the version sedge has.
+[`@sedge-hq/kit`](https://github.com/sedge-hq/sedge/blob/main/packages/kit) is how channels and
+signals are written: plain TypeScript, `async` functions and the values you'd expect. A module's
+default export is a kind, made with `defineSignal(...)` or `defineChannel(...)`.
 
-A module's default export is a kind: `defineSignal(...)` or `defineChannel(...)`. Ship it in a
-package (list the module under `"sedge": { "plugins": ["./src/my-kind.ts"] }` in package.json),
-or register a single file with `create_signal`. Modules are bundled with their dependencies
-before sedge loads them.
+The kit does the hard parts for you:
+
+- it checks settings against what you declared, and keeps secrets out of files;
+- it retries what fails, backing off from 2 seconds to 5 minutes with jitter, and says why in the status line;
+- it stops your code cleanly, and drops anything reported twice.
+
+Underneath it is [Effect](https://effect.website), and
+[`@sedge-hq/kit/effect`](#writing-it-with-effect) is the same kit for those who want to write
+Effect themselves.
 
 ## A signal
 
 ```ts
-import { defineSignal, Effect, fetchJson, field, poll, Redacted, secret } from '@sedge-hq/kit';
+import { defineSignal, field, secret } from '@sedge-hq/kit';
 
 interface Runs {
     readonly workflow_runs: ReadonlyArray<{ id: number; name: string; html_url: string }>;
@@ -31,26 +34,22 @@ export default defineSignal({
         branch: field.optional(field.text('Default: main')),
         token: secret('A GitHub token that can read Actions'),
     },
-    watch: ({ repo, branch = 'main', token }) =>
-        poll(
-            '1 minute',
-            fetchJson<Runs>(
-                `https://api.github.com/repos/${repo}/actions/runs?branch=${branch}&status=failure&per_page=5`,
-                { headers: { authorization: `Bearer ${Redacted.value(token)}` } },
-            ).pipe(
-                Effect.map(({ workflow_runs }) =>
-                    workflow_runs.map((run) => ({
-                        text: `CI failed on ${branch}: ${run.name}`,
-                        key: String(run.id), // reported once, however often it's seen
-                        details: { url: run.html_url },
-                    })),
-                ),
-            ),
-        ),
+    every: '1 minute',
+    check: async ({ repo, branch = 'main', token }, kit) => {
+        const { workflow_runs } = await kit.fetchJson<Runs>(
+            `https://api.github.com/repos/${repo}/actions/runs?branch=${branch}&status=failure&per_page=5`,
+            { headers: { authorization: `Bearer ${token}` } },
+        );
+        return workflow_runs.map((run) => ({
+            text: `CI failed on ${branch}: ${run.name}`,
+            key: String(run.id), // reported once, however often it's seen
+            details: { url: run.html_url },
+        }));
+    },
 });
 ```
 
-`watch` returns a `Stream` of **happenings**:
+`check` runs now and then every `every`, and returns what it found. Each **happening** is:
 
 | Field     | What                                                                          |
 | --------- | ----------------------------------------------------------------------------- |
@@ -58,62 +57,102 @@ export default defineSignal({
 | `key`     | Optional. An id for this happening; one with a key sedge has seen is dropped. |
 | `details` | Optional. Anything else, as JSON, shown to the agent below the text.          |
 
-`poll(every, check)` runs the check now and then every `every`, and reports what each check found.
-Give every happening a `key`: sedge drops one it has already seen, so a check can simply return
-everything that matches. Use `kit.memo` (the second argument of `watch`) for anything else to keep
-across restarts, such as a cursor.
+Give every happening a `key`, and `check` can simply return everything that matches.
+
+For a source that pushes instead (a socket, a stream), write `watch` as an async generator and
+`yield` each happening; stop when `kit.signal` aborts:
+
+```ts
+watch: async function* ({ url }, kit) {
+    for await (const line of follow(url, kit.signal)) yield { text: line };
+},
+```
 
 ## A channel
 
 ```ts
-import { defineChannel, Effect, secret } from '@sedge-hq/kit';
+import { defineChannel, secret } from '@sedge-hq/kit';
 
 export default defineChannel({
     name: 'my-chat',
     summary: 'my chat app: message sedge from anywhere',
     settings: { token: secret('The bot token') },
-    connect: (settings, kit) =>
-        Effect.gen(function* () {
-            // Log in, restore paired accounts from kit.memo, …
-            return {
-                incoming: messages, // Stream of Message | Picked, only from paired accounts
-                deliver: (reply, to) => send(reply, to),
-                invite: (code) => `https://chat.example/bot?start=${code}`,
-                working: (to) => showTyping(to), // optional
-            };
-        }),
+    connect: async ({ token }, kit) => {
+        const client = await login(token, kit.signal);
+        return {
+            listen: async () => {
+                for await (const message of client.messages()) {
+                    await kit.receive({
+                        type: 'message',
+                        from: message.chat,
+                        text: message.text,
+                        key: message.id,
+                    });
+                }
+            },
+            deliver: async (reply, to) => client.send(to ?? client.me, reply.text),
+            invite: (code) => `https://chat.example/bot?start=${code}`,
+            working: async (to) => client.typing(to),
+        };
+    },
 });
 ```
 
-`connect` runs in a scope: close what you open with `Effect.acquireRelease`, and it's released
-when the channel stops. If it fails, sedge retries every 10 seconds and shows why in the status.
+`connect` logs in and returns the connection. `listen` runs until `kit.signal` aborts. If it
+throws, or `connect` does, sedge connects again with the same backoff, and the status line says
+why.
 
 A channel must:
 
 - **Pair through invites.** When someone sends a code from your `invite` link, call
   `kit.claim(code, account)`. If it returns true, that account is the user's: remember it in
   `kit.memo`. Ignore everyone else completely.
-- **Deliver replies.** `reply.text` is Markdown (render what you can, fall back to plain text),
-  `reply.choices` are buttons (send a pick back as `{ _tag: 'Picked', from, value }`),
-  `reply.files` are local paths. `to` is the `from` of the message being answered, or undefined
-  for "the user's usual chat".
+- **Deliver replies.**
+    - `reply.text` is Markdown: render it, or fall back to plain text.
+    - `reply.choices` are buttons; send a pick back with `kit.receive({ type: 'picked', from, value })`.
+    - `reply.files` are local paths.
+    - `to` is the `from` of the message being answered, or undefined for the user's usual chat.
 - **Give events a `key`** (the platform's message id), so a message redelivered after a crash is
   answered once.
 
-[`packages/telegram`](https://github.com/sedge-hq/sedge/blob/main/packages/telegram/src/telegram.ts) is the reference channel.
+[`@sedge-hq/telegram`](https://github.com/sedge-hq/sedge/blob/main/packages/telegram/src/telegram.ts)
+is the reference channel, written this way.
 
 ## The kit
 
-| Name                       | What                                                                                                                       |
-| -------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `secret(description)`      | A secret setting: typed into a hidden field, kept in the keychain, given to you as a `Redacted` (`Redacted.value(token)`). |
-| `kit.memo.get(key)`        | A small value saved across restarts (`Option<string>`).                                                                    |
-| `kit.memo.set(key, v)`     | Save one.                                                                                                                  |
-| `kit.status(line)`         | One line on how it's doing, shown in `channels` / `signals`.                                                               |
-| `kit.claim(code, account)` | Channels: pair the account that sent this invite code.                                                                     |
+| Name                                                | What                                                                       |
+| --------------------------------------------------- | -------------------------------------------------------------------------- |
+| `field.text`, `.number`, `.flag`, `.list`, `.oneOf` | Settings, each with a description the user sees.                           |
+| `field.optional(field)`                             | A setting that may be left out.                                            |
+| `secret(description)`                               | Typed into a hidden field, kept in the keychain, given to you as a string. |
+| `kit.fetchJson(url, init?)`                         | `fetch` that parses JSON and throws on anything but a 2xx.                 |
+| `kit.memo.get(key)`, `.set(key, value)`             | Small values kept across restarts: a cursor, the paired accounts.          |
+| `kit.status(line)`                                  | One line on how it's doing, shown in `channels` and `signals`.             |
+| `kit.signal`                                        | Aborted when sedge stops it: pass it to `fetch`, check it in loops.        |
+| `kit.sleep(duration)`                               | Waits (`'5 seconds'`, `'1 minute'`, or ms); ends early on stop.            |
+| `kit.receive(event)`                                | Channels: hand sedge a message or a pick.                                  |
+| `kit.claim(code, account)`                          | Channels: pair the account that sent this invite code.                     |
 
-Settings descriptions (`.annotate({ description })`) are what the agent and the user see when
-connecting, so write them for a person.
+Setting descriptions are what the agent and the user see when connecting, so write them for a
+person.
+
+## Writing it with Effect
+
+`@sedge-hq/kit/effect` is the same kit with Effect showing: settings are Schemas, a signal's
+`watch` returns a `Stream`, and a channel's `connect` is a scoped `Effect`. It hands you
+`Effect`, `Stream`, `Schedule`, `Schema` and friends, so your package still depends on the kit
+alone and runs on the Effect version sedge has.
+
+```ts
+import { defineSignal, Effect, field, poll } from '@sedge-hq/kit/effect';
+
+export default defineSignal({
+    name: 'heartbeat',
+    summary: 'a beat every few minutes',
+    settings: { label: field.text('What to call it') },
+    watch: ({ label }) => poll('5 minutes', Effect.succeed([{ text: `${label}: beat` }])),
+});
+```
 
 ## Publish your own
 
@@ -127,12 +166,12 @@ keyword, so `find_packages` finds it:
     "type": "module",
     "keywords": ["sedge-kit"],
     "sedge": { "plugins": ["./src/rss.ts"] },
-    "dependencies": { "@sedge-hq/kit": "^0.1.0" }
+    "dependencies": { "@sedge-hq/kit": "^0.3.0" }
 }
 ```
 
 - Ship the TypeScript source; sedge bundles each kind with its dependencies when it loads it.
-- Depend on `@sedge-hq/kit` only. It gives you Effect, so your kind runs on the version sedge has.
+- Depend on `@sedge-hq/kit` alone.
 - Try it before publishing: `sedge install ./path/to/sedge-rss` installs the folder as it would be
   published.
 - Then `npm publish`, and anyone can `sedge install sedge-rss`.

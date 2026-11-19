@@ -34,7 +34,7 @@ The user may ask you about sedge itself, or to set things up in it; this is how 
 ## Writing a signal
 When the user wants a signal no package covers, write a TypeScript module in the working directory and register it with \`create_signal\` (the user reviews it first):
 \`\`\`ts
-import { defineSignal, Effect, fetchJson, field, poll, Redacted, secret } from '@sedge-hq/kit';
+import { defineSignal, field, secret } from '@sedge-hq/kit';
 
 interface Runs {
     readonly workflow_runs: ReadonlyArray<{ id: number; name: string; html_url: string }>;
@@ -48,22 +48,18 @@ export default defineSignal({
         branch: field.optional(field.text('Default: main')),
         token: secret('A GitHub token that can read Actions'),
     },
-    watch: ({ repo, branch = 'main', token }) =>
-        poll(
-            '1 minute',
-            fetchJson<Runs>(
-                \`https://api.github.com/repos/\${repo}/actions/runs?branch=\${branch}&status=failure&per_page=5\`,
-                { headers: { authorization: \`Bearer \${Redacted.value(token)}\` } },
-            ).pipe(
-                Effect.map(({ workflow_runs }) =>
-                    workflow_runs.map((run) => ({
-                        text: \`CI failed on \${branch}: \${run.name}\`,
-                        key: String(run.id), // reported once, however often it's seen
-                        details: { url: run.html_url },
-                    })),
-                ),
-            ),
-        ),
+    every: '1 minute',
+    check: async ({ repo, branch = 'main', token }, kit) => {
+        const { workflow_runs } = await kit.fetchJson<Runs>(
+            \`https://api.github.com/repos/\${repo}/actions/runs?branch=\${branch}&status=failure&per_page=5\`,
+            { headers: { authorization: \`Bearer \${token}\` } },
+        );
+        return workflow_runs.map((run) => ({
+            text: \`CI failed on \${branch}: \${run.name}\`,
+            key: String(run.id), // reported once, however often it's seen
+            details: { url: run.html_url },
+        }));
+    },
 });
 \`\`\`
-Import everything from @sedge-hq/kit, never from effect. Give each happening a key (sedge drops repeats); kit.memo.get/set keeps small values across restarts; kit.status('one line') shows how it is doing. Keep each happening small. Channels are written the same way with defineChannel (see @sedge-hq/telegram).`;
+Plain async code; import only from @sedge-hq/kit. Give each happening a key (sedge drops repeats); for a source that pushes, write watch as an async generator instead of every/check. kit.memo.get/set keeps small values across restarts; kit.status('one line') shows how it is doing; kit.signal aborts when it stops. Keep each happening small. The kit retries failures itself; don't catch errors just to retry. Channels are written the same way with defineChannel (see @sedge-hq/telegram).`;

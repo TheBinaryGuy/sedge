@@ -15,3 +15,30 @@ describe('splitMessage', () => {
         expect(splitMessage('a'.repeat(1200), 500).map((c) => c.length)).toEqual([500, 500, 200]);
     });
 });
+
+describe('update', () => {
+    it('keeps what an update says, and only the id of one it cannot read, so polling moves on', async () => {
+        const { update } = await import('./bot');
+        expect(
+            update({
+                update_id: 7,
+                message: {
+                    message_id: 1,
+                    chat: { id: 42, type: 'private' },
+                    from: { id: 42 },
+                    text: 'hi',
+                },
+            }),
+        ).toEqual({
+            update_id: 7,
+            message: {
+                message_id: 1,
+                chat: { id: 42, type: 'private' },
+                from: { id: 42 },
+                text: 'hi',
+            },
+        });
+        expect(update({ update_id: 8, message: { chat: 'nope' } })).toEqual({ update_id: 8 });
+        expect(update({ nothing: true })).toBeUndefined();
+    });
+});
