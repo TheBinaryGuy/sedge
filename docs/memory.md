@@ -49,5 +49,7 @@ To turn dreaming off, set `"dreaming": false` in `~/.sedge/config.json` and rest
 
 ## Editing it yourself
 
+![sedge dash: each agent's memory](./screenshots/dash-memory.svg)
+
 It's your folder. Edit any file; sedge reads it fresh on the next run. `/sedge memory` shows each
 agent's index and files, and in the TUI you can ask the agent to change what one remembers.

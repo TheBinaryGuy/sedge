@@ -24,7 +24,10 @@ turn that off).
 sedge
 ```
 
-This opens the TUI and starts the daemon in the background if it isn't running. The first time,
+This opens the TUI and starts the daemon in the background if it isn't running.
+
+![The sedge TUI, waiting for a message](./screenshots/tui.svg)
+The first time,
 log in to a model provider with `/login` (an API key, or a subscription such as Claude). The
 daemon uses the same logins and the same default model, so you only do this once.
 

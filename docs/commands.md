@@ -5,16 +5,17 @@ description: Commands for the terminal and the TUI, and the tools the agents use
 
 ## Command line
 
-| Command                     | What it does                                                         |
-| --------------------------- | -------------------------------------------------------------------- |
-| `sedge [message]`           | Open the TUI; starts the daemon in the background if needed.         |
-| `sedge -p "<prompt>"`       | Print one reply and exit.                                            |
-| `sedge start`               | Start the daemon. `--service` also starts it at login.               |
-| `sedge stop`                | Stop the daemon after its current run, and remove the login service. |
-| `sedge update`              | Update now. `--check` only says whether there's a new version.       |
-| `sedge install <package>`   | Install channels and signals: `telegram`, an npm name, or a folder.  |
-| `sedge pi <command>`        | pi's own commands: `install`, `remove`, `list`, `config`, `mcp`, …   |
-| `sedge --version`, `--help` |                                                                      |
+| Command                     | What it does                                                                               |
+| --------------------------- | ------------------------------------------------------------------------------------------ |
+| `sedge [message]`           | Open the TUI; starts the daemon in the background if needed.                               |
+| `sedge -p "<prompt>"`       | Print one reply and exit.                                                                  |
+| `sedge dash [tab] [agent]`  | The dashboard, full screen: agents, inbox, outbox, timers, memory ([Agents](./agents.md)). |
+| `sedge start`               | Start the daemon. `--service` also starts it at login.                                     |
+| `sedge stop`                | Stop the daemon after its current run, and remove the login service.                       |
+| `sedge update`              | Update now. `--check` only says whether there's a new version.                             |
+| `sedge install <package>`   | Install channels and signals: `telegram`, an npm name, or a folder.                        |
+| `sedge pi <command>`        | pi's own commands: `install`, `remove`, `list`, `config`, `mcp`, …                         |
+| `sedge --version`, `--help` |                                                                                            |
 
 The TUI and `-p` also take the agent's options (`--model`, `--continue`, `--resume`,
 `--thinking`, …); `sedge pi --help` lists them.

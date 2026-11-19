@@ -43,7 +43,8 @@ forget: `/sedge tell ci check the last three runs`.
 
 ## See what they're doing
 
-`/sedge` opens the dashboard, with a tab for each of these:
+`sedge dash` opens the dashboard full screen, and `/sedge` opens the same one inside the TUI.
+Either way there's a tab for each of these:
 
 | Tab      | Shows                                                                   |
 | -------- | ----------------------------------------------------------------------- |
@@ -53,8 +54,19 @@ forget: `/sedge tell ci check the last three runs`.
 | `timers` | Follow-ups and schedules, by agent.                                     |
 | `memory` | Each agent's `MEMORY.md` and the files beside it.                       |
 
-← and → switch tabs, ↑ and ↓ scroll, `r` refreshes, Esc closes. `/sedge inbox ci` opens one tab
-for one agent. In the chat, the TUI's agent can read the same things for you (`inbox`, `outbox`,
+![sedge dash: the agents tab, with main and ci](./screenshots/dash-agents.svg)
+
+← and → (or 1 to 5) switch tabs, `a` picks an agent, ↑ and ↓ select, Enter shows all of the
+selected item, `r` refreshes (it also does every two seconds), and `q` closes.
+`sedge dash inbox ci` and `/sedge inbox ci` open one tab for one agent.
+
+![The inbox: what woke which agent, from where, and how it went](./screenshots/dash-inbox.svg)
+
+![The outbox: what the agents sent, and whether it arrived](./screenshots/dash-outbox.svg)
+
+Inside the TUI it's the same view, over the chat:
+
+![/sedge inbox in the TUI](./screenshots/tui-sedge-inbox.svg) In the chat, the TUI's agent can read the same things for you (`inbox`, `outbox`,
 `timers`), and change what an agent remembers if you ask.
 
 ## In the config

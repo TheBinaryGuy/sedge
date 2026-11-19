@@ -15,6 +15,7 @@ const HELP = `sedge ${VERSION}: an always-on agent that lives on your machine
 Usage
   sedge [options] [message]     open the TUI (starts the daemon if it isn't running)
   sedge -p "<prompt>"           print one reply and exit
+  sedge dash [tab] [agent]      the dashboard: agents, inbox, outbox, timers, memory
   sedge start [--service]       run the daemon; --service also starts it at login
   sedge stop                    stop the daemon and remove the login service
   sedge update [--check]        update sedge
@@ -38,6 +39,9 @@ if (first === '--version' || first === '-v') {
     console.log(`sedge ${VERSION}`);
 } else if (first === '--help' || first === '-h' || first === 'help') {
     console.log(HELP);
+} else if (first === 'dash') {
+    const { runDash } = await import('./dash');
+    runDash(paths, args.slice(1));
 } else if (['start', 'stop', 'update', 'install'].includes(first)) {
     const { runSedgeCommand } = await import('./commands');
     runSedgeCommand();

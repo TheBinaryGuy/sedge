@@ -18,6 +18,7 @@ curl -fsSL sedge.sh | sh      # or: npm i -g @sedge-hq/sedge
 ```sh
 sedge                  # the TUI
 sedge -p "…"           # one reply, then exit
+sedge dash             # what the agents are doing: inbox, outbox, timers, memory
 sedge start --service  # keep the daemon running across logins
 sedge stop
 sedge update

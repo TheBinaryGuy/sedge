@@ -63,5 +63,6 @@ Model logins, `models.json`, `mcp.json` and skills are pi's, in `~/.pi/agent`.
 | `SEDGE_NO_UPDATE`        | Set to `1` to only report updates instead of installing them.                            |
 | `SEDGE_AGENT_DIR`        | Use another pi agent folder for the daemon's logins and models.                          |
 | `SEDGE_CODING_AGENT_DIR` | The agent folder the TUI uses (logins, models, settings, themes); default `~/.pi/agent`. |
+| `SEDGE_SECRET_STORE`     | `file` keeps secrets in `~/.sedge/secrets.json` (owner-only) instead of the OS keychain. |
 | `SEDGE_REGISTRY`         | The npm registry to check for updates.                                                   |
 | `SEDGE_GITHUB_API`       | The GitHub API to check standalone releases against.                                     |

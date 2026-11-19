@@ -40,6 +40,9 @@ const fileStore = (path: string): SecretStore => {
 };
 
 export const openSecretStore = async (paths: SedgePaths): Promise<SecretStore> => {
+    // SEDGE_SECRET_STORE=file skips the keychain: for machines without one, and sandboxes that
+    // must not touch yours.
+    if (process.env.SEDGE_SECRET_STORE === 'file') return fileStore(paths.secrets);
     const service = `sh.sedge.${createHash('sha256').update(paths.home).digest('hex').slice(0, 12)}`;
     const keychain: SecretStore = {
         backend: 'keychain',

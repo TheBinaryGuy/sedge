@@ -53,6 +53,12 @@ A change people would notice updates these pages in the same change. `bun run te
 command, tool, setting or environment variable is missing from [Commands](./commands.md) or
 [Configuration](./configuration.md).
 
+## Screenshots
+
+The screenshots in these pages are drawn, not captured: `bun scripts/screenshots.ts` runs the
+real `sedge dash` and TUI from source, with sample data in a throwaway home, in a terminal nobody
+sees, and writes each screen to `docs/screenshots/` as SVG. Run it after changing what they show.
+
 ## The site
 
 sedge.sh is `apps/site`: [Fumadocs](https://fumadocs.dev) on Next.js, exported as static files
