@@ -193,7 +193,7 @@ const draw = () => {
         w: 502,
         h: 72,
         title: 'A run',
-        sub: 'one per agent at a time · durable: resumes after a restart',
+        sub: 'pi-durable · picks up where it stopped after a restart',
         center: true,
     };
     wire(
@@ -214,7 +214,6 @@ const draw = () => {
         h: 58,
         title: 'Skills',
         sub: 'read when useful',
-        soon: true,
     };
     const mcp: Box = {
         x: 696,
@@ -223,7 +222,6 @@ const draw = () => {
         h: 58,
         title: 'MCP servers',
         sub: 'your mcp.json',
-        soon: true,
     };
     const tools: Box = {
         x: 344,
@@ -255,7 +253,7 @@ const draw = () => {
             [595, top + 66],
             [595, run.y - 8],
         ],
-        { end: false, start: true, faint: true },
+        { end: false, start: true },
     );
     label(605, top + 94, 'loads');
     wire(
@@ -263,7 +261,7 @@ const draw = () => {
             [771, top + 66],
             [771, run.y - 8],
         ],
-        { start: true, faint: true },
+        { start: true },
     );
     label(781, top + 94, 'calls');
     wire(

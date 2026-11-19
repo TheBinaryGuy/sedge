@@ -30,10 +30,10 @@
 <path d="M419,346L422.3559787702294,339.85692206676737L415.6440212297706,339.85692206676737Z" fill="#8b949e"/>
 <path d="M419,290L415.6440212297706,296.14307793323263L422.3559787702294,296.14307793323263Z" fill="#8b949e"/>
 <text class="sub" x="429" y="318" text-anchor="start" fill="#8b949e">reads, writes</text>
-<path d="M595 290L595 346" fill="none" stroke="#8b949e" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0 7" stroke-opacity="0.6"/>
+<path d="M595 290L595 346" fill="none" stroke="#8b949e" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0 7"/>
 <path d="M595,290L591.6440212297706,296.14307793323263L598.3559787702294,296.14307793323263Z" fill="#8b949e"/>
 <text class="sub" x="605" y="318" text-anchor="start" fill="#8b949e">loads</text>
-<path d="M771 290L771 346" fill="none" stroke="#8b949e" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0 7" stroke-opacity="0.6"/>
+<path d="M771 290L771 346" fill="none" stroke="#8b949e" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0 7"/>
 <path d="M771,346L774.3559787702294,339.85692206676737L767.6440212297706,339.85692206676737Z" fill="#8b949e"/>
 <path d="M771,290L767.6440212297706,296.14307793323263L774.3559787702294,296.14307793323263Z" fill="#8b949e"/>
 <text class="sub" x="781" y="318" text-anchor="start" fill="#8b949e">calls</text>
@@ -78,20 +78,16 @@
 <text class="sub" x="80" y="411" fill="#0d1117">answered together</text>
 <rect x="344" y="354" width="502" height="72" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
 <text class="title" x="595" y="387" text-anchor="middle" fill="#e6edf3">A run</text>
-<text class="sub" x="595" y="404" text-anchor="middle" fill="#8b949e">one per agent at a time · durable: resumes after a restart</text>
+<text class="sub" x="595" y="404" text-anchor="middle" fill="#8b949e">pi-durable · picks up where it stopped after a restart</text>
 <rect x="344" y="224" width="150" height="58" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
 <text class="title" x="360" y="250" fill="#e6edf3">Memory</text>
 <text class="sub" x="360" y="267" fill="#8b949e">files it keeps</text>
-<rect x="520" y="224" width="150" height="58" rx="10" fill="#161b22" stroke="#30363d" stroke-width="2.5" stroke-dasharray="0 5" stroke-linecap="round"/>
+<rect x="520" y="224" width="150" height="58" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
 <text class="title" x="536" y="250" fill="#e6edf3">Skills</text>
 <text class="sub" x="536" y="267" fill="#8b949e">read when useful</text>
-<rect x="626" y="216" width="38" height="16" rx="8" fill="#3fb950"/>
-<text class="tag" x="645" y="227.5" text-anchor="middle" fill="#0d1117">SOON</text>
-<rect x="696" y="224" width="150" height="58" rx="10" fill="#161b22" stroke="#30363d" stroke-width="2.5" stroke-dasharray="0 5" stroke-linecap="round"/>
+<rect x="696" y="224" width="150" height="58" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
 <text class="title" x="712" y="250" fill="#e6edf3">MCP servers</text>
 <text class="sub" x="712" y="267" fill="#8b949e">your mcp.json</text>
-<rect x="802" y="216" width="38" height="16" rx="8" fill="#3fb950"/>
-<text class="tag" x="821" y="227.5" text-anchor="middle" fill="#0d1117">SOON</text>
 <rect x="344" y="484" width="150" height="58" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
 <text class="title" x="360" y="510" fill="#e6edf3">Tools</text>
 <text class="sub" x="360" y="527" fill="#8b949e">read, edit, bash</text>
