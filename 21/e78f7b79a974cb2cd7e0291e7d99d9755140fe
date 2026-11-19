@@ -1,0 +1,128 @@
+docs/how-it-works.md
+  s_fe732417ee9cdb::t_bf8061df0eb505 3
+  s_fe732417ee9cdb::t_66d21c8cd87201 6-7
+apps/site/app/global.css
+  s_fe732417ee9cdb::t_66d21c8cd87201 69,73-74,76-77,79-80
+  s_fe732417ee9cdb::t_e99385ff6ba85d 70-72,75,78
+  s_fe732417ee9cdb::t_c2dda2fafe24bc 1-68
+apps/site/tsconfig.worker.json
+  s_fe732417ee9cdb::t_155c6bc3d27101 1-5
+docs/channels-and-signals.md
+  s_fe732417ee9cdb::t_bf8061df0eb505 3
+  s_fe732417ee9cdb::t_0b884b1c3a2ec0 57-58
+  s_fe732417ee9cdb::t_0d1aaf2dc1767b 59
+apps/site/.gitignore
+  s_fe732417ee9cdb::t_0bb32dd011c05d 1-4
+  s_fe732417ee9cdb::t_1ccd33045a9eef 5
+docs/development.md
+  s_fe732417ee9cdb::t_0d1aaf2dc1767b 48
+  s_fe732417ee9cdb::t_bf8061df0eb505 3
+apps/site/worker.ts
+  s_fe732417ee9cdb::t_67d59f1c60405f 5-6
+  s_fe732417ee9cdb::t_0b884b1c3a2ec0 15-16
+  s_fe732417ee9cdb::t_04e2239ba7626a 44-51
+docs/memory.md
+  s_fe732417ee9cdb::t_bf8061df0eb505 3
+apps/site/lib/shared.ts
+  s_fe732417ee9cdb::t_1071553d4e75eb 1-5
+apps/site/next.config.mjs
+  s_fe732417ee9cdb::t_1ccd33045a9eef 15
+  s_fe732417ee9cdb::t_155c6bc3d27101 1-14,16-19
+apps/site/app/(home)/page.tsx
+  s_fe732417ee9cdb::t_0b884b1c3a2ec0 34-35,39-42,53-56
+  s_fe732417ee9cdb::t_c2dda2fafe24bc 1-33,36-38,43-52,57-78
+apps/site/lib/layout.shared.tsx
+  s_fe732417ee9cdb::t_1071553d4e75eb 1-18
+apps/site/app/api/search/route.ts
+  s_fe732417ee9cdb::t_d133c5fbce3dde 1-6,9
+  s_fe732417ee9cdb::t_0b884b1c3a2ec0 7-8
+apps/site/components/mdx.tsx
+  s_fe732417ee9cdb::t_0b884b1c3a2ec0 5-8,14
+  s_fe732417ee9cdb::t_d133c5fbce3dde 1-4,9-13,15
+apps/site/app/docs/[[...slug]]/page.tsx
+  s_fe732417ee9cdb::t_c2dda2fafe24bc 14
+  s_fe732417ee9cdb::t_0b884b1c3a2ec0 3-8,17-19,21-22,24-44,48,52-54,56-59
+  s_fe732417ee9cdb::t_d133c5fbce3dde 1-2,9-13,15-16,20,23,45-47,49-51,55,60
+apps/site/lib/source.ts
+  s_fe732417ee9cdb::t_1071553d4e75eb 1-5,7,9-27
+  s_fe732417ee9cdb::t_1ccd33045a9eef 6,8
+docs/security.md
+  s_fe732417ee9cdb::t_bf8061df0eb505 3
+apps/site/tsconfig.json
+  s_fe732417ee9cdb::t_0b884b1c3a2ec0 2-23,25-32
+  s_fe732417ee9cdb::t_155c6bc3d27101 24
+apps/site/app/llms-full.txt/route.ts
+  s_fe732417ee9cdb::t_0b884b1c3a2ec0 6
+  s_fe732417ee9cdb::t_d133c5fbce3dde 1-5,7
+apps/site/components/copy-command.tsx
+  s_fe732417ee9cdb::t_c2dda2fafe24bc 1-23,25-32
+  s_fe732417ee9cdb::t_04e2239ba7626a 24
+docs/commands.md
+  s_fe732417ee9cdb::t_bf8061df0eb505 3
+apps/site/app/llms.mdx/[...path]/route.ts
+  s_fe732417ee9cdb::t_0b884b1c3a2ec0 8-9,13-19
+  s_fe732417ee9cdb::t_d133c5fbce3dde 1-7,10-12,20
+docs/mcp-and-skills.md
+  s_fe732417ee9cdb::t_bf8061df0eb505 3
+apps/site/wrangler.jsonc
+  s_fe732417ee9cdb::t_155c6bc3d27101 6-7
+.gitignore
+  s_fe732417ee9cdb::t_1071553d4e75eb 31-36
+apps/site/components/logo.tsx
+  s_fe732417ee9cdb::t_1071553d4e75eb 1-46,54-58
+  s_fe732417ee9cdb::t_0b884b1c3a2ec0 47-53
+apps/site/components/search.tsx
+  s_fe732417ee9cdb::t_0b884b1c3a2ec0 3-11,17-20,22-34
+  s_fe732417ee9cdb::t_d133c5fbce3dde 1-2,12-16,21,35
+apps/site/package.json
+  s_fe732417ee9cdb::t_fae484ef97cde8 27,31
+  s_fe732417ee9cdb::t_1ccd33045a9eef 12
+  s_fe732417ee9cdb::t_67d59f1c60405f 9
+  s_fe732417ee9cdb::t_0b884b1c3a2ec0 14-20
+  s_fe732417ee9cdb::t_0bb32dd011c05d 7-8,10-11
+  s_fe732417ee9cdb::t_d133c5fbce3dde 25-26,28-30
+  s_fe732417ee9cdb::t_a6cb226744e7c7 13
+docs/configuration.md
+  s_fe732417ee9cdb::t_bf8061df0eb505 3
+apps/site/components/provider.tsx
+  s_fe732417ee9cdb::t_d133c5fbce3dde 1-6,8
+  s_fe732417ee9cdb::t_0b884b1c3a2ec0 7
+apps/site/app/layout.tsx
+  s_fe732417ee9cdb::t_0b884b1c3a2ec0 19-23
+  s_fe732417ee9cdb::t_c2dda2fafe24bc 1-18,24-29
+apps/site/app/llms.txt/route.ts
+  s_fe732417ee9cdb::t_0b884b1c3a2ec0 6
+  s_fe732417ee9cdb::t_d133c5fbce3dde 1-5,7
+apps/site/app/(home)/layout.tsx
+  s_fe732417ee9cdb::t_c2dda2fafe24bc 1-6
+docs/index.md
+  s_fe732417ee9cdb::t_66d21c8cd87201 2,10-11
+  s_fe732417ee9cdb::t_bf8061df0eb505 3
+apps/site/postcss.config.mjs
+  s_fe732417ee9cdb::t_d133c5fbce3dde 1,5-7
+  s_fe732417ee9cdb::t_0b884b1c3a2ec0 2-4
+docs/kit.md
+  s_fe732417ee9cdb::t_0d1aaf2dc1767b 6,85
+  s_fe732417ee9cdb::t_bf8061df0eb505 3
+apps/site/app/docs/layout.tsx
+  s_fe732417ee9cdb::t_0b884b1c3a2ec0 6-10
+  s_fe732417ee9cdb::t_d133c5fbce3dde 1-5,11
+bun.lock
+  s_fe732417ee9cdb::t_4504cbb61a41c8 45-52,56-62,190-191,234-237,382-395,454-457,470-471,474-491,662-677,700-733,752-753,758-767,772-775,778-779,826-827,832-857,860-863,870-871,874-875,880-881,896-899,904-917,920-925,928-931,936-937,944-945,948-949,952-955,972-973,986-989,992-1007,1036-1037,1040-1045,1056-1057,1060-1061,1076-1089,1094-1095,1108-1119,1166-1167,1172-1173,1176-1179,1186-1289,1298-1303,1308-1311,1316-1317,1320-1323,1336-1337,1350,1354-1355,1362-1403,1410-1413,1424-1425,1430-1431,1434-1435,1440-1447,1450-1453,1464-1467,1484-1509,1514-1515,1538-1549,1566-1579,1584-1587,1592-1593,1598-1599,1602-1605,1611-1612
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "21e78f7b79a974cb2cd7e0291e7d99d9755140fe",
+  "prompts": {},
+  "sessions": {
+    "s_fe732417ee9cdb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b6666194-df82-46a7-a1ef-33e06788ffe9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "TheBinaryGuy <hello@thebinary.dev>"
+    }
+  }
+}
