@@ -1,0 +1,13 @@
+{
+    "$schema": "../../node_modules/wrangler/config-schema.json",
+    "name": "sedge-site",
+    "main": "src/worker.ts",
+    "compatibility_date": "2026-11-01",
+    // The page is a static asset; the worker runs first so `curl sedge.sh` gets the installer.
+    "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": true },
+    // scripts/install.sh is bundled into the worker as text: one source for the installer.
+    "rules": [{ "type": "Text", "globs": ["**/*.sh"], "fallthrough": true }],
+    "routes": [{ "pattern": "sedge.sh", "custom_domain": true }],
+    "workers_dev": true,
+    "observability": { "enabled": true },
+}
