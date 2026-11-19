@@ -1,0 +1,39 @@
+apps/site/src/worker.ts
+  s_fe732417ee9cdb::t_344741b79152e8 1-27
+apps/site/tsconfig.json
+  s_fe732417ee9cdb::t_344741b79152e8 1-5
+scripts/install.sh
+  s_fe732417ee9cdb::t_344741b79152e8 2-6,9-10,14,19,22-27,29,32-35,37,40,42-51
+apps/site/wrangler.jsonc
+  s_fe732417ee9cdb::t_344741b79152e8 1-13
+packages/daemon/src/updater.ts
+  s_fe732417ee9cdb::t_a86497808d014f 6,64-86,88-92,96-98,100,103-113,117-119,156-164,166-167
+apps/site/public/favicon.svg
+  s_fe732417ee9cdb::t_fa7e23a02e8c75 1
+apps/site/package.json
+  s_fe732417ee9cdb::t_344741b79152e8 1-17
+apps/site/src/modules.d.ts
+  s_fe732417ee9cdb::t_344741b79152e8 1-4
+apps/site/public/index.html
+  s_fe732417ee9cdb::t_fa7e23a02e8c75 1-249
+.changeset/standalone-updates.md
+  s_fe732417ee9cdb::t_8ea61355a40b80 1-5
+bun.lock
+  s_fe732417ee9cdb::t_3224160b37cb9e 40-49,220-239,270-321,324-377,486-491,522-523,562-563,576-577,604-605,610-613,658-659,662-663,666-667,684-685,690-695,704-705,708-709,712-713,718-719,724-729,732-737,740-741,758-763,768-769,776-779,784-785,788-793,804-805,826-827,866-873,882,902-905,928-929,946-947,956-957,972-973,978-982,988-991,996-999,1008-1019,1022-1027,1030-1033
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "73cd2bf584a00c2be98af71f3fdc44793edf3a11",
+  "prompts": {},
+  "sessions": {
+    "s_fe732417ee9cdb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b6666194-df82-46a7-a1ef-33e06788ffe9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "TheBinaryGuy <hello@thebinary.dev>"
+    }
+  }
+}
