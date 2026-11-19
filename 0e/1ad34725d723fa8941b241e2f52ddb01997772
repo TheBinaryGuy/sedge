@@ -1,0 +1,120 @@
+packages/web/src/page.ts
+  s_fe732417ee9cdb::t_06f5e6a862ca1f 1-19,24-37,46-51
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 20-23,38-45
+docs/mcp-and-skills.md
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 49-54
+packages/slack/src/mrkdwn.test.ts
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 6-10
+  s_fe732417ee9cdb::t_e0c71ac7878be8 1-5,11-18
+packages/slack/tsconfig.json
+  s_fe732417ee9cdb::t_b514c76a533c93 1
+packages/agent/src/mcp-auth.test.ts
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 13-18,41-44,47-50
+  s_fe732417ee9cdb::t_c8cd0db302691b 1-12,19-40,45-46,51-54
+.github/workflows/ci.yml
+  s_fe732417ee9cdb::t_cbe42ef2315489 16-17,21-24,37
+packages/web/README.md
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 1-12
+packages/web/src/text.ts
+  s_fe732417ee9cdb::t_06f5e6a862ca1f 1-5,9-27
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 6-8
+packages/github/src/ci.ts
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 25-27,34-37
+  s_fe732417ee9cdb::t_0783107a0d79e2 1-24,28-33,39-48
+  s_fe732417ee9cdb::t_d05cbfd94491a2 38
+packages/web/src/web.test.ts
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 28-31,46-48,54-57,65-67,73-82,86-91,99-103
+  s_fe732417ee9cdb::t_c372affc66ee22 1-27,32-45,49-53,58-64,68-72,83-85,92-98,104-106
+packages/slack/src/api.ts
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 29-32,44-47,50-58
+  s_fe732417ee9cdb::t_e67f5e6cf5ecc7 1-28,33-43,48-49,59-71
+packages/agent/src/mcp.ts
+  s_fe732417ee9cdb::t_81e412d88d7531 14-16,22,105,123,129-134,140,146-158
+  s_fe732417ee9cdb::t_0ce2845b45c1e1 205,210
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 124-127,135-138,206-209
+  s_fe732417ee9cdb::t_036d48e44d92df 128
+packages/github/vitest.config.ts
+  s_fe732417ee9cdb::t_b514c76a533c93 1-3
+packages/web/package.json
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 7-9,12-13
+  s_fe732417ee9cdb::t_b514c76a533c93 1-6,10-11,14-49
+packages/kit/src/index.ts
+  s_fe732417ee9cdb::t_185f4f74cd4feb 189-190,224,230
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 225-229
+scripts/release.ts
+  s_fe732417ee9cdb::t_cbe42ef2315489 88
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 93-99
+packages/web/tsconfig.json
+  s_fe732417ee9cdb::t_b514c76a533c93 1
+packages/github/src/api.ts
+  s_fe732417ee9cdb::t_0783107a0d79e2 1-29
+packages/agent/package.json
+  s_fe732417ee9cdb::t_5e81df2bf588e4 22-23,29
+packages/github/src/github.test.ts
+  s_fe732417ee9cdb::t_e27537314d7f61 1-30,34-35,54-58,63-85,95-98,103-113
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 31-33,36-53,59-62,86-94,99-102
+packages/web/vitest.config.ts
+  s_fe732417ee9cdb::t_b514c76a533c93 1-3
+packages/slack/src/slack.ts
+  s_fe732417ee9cdb::t_e67f5e6cf5ecc7 1-11,16-47,52-71,75-79,86-90,94,101-103,109-113,122-128,132-139,146-163,170-174,177-183,188-196,199-200,204-209,213-219,222-225
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 12-15,48-51,72-74,80-85,91-93,95-100,104-108,114-121,129-131,140-145,164-169,175-176,184-187,197-198,201-203,210-212,220-221
+packages/github/src/github.ts
+  s_fe732417ee9cdb::t_d05cbfd94491a2 47
+  s_fe732417ee9cdb::t_1004344dbc567c 43-44,70,79
+  s_fe732417ee9cdb::t_0783107a0d79e2 1-30,37-42,45,49-69,71-78,80-81
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 31-36,46,48
+packages/slack/package.json
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 7,10-11
+  s_fe732417ee9cdb::t_b514c76a533c93 1-6,8-9,12-46
+packages/github/tsconfig.json
+  s_fe732417ee9cdb::t_b514c76a533c93 1
+packages/slack/src/mrkdwn.ts
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 15-16,18
+  s_fe732417ee9cdb::t_e0c71ac7878be8 1-6,8-13,19,21-23,25
+  s_fe732417ee9cdb::t_d05cbfd94491a2 7,14,17,20,24
+packages/slack/src/slack.test.ts
+  s_fe732417ee9cdb::t_b6b821d2907167 1-19,22-23,26,29-39,42-44,61-83,88-90,97,102-106,113-119,127-136
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 20-21,24-25,27-28,40-41,45-60,84-87,91-96,98-101,107-112,120-126
+packages/slack/README.md
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 1-21
+packages/github/package.json
+  s_fe732417ee9cdb::t_b514c76a533c93 1-5,7,10,13-48
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 6,8-9,11-12
+packages/web/src/feed.ts
+  s_fe732417ee9cdb::t_06f5e6a862ca1f 1-18,24-26,32-47,52-68
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 19-23,27-31,48-51
+docs/channels-and-signals.md
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 31-33,57-64,70-75
+  s_fe732417ee9cdb::t_4a1504e7fb233e 76
+packages/slack/vitest.config.ts
+  s_fe732417ee9cdb::t_b514c76a533c93 1-3
+apps/cli/src/connection-tools.ts
+  s_fe732417ee9cdb::t_cbe42ef2315489 207
+packages/github/README.md
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 1-14
+.changeset/more-kinds.md
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 1-9
+packages/agent/src/mcp-auth.ts
+  s_fe732417ee9cdb::t_e88ed7cc8ebd88 29-32,51-54,69-72,74-77,111-113
+  s_fe732417ee9cdb::t_6a7405e5ea680b 1-28,33-50,55-68,73,78-110,114-135
+apps/cli/src/guide.ts
+  s_fe732417ee9cdb::t_cbe42ef2315489 29
+bun.lock
+  s_fe732417ee9cdb::t_4f741969e2fdb2 81,87,151-163,190-202,217-229,694-695,704-705,708-709,820-821
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "0e1ad34725d723fa8941b241e2f52ddb01997772",
+  "prompts": {},
+  "sessions": {
+    "s_fe732417ee9cdb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b6666194-df82-46a7-a1ef-33e06788ffe9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "TheBinaryGuy <hello@thebinary.dev>"
+    }
+  }
+}
