@@ -20,7 +20,7 @@
     },
     "apps/cli": {
       "name": "@sedge-hq/sedge",
-      "version": "0.2.0",
+      "version": "0.3.0",
       "bin": {
         "sedge": "./bin/sedge.js",
       },
@@ -148,7 +148,7 @@
     },
     "packages/kit": {
       "name": "@sedge-hq/kit",
-      "version": "0.1.1",
+      "version": "0.2.0",
       "dependencies": {
         "effect": "4.1.4",
       },
@@ -174,7 +174,7 @@
     },
     "packages/telegram": {
       "name": "@sedge-hq/telegram",
-      "version": "0.1.1",
+      "version": "0.1.2",
       "dependencies": {
         "@sedge-hq/kit": "workspace:*",
       },

@@ -1,6 +1,6 @@
 {
     "name": "@sedge-hq/telegram",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "Telegram for sedge: message your agent from anywhere, and it answers there.",
     "keywords": [
         "agent",
