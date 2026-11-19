@@ -1,0 +1,112 @@
+packages/daemon/src/connections.ts
+  s_fe732417ee9cdb::t_344afd8bdd486d 14,18-19,24-25,87-88,114-115,117,176,185,225-239,245,247,406,409-412,425,428-443
+  s_fe732417ee9cdb::t_9655a1ea29a84f 444
+packages/protocol/src/index.ts
+  s_fe732417ee9cdb::t_4ec581bf5bbd97 21-22
+  s_fe732417ee9cdb::t_1ae5cfd9810789 92-144,155-156,164-188
+apps/cli/src/agent-tools.ts
+  s_fe732417ee9cdb::t_596ccaa9f46fe7 1-13,17-209
+  s_fe732417ee9cdb::t_5dd0a377443ac8 14-16
+apps/cli/src/docs.test.ts
+  s_fe732417ee9cdb::t_5dd0a377443ac8 5
+  s_fe732417ee9cdb::t_89fbf40bd951ab 14-19
+packages/agent/src/durable.test.ts
+  s_fe732417ee9cdb::t_b670c173149a2a 81-84,253-260,265-267,287-292,296-298
+  s_fe732417ee9cdb::t_7af0de774de668 25,35-38,73-80,87,248-252,261-264,268-286,293-295,299-301
+  s_fe732417ee9cdb::t_8071959c278bbc 85-86
+apps/cli/src/dashboard.ts
+  s_fe732417ee9cdb::t_5dd0a377443ac8 79-81,93-95,116-123,127-131,179-184,199-200,202-203
+  s_fe732417ee9cdb::t_8e5af77da89ce9 1-78,82-92,96-115,124-126,132-178,185-198,201,204-209
+docs/agents.md
+  s_fe732417ee9cdb::t_fcc1ccc4f94521 1-75
+docs/meta.json
+  s_fe732417ee9cdb::t_fcc1ccc4f94521 8
+docs/configuration.md
+  s_fe732417ee9cdb::t_fcc1ccc4f94521 16-18,36-37
+  s_fe732417ee9cdb::t_2d4e733feeffca 25-33
+  s_fe732417ee9cdb::t_5dd0a377443ac8 43-54
+packages/db/src/inbox.ts
+  s_fe732417ee9cdb::t_b670c173149a2a 31-33,62-93,140-143,147-149,160-162
+  s_fe732417ee9cdb::t_ce17526e5c8dc6 1,28-29,34-40,144-146,150-159,163-175
+packages/agent/src/durable.ts
+  s_fe732417ee9cdb::t_c26929939f6d5b 171,182,257,264
+apps/cli/scripts/e2e-telegram.ts
+  s_fe732417ee9cdb::t_b670c173149a2a 15,220-258
+  s_fe732417ee9cdb::t_87d47e4847f2aa 259
+packages/daemon/src/server.ts
+  s_fe732417ee9cdb::t_1ae5cfd9810789 4,6-16,20,22,50-51,68,74,156-187,191-244
+  s_fe732417ee9cdb::t_4ec581bf5bbd97 80
+  s_fe732417ee9cdb::t_b670c173149a2a 188-190
+packages/db/src/outbox.ts
+  s_fe732417ee9cdb::t_b670c173149a2a 87-90,94-98
+  s_fe732417ee9cdb::t_ce17526e5c8dc6 27-31,91-93,99-102,112
+packages/daemon/src/threads.ts
+  s_fe732417ee9cdb::t_344afd8bdd486d 1-17
+packages/daemon/src/daemon.ts
+  s_fe732417ee9cdb::t_4ec581bf5bbd97 41
+  s_fe732417ee9cdb::t_aa423595ae7c68 9,101-102
+packages/daemon/src/memory.ts
+  s_fe732417ee9cdb::t_aa423595ae7c68 68
+packages/agent/src/host.ts
+  s_fe732417ee9cdb::t_c26929939f6d5b 39-40
+packages/agent/src/index.ts
+  s_fe732417ee9cdb::t_c26929939f6d5b 118-128,185
+  s_fe732417ee9cdb::t_b670c173149a2a 167-184
+docs/how-it-works.md
+  s_fe732417ee9cdb::t_fcc1ccc4f94521 25-28,41-42
+docs/index.md
+  s_fe732417ee9cdb::t_fcc1ccc4f94521 25
+packages/daemon/src/host.ts
+  s_fe732417ee9cdb::t_aa423595ae7c68 8,10,108,170-175,179-180,182,186,196,199-200,226
+  s_fe732417ee9cdb::t_f023bf759f019b 176-178,209
+  s_fe732417ee9cdb::t_b670c173149a2a 181
+packages/core/src/index.ts
+  s_fe732417ee9cdb::t_b670c173149a2a 13-20
+packages/agent/src/tools.ts
+  s_fe732417ee9cdb::t_c26929939f6d5b 78-87
+  s_fe732417ee9cdb::t_b670c173149a2a 21-27
+  s_fe732417ee9cdb::t_d6788ceebd5407 88
+docs/commands.md
+  s_fe732417ee9cdb::t_5dd0a377443ac8 24-31,39-54,61
+apps/cli/src/guide.ts
+  s_fe732417ee9cdb::t_a2f20af80405aa 21-26
+packages/core/src/config.ts
+  s_fe732417ee9cdb::t_e1f1acafef8b26 16-17,22-27,36-40
+docs/memory.md
+  s_fe732417ee9cdb::t_fcc1ccc4f94521 16-17,43-44,52-53
+packages/daemon/src/agents.ts
+  s_fe732417ee9cdb::t_344afd8bdd486d 1,8,10,12
+  s_fe732417ee9cdb::t_a9c902ece4f28e 65,129
+  s_fe732417ee9cdb::t_b670c173149a2a 76-77,101-103,107-109,118-120,155-156
+  s_fe732417ee9cdb::t_22ec19ad11985e 2-7,9,11,13-64,66-75,78-100,104-106,110-117,121-128,130-154,157-184
+packages/daemon/src/runtime.ts
+  s_fe732417ee9cdb::t_b670c173149a2a 137-147,149-153,155-174,176-192,194-202,205,216-218,265-268
+  s_fe732417ee9cdb::t_4ec581bf5bbd97 22-24,93-94,106-107,136,207-208,210-215,219-228
+apps/cli/src/extension.ts
+  s_fe732417ee9cdb::t_823bd1c1dae480 12,14,53-58,88,192,194,199-203,215-216,218-219,223-225,231
+  s_fe732417ee9cdb::t_5dd0a377443ac8 220-222,235-238
+  s_fe732417ee9cdb::t_4ec581bf5bbd97 102,208
+packages/db/src/stores.test.ts
+  s_fe732417ee9cdb::t_b670c173149a2a 69-72
+  s_fe732417ee9cdb::t_1dfb78315c3810 40,44,46,82,86
+  s_fe732417ee9cdb::t_ba7c528f41346c 51-68
+  s_fe732417ee9cdb::t_b71ee8a4bdd395 47-50
+.changeset/agents.md
+  s_fe732417ee9cdb::t_c54f0928df30b0 1-5
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "8dc3ac6758982eba53d8a5c76602a25c25d13452",
+  "prompts": {},
+  "sessions": {
+    "s_fe732417ee9cdb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b6666194-df82-46a7-a1ef-33e06788ffe9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "TheBinaryGuy <hello@thebinary.dev>"
+    }
+  }
+}
