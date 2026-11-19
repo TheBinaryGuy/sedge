@@ -1,5 +1,14 @@
 # sedge
 
+## 0.6.0
+
+### Minor Changes
+
+- [`45d13cd`](https://github.com/sedge-hq/sedge/commit/45d13cdfbb89d3de602f0668ddce33f343fbecde) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - `sedge uninstall` removes sedge from your machine: the daemon, the login service, its keychain
+  secrets and `~/.sedge`, after showing what goes and asking (`--keep-data` keeps `~/.sedge`).
+  `sedge uninstall <package>` removes a package of channels and signals, and the agent can do that
+  too with the `uninstall` tool. A package stays while anything it provides is connected.
+
 ## 0.5.0
 
 ### Minor Changes
