@@ -1,0 +1,238 @@
+packages/db/src/outbox.ts
+  s_fe732417ee9cdb::t_ae8f5f23cdee38 1-26,31-63,69-73,77-93
+  s_fe732417ee9cdb::t_77a16b81b0cb58 27-30,64-68,74-76
+packages/telegram/src/bot.test.ts
+  s_fe732417ee9cdb::t_ad60969facc1c2 1-5,9-17
+  s_fe732417ee9cdb::t_77a16b81b0cb58 6-8
+oxfmt.config.ts
+  s_fe732417ee9cdb::t_c76a58a86355d2 1
+README.md
+  s_fe732417ee9cdb::t_c2e6a3e857262a 27-29
+packages/db/package.json
+  s_fe732417ee9cdb::t_c76a58a86355d2 2,23
+packages/source/package.json
+  s_fe732417ee9cdb::t_26077547430b09 1-5,14-16,20-24,26-29
+  s_fe732417ee9cdb::t_dfb8f2d6b68d79 6-13,17-19
+  s_fe732417ee9cdb::t_c76a58a86355d2 25
+packages/telegram/src/bot.ts
+  s_fe732417ee9cdb::t_e61c07a161c897 134-139,145
+  s_fe732417ee9cdb::t_77a16b81b0cb58 1-133,140-144,146-160
+packages/core/src/index.ts
+  s_fe732417ee9cdb::t_fde629c2567299 14
+  s_fe732417ee9cdb::t_87a70bfb8b462e 13
+apps/cli/src/main.ts
+  s_fe732417ee9cdb::t_2c8856dc4aec68 21,26,31,41
+  s_fe732417ee9cdb::t_69eaeb45db8a58 24-25
+  s_fe732417ee9cdb::t_c76a58a86355d2 2
+apps/cli/package.json
+  s_fe732417ee9cdb::t_377b563fff0b52 36
+  s_fe732417ee9cdb::t_d74a325b280c57 33
+  s_fe732417ee9cdb::t_c76a58a86355d2 29-32
+scripts/release.ts
+  s_fe732417ee9cdb::t_dfb8f2d6b68d79 1,28-31,33-39,41-64,71,78-81,84
+  s_fe732417ee9cdb::t_22d46ae745060b 67-70,72-77,82-83
+  s_fe732417ee9cdb::t_8ecb463ba1017e 85
+packages/db/drizzle/20261119063322_init/snapshot.json
+  s_fe732417ee9cdb::t_56829e4738b43f 1-628
+apps/cli/scripts/e2e-telegram.ts
+  s_fe732417ee9cdb::t_eda029f186f3ca 1-8,11,13-23,28-123,125-132,135-218,220-223
+  s_fe732417ee9cdb::t_20b123fdaf1c88 133-134
+  s_fe732417ee9cdb::t_b7738499952f0e 219
+  s_fe732417ee9cdb::t_dafe0fdb4194ba 9-10,24-27,124
+  s_fe732417ee9cdb::t_c76a58a86355d2 12
+packages/daemon/src/sources.test.ts
+  s_fe732417ee9cdb::t_6273015a50b057 1-51
+packages/db/src/timers.ts
+  s_fe732417ee9cdb::t_ae8f5f23cdee38 1,6-15,19,21-24,30-32,40-50,56,59,62-67,70-93,98,104
+  s_fe732417ee9cdb::t_87c43cdd726fa4 94
+  s_fe732417ee9cdb::t_77a16b81b0cb58 25-29
+packages/telegram/src/format.test.ts
+  s_fe732417ee9cdb::t_e61c07a161c897 1-25
+packages/db/src/approvals.ts
+  s_fe732417ee9cdb::t_ae8f5f23cdee38 1-96
+packages/source/tsconfig.json
+  s_fe732417ee9cdb::t_26077547430b09 1
+apps/cli/src/client.ts
+  s_fe732417ee9cdb::t_c76a58a86355d2 2-4
+packages/telegram/src/format.ts
+  s_fe732417ee9cdb::t_e61c07a161c897 1-13,15-25,27-52
+  s_fe732417ee9cdb::t_4ff81950e5b404 14,26
+packages/protocol/src/index.ts
+  s_fe732417ee9cdb::t_77a16b81b0cb58 115-118
+  s_fe732417ee9cdb::t_b04d091906ca78 64-97,110-114,119-144
+.changeset/README.md
+  s_fe732417ee9cdb::t_c76a58a86355d2 4
+apps/site/package.json
+  s_fe732417ee9cdb::t_c76a58a86355d2 2,13
+packages/agent/src/extension.ts
+  s_fe732417ee9cdb::t_8ecf254cb6612c 1-4,9-45,49-85,91-92
+  s_fe732417ee9cdb::t_77a16b81b0cb58 5-8,46-48,86-90
+apps/cli/src/secret-dialog.ts
+  s_fe732417ee9cdb::t_d74a325b280c57 4-5,14,42-45,47
+  s_fe732417ee9cdb::t_2c8856dc4aec68 32-35
+  s_fe732417ee9cdb::t_377b563fff0b52 1-3,6,15-31,36-41,46,48-53
+  s_fe732417ee9cdb::t_29b5684704f0d4 7-13
+packages/db/src/stores.test.ts
+  s_fe732417ee9cdb::t_9e6e9fa215a558 1-72,78-108,115-163
+  s_fe732417ee9cdb::t_77a16b81b0cb58 73-77,109-114
+packages/daemon/src/lock.ts
+  s_fe732417ee9cdb::t_c76a58a86355d2 1
+package.json
+  s_fe732417ee9cdb::t_eda029f186f3ca 25-26
+  s_fe732417ee9cdb::t_c76a58a86355d2 31
+packages/core/src/paths.ts
+  s_fe732417ee9cdb::t_87a70bfb8b462e 24-29,49-51
+  s_fe732417ee9cdb::t_26077547430b09 30-35,52-54
+packages/core/package.json
+  s_fe732417ee9cdb::t_c76a58a86355d2 2,18
+packages/daemon/src/env-file.ts
+  s_fe732417ee9cdb::t_505a176a71de66 1-40,43-47
+  s_fe732417ee9cdb::t_77a16b81b0cb58 41-42
+packages/db/src/index.ts
+  s_fe732417ee9cdb::t_ae8f5f23cdee38 1,3-6,8-21
+apps/cli/src/commands.ts
+  s_fe732417ee9cdb::t_2c8856dc4aec68 5,11,89,117-128,132-163,192
+  s_fe732417ee9cdb::t_20b123fdaf1c88 6-8,90-116,129-131
+  s_fe732417ee9cdb::t_c76a58a86355d2 2-3
+apps/cli/tsconfig.json
+  s_fe732417ee9cdb::t_eda029f186f3ca 1-4
+packages/daemon/src/service.ts
+  s_fe732417ee9cdb::t_c76a58a86355d2 1
+packages/agent/src/index.ts
+  s_fe732417ee9cdb::t_c76a58a86355d2 3
+  s_fe732417ee9cdb::t_cf8bf36bdbb6ce 66-67,76-78,81,95-98,110,115,128,154,193-194
+  s_fe732417ee9cdb::t_77a16b81b0cb58 141-145,197-201
+  s_fe732417ee9cdb::t_8ecf254cb6612c 4-7,24-25,30,36,39
+packages/daemon/src/updater.ts
+  s_fe732417ee9cdb::t_c76a58a86355d2 9
+packages/telegram/src/source.ts
+  s_fe732417ee9cdb::t_6273015a50b057 29-32,56-59
+  s_fe732417ee9cdb::t_ad60969facc1c2 1-3,5-25,28,33-55,60-100,107-108,115-149,155-160,165-174,176-177,183,189-209,213-217
+  s_fe732417ee9cdb::t_e61c07a161c897 4,175,178-182,184-188
+  s_fe732417ee9cdb::t_77a16b81b0cb58 26-27,101-106,109-114,150-154,161-164,210-212
+packages/db/src/migrations.gen.ts
+  s_fe732417ee9cdb::t_56829e4738b43f 7-12,14-17,20-22
+packages/source/src/index.ts
+  s_fe732417ee9cdb::t_26077547430b09 1-129
+packages/daemon/src/host.ts
+  s_fe732417ee9cdb::t_fde629c2567299 2,185-186
+  s_fe732417ee9cdb::t_2e09004f25ae54 4
+  s_fe732417ee9cdb::t_c76a58a86355d2 1,3
+  s_fe732417ee9cdb::t_2ac9fd624e274c 5-7,9-28,33-36,40-76,83-104,106-121,127-134,136-169,171-175,180-184,187-253
+  s_fe732417ee9cdb::t_a4276418581a28 8,105,122-126,135,170
+  s_fe732417ee9cdb::t_77a16b81b0cb58 29-32,37-39,77-82,176-179
+AGENTS.md
+  s_fe732417ee9cdb::t_c2e6a3e857262a 30-40
+packages/telegram/package.json
+  s_fe732417ee9cdb::t_a8d3c1b914e9ab 1,3,15-16,19,23-31,34-36,42-43
+  s_fe732417ee9cdb::t_ad60969facc1c2 2,17-18,33,37-41
+  s_fe732417ee9cdb::t_77a16b81b0cb58 4-14
+  s_fe732417ee9cdb::t_dfb8f2d6b68d79 20-22
+  s_fe732417ee9cdb::t_c76a58a86355d2 32
+packages/agent/package.json
+  s_fe732417ee9cdb::t_8ecf254cb6612c 17-18
+  s_fe732417ee9cdb::t_c76a58a86355d2 2,15-16,22
+packages/daemon/src/daemon.ts
+  s_fe732417ee9cdb::t_88fac7dbfa3d49 9-12,14-15,86-87,92-94,104-105,109-111
+  s_fe732417ee9cdb::t_c76a58a86355d2 1-4
+  s_fe732417ee9cdb::t_77a16b81b0cb58 95-102,106-108
+  s_fe732417ee9cdb::t_69eaeb45db8a58 88-90
+packages/db/src/kv.ts
+  s_fe732417ee9cdb::t_ae8f5f23cdee38 1-36
+apps/cli/src/extension.ts
+  s_fe732417ee9cdb::t_52491e9e118da3 191-193
+  s_fe732417ee9cdb::t_c76a58a86355d2 8
+  s_fe732417ee9cdb::t_8a6c0ab3810cbe 12,72,85,92,121-130,136-138
+  s_fe732417ee9cdb::t_0034d645baa1c2 11,86-91
+.changeset/sources.md
+  s_fe732417ee9cdb::t_dfb8f2d6b68d79 1-7
+apps/cli/src/source-tools.test.ts
+  s_fe732417ee9cdb::t_0ad61fa70effcf 1-31
+packages/db/src/inbox.ts
+  s_fe732417ee9cdb::t_ae8f5f23cdee38 1,6-10,15-16,18-19,24-30,32,34,43,46-47,49,52,56,61-62,65,69,71-83,86-87,89,98,120
+  s_fe732417ee9cdb::t_77a16b81b0cb58 70
+packages/db/drizzle/20261119063322_init/migration.sql
+  s_fe732417ee9cdb::t_56829e4738b43f 1-65
+packages/telegram/tsconfig.json
+  s_fe732417ee9cdb::t_a8d3c1b914e9ab 1
+packages/daemon/src/sources.ts
+  s_fe732417ee9cdb::t_77a16b81b0cb58 60-63,74-75,127-128,157-160,163-166,188-191,202-205,210-213,267-270,275-280,320-326,365-366,388-392,403-408,425-429,435-436,459,464-465,472-483,489-491,494-495,498-499,503-504,510-514,539-544,555-556,560-563,573-575,587-588
+  s_fe732417ee9cdb::t_3345ac93a681cf 4-13,15-59,64-73,76-93,129-156,161-162,167-184,186-187,192-201,206-207,209,214-218,220-247,249-266,271-274,281-319,327-364,367-373,375-387,393-402,409-424,430-434,437-458,466-471,484-488,492-493,496-497,500-502,505-509,515-530,532-538,545-546,549-552,554,557-559,564-572,576-586,589-592
+  s_fe732417ee9cdb::t_c76a58a86355d2 1-3
+  s_fe732417ee9cdb::t_2dc3e55f1c4da3 248,374,460-463,531
+  s_fe732417ee9cdb::t_0ad61fa70effcf 547-548
+  s_fe732417ee9cdb::t_6c090125c21839 14,94-126,185,208,219,553
+apps/cli/src/source-tools.ts
+  s_fe732417ee9cdb::t_0ad61fa70effcf 36-38,50
+  s_fe732417ee9cdb::t_d74a325b280c57 128,130,134,160,162,164,184,187-188,262-264
+  s_fe732417ee9cdb::t_dafe0fdb4194ba 113
+  s_fe732417ee9cdb::t_c76a58a86355d2 2-3
+  s_fe732417ee9cdb::t_69eaeb45db8a58 67-68
+  s_fe732417ee9cdb::t_ab3ba014f04fbf 6-8,35,39-49,51-60,198,200-202,229,238-249,255,259
+  s_fe732417ee9cdb::t_2c8856dc4aec68 15-18,21-22,62-64,87-92,94-96,144-145,153-159,175-180,183,185-186,189-190,199,203,211-214,250-252,258,260,280-282
+  s_fe732417ee9cdb::t_51690d162c6bea 1,4-5,9-14,19-20,23-34,61,65-66,69-86,93,97-112,114-127,129,131-133,135-143,146-152,161,163,165-174,181-182,191-197,204-210,215-228,230-237,253-254,256-257,261,265-279,283-286
+packages/daemon/src/runtime.ts
+  s_fe732417ee9cdb::t_77a16b81b0cb58 9-13
+  s_fe732417ee9cdb::t_2e09004f25ae54 4,27
+  s_fe732417ee9cdb::t_c5f8ca8de69029 15-26,29-41,48,60-62,68,78,81,84-85,89-96,98-106,109-113,115-118,120-132,134-142,149-152,154,157-167,169-178,180-182,184-185,187
+  s_fe732417ee9cdb::t_37d455165a4bd6 7,14,42-44,47,49-59,86,97,119,133,143-144
+  s_fe732417ee9cdb::t_c76a58a86355d2 1-3
+  s_fe732417ee9cdb::t_5695eeaf158558 28
+apps/cli/src/pi.ts
+  s_fe732417ee9cdb::t_c76a58a86355d2 1-2
+packages/daemon/src/server.ts
+  s_fe732417ee9cdb::t_c76a58a86355d2 2-6
+  s_fe732417ee9cdb::t_88fac7dbfa3d49 9-10,36-37,58-64,67,77,142-150
+  s_fe732417ee9cdb::t_3677b8f52e9fb6 151
+apps/cli/src/guide.ts
+  s_fe732417ee9cdb::t_2b4174feddc55c 2-9,13-45
+  s_fe732417ee9cdb::t_fde629c2567299 1,10-12
+packages/agent/src/host.ts
+  s_fe732417ee9cdb::t_8ecf254cb6612c 1-40
+packages/daemon/package.json
+  s_fe732417ee9cdb::t_c76a58a86355d2 2,15-18,24
+  s_fe732417ee9cdb::t_b8c81bd93ad286 19
+packages/telegram/vitest.config.ts
+  s_fe732417ee9cdb::t_a8d3c1b914e9ab 1-6
+packages/daemon/src/settings.ts
+  s_fe732417ee9cdb::t_a4276418581a28 4,10,16
+  s_fe732417ee9cdb::t_c76a58a86355d2 1
+  s_fe732417ee9cdb::t_6e3b762145afc2 2-3,5-9,11-15,17-18
+packages/config/package.json
+  s_fe732417ee9cdb::t_c76a58a86355d2 2
+packages/db/src/schema/index.ts
+  s_fe732417ee9cdb::t_faee81bb09fbb2 2,4-6,9-15,21-23,31,35-38,41-45,50-53,56-58,61-113,115,118-122,126-127
+  s_fe732417ee9cdb::t_87c43cdd726fa4 123
+packages/daemon/src/dispatcher.ts
+  s_fe732417ee9cdb::t_77a16b81b0cb58 49-55,57
+  s_fe732417ee9cdb::t_2f22ae9ee876d3 2,6-7,9-12,16-20,22-24,35-40,43-44,56,58-62,64-65,67-69
+  s_fe732417ee9cdb::t_c76a58a86355d2 1
+  s_fe732417ee9cdb::t_a4276418581a28 3-5,8,13-15,21,25-34,41-42,45-48,63,66
+packages/protocol/package.json
+  s_fe732417ee9cdb::t_c76a58a86355d2 2,17
+packages/daemon/src/memory.ts
+  s_fe732417ee9cdb::t_6e3b762145afc2 1-34
+packages/core/src/about.ts
+  s_fe732417ee9cdb::t_fde629c2567299 1-7
+packages/core/src/config.ts
+  s_fe732417ee9cdb::t_87a70bfb8b462e 1-11,26,29-55
+  s_fe732417ee9cdb::t_b04d091906ca78 12-25,27-28
+bun.lock
+  s_fe732417ee9cdb::t_14d4e7d5842920 10,30-34,37,43,47,53,57-58,60,64,71,79,86,93,97-101,106,113,122,130,136-160,572-583,586-591
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "29f969f1762b2216cb72b0610199ddf8e0598976",
+  "prompts": {},
+  "sessions": {
+    "s_fe732417ee9cdb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b6666194-df82-46a7-a1ef-33e06788ffe9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "TheBinaryGuy <hello@thebinary.dev>"
+    }
+  }
+}
