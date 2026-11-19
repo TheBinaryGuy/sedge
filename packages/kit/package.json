@@ -1,15 +1,16 @@
 {
-    "name": "@sedge-hq/source",
+    "name": "@sedge-hq/kit",
     "version": "0.0.0",
-    "description": "Types for writing a Sedge event source.",
+    "description": "Build channels and signals for sedge, the always-on agent.",
     "license": "MIT",
     "repository": {
         "type": "git",
         "url": "git+https://github.com/sedge-hq/sedge.git",
-        "directory": "packages/source"
+        "directory": "packages/kit"
     },
     "files": [
-        "src"
+        "src",
+        "!src/**/*.test.ts"
     ],
     "type": "module",
     "exports": {
@@ -20,6 +21,9 @@
     },
     "scripts": {
         "typecheck": "tsc --noEmit"
+    },
+    "dependencies": {
+        "effect": "4.1.4"
     },
     "devDependencies": {
         "@sedge-hq/config": "workspace:*",

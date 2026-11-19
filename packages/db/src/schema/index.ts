@@ -68,6 +68,12 @@ export const timers = sqliteTable(
  * backoff, and the agent's recent messages per thread are what it reads back to avoid repeating
  * itself. `kind: 'approval'` rows carry an approval id and are sent with approve/deny buttons.
  */
+/** What a message carries beside its text. */
+export interface OutboxExtra {
+    readonly choices?: ReadonlyArray<{ readonly label: string; readonly value: string }>;
+    readonly files?: ReadonlyArray<{ readonly path: string; readonly caption?: string }>;
+}
+
 export const outbox = sqliteTable(
     'outbox',
     {
@@ -78,6 +84,8 @@ export const outbox = sqliteTable(
             .default('message'),
         text: text('text').notNull(),
         approvalId: text('approval_id'),
+        /** Buttons and files to send along: { choices?, files? }. */
+        extra: text('extra', { mode: 'json' }).$type<OutboxExtra>(),
         status: text('status', { enum: ['pending', 'sent', 'failed'] })
             .notNull()
             .default('pending'),

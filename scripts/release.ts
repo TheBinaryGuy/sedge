@@ -65,11 +65,12 @@ if (onNpm(CLI_PACKAGE, version)) {
 }
 
 /*
- * Source packages (`@sedge-hq/telegram`, `@sedge-hq/source`) version on their own. Each is packed
- * the way bun publishes (workspace references rewritten) and published when its version is new.
+ * The kit and the packages built on it (`@sedge-hq/kit`, `@sedge-hq/telegram`) version on their own,
+ * kit first since the others depend on it. Each is packed the way bun publishes (workspace
+ * references rewritten) and published when its version is new.
  */
 await mkdir(out, { recursive: true });
-for (const dir of ['packages/source', 'packages/telegram']) {
+for (const dir of ['packages/kit', 'packages/telegram']) {
     const pkg = (await Bun.file(join(root, dir, 'package.json')).json()) as {
         name: string;
         version: string;

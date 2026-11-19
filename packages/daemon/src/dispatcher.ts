@@ -1,7 +1,7 @@
 import { Outbox, type OutboxMessage } from '@sedge-hq/db';
 import { Effect, Layer, Queue } from 'effect';
 import { DispatcherWake } from './host';
-import { Sources } from './sources';
+import { Connections } from './connections';
 import { supervise } from './supervise';
 
 const MAX_ATTEMPTS = 6;
@@ -12,26 +12,29 @@ const PACE = '1100 millis';
  * Delivers the outbox. Only the dispatcher talks to the user: the agent writes rows, this decides
  * when they go out, sends each through the source that reaches that conversation, retries what
  * fails (5 s, 10 s, 20 s …), and gives up after six attempts. Approval requests carry
- * approve/deny buttons, which come back from the source as actions.
+ * approve/deny choices, which come back from the channel as picks.
  */
 export const DispatcherLive = Layer.effect(
     DispatcherWake,
     Effect.gen(function* () {
         const outbox = yield* Outbox;
-        const sources = yield* Sources;
+        const connections = yield* Connections;
         const wakeups = yield* Queue.sliding<void>(1);
 
         const deliver = (message: OutboxMessage) =>
-            sources.send(message.thread, {
+            connections.send(message.thread, {
                 text: message.text,
+                ...(message.extra?.files ? { files: message.extra.files } : {}),
                 ...(message.kind === 'approval' && message.approvalId
                     ? {
-                          buttons: [
-                              { label: '✅ Approve', data: `approve:${message.approvalId}` },
-                              { label: '❌ Deny', data: `deny:${message.approvalId}` },
+                          choices: [
+                              { label: '✅ Approve', value: `approve:${message.approvalId}` },
+                              { label: '❌ Deny', value: `deny:${message.approvalId}` },
                           ],
                       }
-                    : {}),
+                    : message.extra?.choices
+                      ? { choices: message.extra.choices }
+                      : {}),
             });
 
         const drain = Effect.gen(function* () {

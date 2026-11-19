@@ -3,12 +3,12 @@ import { sedgePaths, VERSION } from '@sedge-hq/core';
 import { installService, runDaemon, spawnDetachedDaemon, uninstallService } from '@sedge-hq/daemon';
 import { Console, Effect } from 'effect';
 import { Argument, Command, Flag } from 'effect/cli';
-import { mkdir, mkdtemp, readFile, stat, writeFile } from 'node:fs/promises';
+import { copyFile, mkdir, mkdtemp, readFile, rename, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { basename, dirname, join, resolve } from 'node:path';
 import { Daemon, DaemonLive, isListening, waitUntil } from './client';
 import { loadPi } from './load-pi';
-import { packageSpec } from './source-tools';
+import { packageSpec } from './connection-tools';
 
 const paths = sedgePaths();
 
@@ -86,35 +86,91 @@ const stop = Command.make(
     Command.withDescription('Stop the daemon after its current run (and remove the login service)'),
 );
 
-/**
- * A package folder (one you're writing, or one inside a monorepo) is packed first, the way it would
- * be published: `workspace:` references become versions, and only its published files go in.
- * Installing the folder directly would try to resolve those workspace references and fail.
- */
-const localPackage = async (name: string): Promise<string | undefined> => {
-    const dir = resolve(name);
-    const isPackage = await stat(join(dir, 'package.json')).then(
-        (s) => s.isFile(),
-        () => false,
-    );
-    if (!isPackage) return undefined;
-    const destination = await mkdtemp(join(tmpdir(), 'sedge-pack-'));
+const pack = async (dir: string, destination: string): Promise<string> => {
     const proc = Bun.spawn(
         [process.execPath, 'pm', 'pack', '--destination', destination, '--quiet'],
-        {
-            cwd: dir,
-            env: { ...process.env, BUN_BE_BUN: '1' },
-            stdout: 'pipe',
-            stderr: 'inherit',
-        },
+        { cwd: dir, env: { ...process.env, BUN_BE_BUN: '1' }, stdout: 'pipe', stderr: 'inherit' },
     );
     const [code, out] = await Promise.all([proc.exited, new Response(proc.stdout).text()]);
     if (code !== 0) throw new Error(`Could not pack ${dir}`);
     return resolve(destination, out.trim().split('\n').pop()!);
 };
 
+const readJson = <A>(path: string) =>
+    readFile(path, 'utf8').then(
+        (text) => JSON.parse(text) as A,
+        () => undefined,
+    );
+
+interface Manifest {
+    readonly name?: string;
+    readonly dependencies?: Record<string, string>;
+    readonly workspaces?: ReadonlyArray<string> | { readonly packages?: ReadonlyArray<string> };
+    overrides?: Record<string, string>;
+}
+
+/** The packages of the monorepo `dir` is in, by name, so `workspace:` dependencies can be found. */
+const workspacePackages = async (dir: string) => {
+    for (let current = dirname(dir); dirname(current) !== current; current = dirname(current)) {
+        const root = await readJson<Manifest>(join(current, 'package.json'));
+        const globs = Array.isArray(root?.workspaces)
+            ? root.workspaces
+            : ((root?.workspaces as { packages?: ReadonlyArray<string> } | undefined)?.packages ??
+              []);
+        if (globs.length === 0) continue;
+        const found = new Map<string, string>();
+        for (const glob of globs) {
+            for await (const file of new Bun.Glob(`${glob}/package.json`).scan({ cwd: current })) {
+                const pkg = await readJson<Manifest>(join(current, file));
+                if (pkg?.name) found.set(pkg.name, dirname(join(current, file)));
+            }
+        }
+        return found;
+    }
+    return new Map<string, string>();
+};
+
 /**
- * `sedge install telegram`: adds a package of source types to ~/.sedge/packages, a small npm
+ * A package folder (one you're writing, or one inside a monorepo) is packed first, the way it would
+ * be published: `workspace:` references become versions, and only its published files go in. The
+ * workspace packages it depends on are packed too and pinned through `overrides`, so a package can
+ * be tried before any of it is on npm. Tarballs are kept in ~/.sedge/packages/local.
+ */
+const localPackage = async (name: string): Promise<string | undefined> => {
+    const dir = resolve(name);
+    const manifest = await readJson<Manifest>(join(dir, 'package.json'));
+    if (!manifest) return undefined;
+    const local = join(paths.packages, 'local');
+    await mkdir(local, { recursive: true });
+    const destination = await mkdtemp(join(tmpdir(), 'sedge-pack-'));
+    const keep = async (tarball: string) => {
+        const kept = join(local, basename(tarball));
+        await rename(tarball, kept).catch(() => copyFile(tarball, kept));
+        return kept;
+    };
+
+    const siblings = await workspacePackages(dir);
+    const overrides: Record<string, string> = {};
+    const visit = async (deps: Record<string, string> | undefined) => {
+        for (const [dep, range] of Object.entries(deps ?? {})) {
+            const sibling = siblings.get(dep);
+            if (!range.startsWith('workspace:') || !sibling || overrides[dep]) continue;
+            overrides[dep] = `file:${await keep(await pack(sibling, destination))}`;
+            await visit((await readJson<Manifest>(join(sibling, 'package.json')))?.dependencies);
+        }
+    };
+    await visit(manifest.dependencies);
+    if (Object.keys(overrides).length > 0) {
+        const file = join(paths.packages, 'package.json');
+        const project = (await readJson<Manifest>(file)) ?? {};
+        project.overrides = { ...project.overrides, ...overrides };
+        await writeFile(file, `${JSON.stringify(project, null, 4)}\n`);
+    }
+    return keep(await pack(dir, destination));
+};
+
+/**
+ * `sedge install telegram`: adds a package of channels and signals to ~/.sedge/packages, a small npm
  * project of its own. The binary installs it by running as Bun (`BUN_BE_BUN`), so neither npm nor
  * Bun has to be on the machine. A running daemon picks the new types up straight away.
  */
@@ -122,13 +178,10 @@ const install = Command.make(
     'install',
     {
         name: Argument.String('package').pipe(
-            Argument.withDescription('A source package: "telegram", a full npm name, or a path'),
+            Argument.withDescription('A package: "telegram", a full npm name, or a folder path'),
         ),
     },
     Effect.fn(function* ({ name }) {
-        const spec = yield* Effect.promise(() => localPackage(name)).pipe(
-            Effect.map((packed) => packed ?? packageSpec(name)),
-        );
         const manifest = join(paths.packages, 'package.json');
         yield* Effect.promise(async () => {
             await mkdir(paths.packages, { recursive: true });
@@ -139,6 +192,9 @@ const install = Command.make(
                 ),
             );
         });
+        const spec = yield* Effect.promise(() => localPackage(name)).pipe(
+            Effect.map((packed) => packed ?? packageSpec(name)),
+        );
         const code = yield* Effect.promise(async () => {
             const proc = Bun.spawn([process.execPath, 'add', spec], {
                 cwd: paths.packages,
@@ -151,15 +207,15 @@ const install = Command.make(
         if (code !== 0) return yield* Effect.fail(new Error(`Could not install ${spec}`));
         if (yield* isListening(paths)) {
             const types = yield* withDaemon(({ client }) =>
-                client.ReloadSourceTypes().pipe(Effect.andThen(client.SourceTypes())),
+                client.ReloadKinds().pipe(Effect.andThen(client.Kinds())),
             );
             return yield* Console.log(
-                `Installed ${spec}. Source types: ${types.map((t) => t.name).join(', ')}`,
+                `Installed ${spec}. Kinds: ${types.map((t) => `${t.name} (${t.type})`).join(', ')}`,
             );
         }
         yield* Console.log(`Installed ${spec}.`);
     }),
-).pipe(Command.withDescription('Install a package of event sources (e.g. telegram)'));
+).pipe(Command.withDescription('Install a package of channels and signals (e.g. telegram)'));
 
 const update = Command.make(
     'update',

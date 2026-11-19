@@ -1,13 +1,14 @@
 import { and, asc, desc, eq, lte } from 'drizzle-orm';
 import { Context, Effect, Layer } from 'effect';
 import { Database } from './database';
-import { outbox, type OutboxMessage } from './schema';
+import { outbox, type OutboxExtra, type OutboxMessage } from './schema';
 
 export interface NewOutboxMessage {
     readonly thread: string;
     readonly text: string;
     readonly kind?: OutboxMessage['kind'];
     readonly approvalId?: string | undefined;
+    readonly extra?: OutboxExtra | undefined;
 }
 
 /** Messages leave only through here; the dispatcher delivers and retries them. */

@@ -2,16 +2,18 @@
  * End to end, with a fake Telegram: `bun run e2e:telegram` from the repo root.
  *
  * Starts a fake Bot API server and a daemon from source in a throwaway home, then walks the whole
- * path a user takes: install the Telegram source package, set the source up (the token must land
- * in .env, not the config), pair an account with the code the bot sends, message the agent and get
- * an answer in the chat, and approve a shell command from the chat's buttons. The last two steps
- * call the model through your pi credentials. Exits non-zero on the first failure.
+ * path a user takes: install the Telegram package, connect the channel (the token must land in the
+ * keychain, not the config), check a stranger gets no answer, pair through the invite link, message
+ * the agent and get an answer in the chat (with "typing…" meanwhile), approve a shell command from
+ * the chat's buttons, and disconnect (the token leaves the keychain). The agent steps call the model
+ * through your logins. Exits non-zero on the first failure.
  *
  * SEDGE_BIN=dist/npm/sedge-<os>-<cpu>/bin/sedge runs the same walk against a compiled binary.
  */
 import { sedgePaths } from '@sedge-hq/core';
-import { Effect, Fiber, Stream } from 'effect';
-import { mkdtemp, readFile, rm, stat } from 'node:fs/promises';
+import { openSecretStore } from '@sedge-hq/daemon';
+import { Effect } from 'effect';
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { Daemon, DaemonLive, waitUntil } from '../src/client';
@@ -34,16 +36,18 @@ type Sent = {
 };
 const updates: Array<Record<string, unknown>> = [];
 const sent: Array<Sent> = [];
+const actions: Array<{ chat_id: number; action: string }> = [];
 let nextUpdate = 1;
 const user = { id: CHAT, first_name: 'Test', username: 'tester' };
-const pushMessage = (text: string) =>
+const stranger = { id: 666, first_name: 'Stranger', username: 'stranger' };
+const pushMessage = (text: string, from = user) =>
     updates.push({
         update_id: nextUpdate++,
         message: {
             message_id: nextUpdate,
             date: Date.now() / 1000,
-            chat: { id: CHAT, type: 'private' },
-            from: user,
+            chat: { id: from.id, type: 'private' },
+            from,
             text,
         },
     });
@@ -79,6 +83,9 @@ const server = Bun.serve({
             case 'sendMessage':
                 sent.push(body as unknown as Sent);
                 return ok({ message_id: sent.length });
+            case 'sendChatAction':
+                actions.push(body as unknown as { chat_id: number; action: string });
+                return ok(true);
             default:
                 return ok(true);
         }
@@ -129,65 +136,66 @@ try {
     if (!(await Effect.runPromise(waitUntil(paths, true)))) fail('daemon did not listen');
     pass(`listening (home ${home})`);
 
-    step('sedge install the Telegram source package');
+    step('sedge install the Telegram package');
     // From the package folder: sedge packs it the way it would be published, then installs it.
     const install = sedge('install', join(root, 'packages/telegram'));
     const installed = (await new Response(install.stdout).text()).trim();
     if ((await install.exited) !== 0)
         fail(`install failed: ${await new Response(install.stderr).text()}`);
-    if (!installed.includes('telegram')) fail(`no telegram type after install: ${installed}`);
+    if (!installed.includes('telegram (channel)'))
+        fail(`no telegram channel after install: ${installed}`);
     pass(installed);
 
-    step('add the source; the token goes to .env, not the config');
-    const added = await withDaemon(({ client }) =>
-        client.AddSource({
+    step('connect the channel; the token goes to the keychain, not the config');
+    const { invite } = await withDaemon(({ client }) =>
+        client.Connect({
             name: 'telegram',
-            type: 'telegram',
-            description: 'my Telegram',
-            options: { apiBase: server.url.origin },
+            kind: 'telegram',
+            settings: { api: server.url.origin },
             secrets: { token: 'E2E:TOKEN' },
+            instruction: null,
         }),
     );
     const config = await readFile(paths.config, 'utf8');
-    const secrets = await readFile(paths.env, 'utf8');
     if (config.includes('E2E:TOKEN')) fail('the token is in config.json');
-    if (!secrets.includes('E2E:TOKEN')) fail('the token is not in .env');
-    if (((await stat(paths.env)).mode & 0o077) !== 0) fail('.env is readable by others');
-    pass(`config names \${…}, .env holds the token (0600); tells: ${added.tell}`);
+    const store = await openSecretStore(paths);
+    if ((await store.get('telegram.token')) !== 'E2E:TOKEN')
+        fail(`the token is not in the ${store.backend}`);
+    const code = /^https:\/\/t\.me\/sedge_e2e_bot\?start=([\w-]{16,})$/.exec(invite ?? '')?.[1];
+    if (!code) fail(`unexpected invite link: ${invite}`);
+    pass(`token in the ${store.backend}; invite ${invite}`);
 
-    step('pair: the bot sends a code, sedge asks for it');
-    const questions: Array<{ id: string; title: string }> = [];
-    const watcher = Effect.runFork(
-        Effect.gen(function* () {
-            const d = yield* Daemon;
-            yield* d.client
-                .Questions()
-                .pipe(Stream.runForEach((q) => Effect.sync(() => questions.push(q))));
-        }).pipe(Effect.provide(DaemonLive(paths, { autostart: false }))),
-    );
+    step('a stranger gets no answer, not even with a wrong code');
     let mark = sent.length;
-    pushMessage('hello');
-    const codeMessage = await waitFor(
-        'the pairing code',
-        () => sentTo(mark, (m) => /\d{6}/.test(m.text)),
-        20,
-    );
-    const code = /(\d{6})/.exec(codeMessage.text)![1]!;
-    const question = await waitFor('the pairing question', () => questions[0], 20);
-    pass(`code sent to the chat; asked: ${question.title}`);
+    pushMessage('hello?', stranger);
+    pushMessage('/start not-the-code', stranger);
+    await Bun.sleep(2500);
+    if (sent.slice(mark).length > 0) fail(`answered a stranger: ${sent.slice(mark)[0]?.text}`);
+    pass('silence');
+
+    step('opening the invite link pairs the account');
     mark = sent.length;
-    await withDaemon(({ client }) => client.Answer({ id: question.id, answer: code }));
+    pushMessage(`/start ${code}`);
     await waitFor('the paired message', () => sentTo(mark, (m) => m.text.startsWith('Paired')), 20);
     pass('paired');
-    await Effect.runPromise(Fiber.interrupt(watcher));
+
+    step('the invite works once');
+    mark = sent.length;
+    pushMessage(`/start ${code}`, stranger);
+    await Bun.sleep(2500);
+    if (sent.slice(mark).length > 0) fail('the used code paired a second account');
+    pass('the second use was ignored');
 
     step('a message gets an answer in the chat');
     mark = sent.length;
+    const typed = actions.length;
     pushMessage('Reply with exactly the word: pong-telegram');
     const reply = await waitFor('a reply', () =>
         sentTo(mark, (m) => m.text.includes('pong-telegram')),
     );
-    pass(`replied: ${reply.text}`);
+    if (!actions.slice(typed).some((a) => a.chat_id === CHAT && a.action === 'typing'))
+        fail('no typing indicator while it worked');
+    pass(`replied: ${reply.text} (typing… shown meanwhile)`);
 
     step('a shell command asks for approval in the chat, and runs once approved');
     mark = sent.length;
@@ -208,6 +216,11 @@ try {
         sentTo(mark, (m) => m.text.includes('approved-ok')),
     );
     pass(`after approval: ${output.text}`);
+
+    step('disconnect; the token leaves the keychain');
+    await withDaemon(({ client }) => client.Disconnect({ name: 'telegram' }));
+    if ((await store.get('telegram.token')) !== undefined) fail('the token is still stored');
+    pass('gone');
 } catch (error) {
     failed = true;
     if (!(error instanceof Error && error.message.startsWith('timed out'))) console.error(error);

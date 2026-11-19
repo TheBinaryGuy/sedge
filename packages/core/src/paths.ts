@@ -27,12 +27,12 @@ export interface SedgePaths {
     readonly memory: string;
     /** Default working directory for runs that don't come from a terminal (Telegram, timers). */
     readonly workspace: string;
-    /** Secrets for sources (`NAME=value` lines), referenced from the config as `${NAME}`. */
-    readonly env: string;
-    /** Installed source packages (`sedge install …`), a small npm project of its own. */
+    /** Where secrets go when the machine has no keychain (owner-only). */
+    readonly secrets: string;
+    /** Installed packages of channels and signals (`sedge install …`), an npm project of its own. */
     readonly packages: string;
-    /** Source type modules you registered; copied here so nothing can change them afterwards. */
-    readonly sourceTypes: string;
+    /** Channel and signal modules you registered; copied here so nothing can change them later. */
+    readonly kinds: string;
 }
 
 export const sedgePaths = (home: string = sedgeHome()): SedgePaths => ({
@@ -49,7 +49,7 @@ export const sedgePaths = (home: string = sedgeHome()): SedgePaths => ({
     config: join(home, 'config.json'),
     memory: join(home, 'memory'),
     workspace: join(home, 'workspace'),
-    env: join(home, '.env'),
+    secrets: join(home, 'secrets.json'),
     packages: join(home, 'packages'),
-    sourceTypes: join(home, 'source-types'),
+    kinds: join(home, 'kinds'),
 });

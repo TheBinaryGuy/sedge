@@ -61,35 +61,35 @@ export class UpdateInfo extends Schema.Class<UpdateInfo>('sedge/protocol/UpdateI
     applied: Schema.Boolean,
 }) {}
 
-/** A configured source and how it is doing. */
-export class SourceInfo extends Schema.Class<SourceInfo>('sedge/protocol/SourceInfo')({
+/** A setting a kind of channel or signal takes. Secrets are typed by the user, never passed. */
+export class FieldInfo extends Schema.Class<FieldInfo>('sedge/protocol/FieldInfo')({
     name: Schema.String,
-    type: Schema.String,
     description: Schema.String,
-    status: Schema.String,
-    running: Schema.Boolean,
+    secret: Schema.Boolean,
+    optional: Schema.Boolean,
 }) {}
 
-/** A kind of source that can be set up, with the options it takes (a JSON schema). */
-export class SourceTypeInfo extends Schema.Class<SourceTypeInfo>('sedge/protocol/SourceTypeInfo')({
+/** A kind of channel or signal that is installed and can be connected. */
+export class KindInfo extends Schema.Class<KindInfo>('sedge/protocol/KindInfo')({
     name: Schema.String,
+    type: Schema.Literals(['channel', 'signal']),
     summary: Schema.String,
-    options: Schema.Unknown,
-    talks: Schema.Boolean,
-    sends: Schema.NullOr(Schema.String),
-    /** The npm package it comes from, or `custom` for a module you registered. */
+    fields: Schema.Array(FieldInfo),
+    /** The npm package it comes from, or `yours` for a module you registered. */
     origin: Schema.String,
 }) {}
 
-/** A source asking the user something at their computer, such as a pairing code. */
-export class Question extends Schema.Class<Question>('sedge/protocol/Question')({
-    id: Schema.String,
-    source: Schema.String,
-    title: Schema.String,
-    detail: Schema.NullOr(Schema.String),
+/** A connected channel or signal and how it is doing. */
+export class ConnectionInfo extends Schema.Class<ConnectionInfo>('sedge/protocol/ConnectionInfo')({
+    name: Schema.String,
+    kind: Schema.String,
+    type: Schema.Literals(['channel', 'signal', 'unknown']),
+    status: Schema.String,
+    running: Schema.Boolean,
+    instruction: Schema.NullOr(Schema.String),
 }) {}
 
-export class SourceError extends Schema.TaggedError<SourceError>()('SourceError', {
+export class ConnectionError extends Schema.TaggedError<ConnectionError>()('ConnectionError', {
     message: Schema.String,
 }) {}
 
@@ -107,41 +107,44 @@ export class SedgeRpcs extends RpcGroup.make(
     Rpc.make('Abort'),
     /** Every background run as it finishes, for the TUI's notifications. */
     Rpc.make('Watch', { success: Completion, stream: true }),
-    Rpc.make('Sources', { success: Schema.Array(SourceInfo) }),
-    Rpc.make('SourceTypes', { success: Schema.Array(SourceTypeInfo) }),
-    /** Checks options against the type and says what the source would do, without setting it up. */
-    Rpc.make('PlanSource', {
-        payload: { type: Schema.String, options: Options },
-        success: Schema.Struct({
-            does: Schema.Array(Schema.String),
-            tell: Schema.NullOr(Schema.String),
-        }),
-        error: SourceError,
+    Rpc.make('Connections', { success: Schema.Array(ConnectionInfo) }),
+    Rpc.make('Kinds', { success: Schema.Array(KindInfo) }),
+    /** Checks settings against a kind without connecting anything: a problem, or null. */
+    Rpc.make('CheckSettings', {
+        payload: { kind: Schema.String, settings: Options },
+        success: Schema.NullOr(Schema.String),
+        error: ConnectionError,
     }),
-    /** Secrets are passed separately: they go to ~/.sedge/.env and the config only names them. */
-    Rpc.make('AddSource', {
+    /**
+     * Connects a channel or signal. Secrets go to the OS keychain; the config only names them. A
+     * channel answers with an invite link that pairs whoever opens it.
+     */
+    Rpc.make('Connect', {
         payload: {
             name: Schema.String,
-            type: Schema.String,
-            description: Schema.String,
-            options: Options,
+            kind: Schema.String,
+            settings: Options,
             secrets: Schema.Record(Schema.String, Schema.String),
+            instruction: Schema.NullOr(Schema.String),
         },
-        success: Schema.Struct({ tell: Schema.NullOr(Schema.String) }),
-        error: SourceError,
+        success: Schema.Struct({ invite: Schema.NullOr(Schema.String) }),
+        error: ConnectionError,
     }),
-    Rpc.make('RemoveSource', { payload: { name: Schema.String }, error: SourceError }),
-    /** Registers a source type module (its source code), after the user reviewed it. */
-    Rpc.make('AddSourceType', {
+    Rpc.make('Disconnect', { payload: { name: Schema.String }, error: ConnectionError }),
+    /** A fresh one-time invite link for a channel (to pair another account, or re-pair). */
+    Rpc.make('Invite', {
+        payload: { name: Schema.String },
+        success: Schema.String,
+        error: ConnectionError,
+    }),
+    /** Registers a channel or signal module (bundled code), after the user reviewed it. */
+    Rpc.make('AddKind', {
         payload: { name: Schema.String, code: Schema.String },
-        success: SourceTypeInfo,
-        error: SourceError,
+        success: KindInfo,
+        error: ConnectionError,
     }),
-    /** Picks up source packages installed since the daemon started. */
-    Rpc.make('ReloadSourceTypes'),
-    /** Questions sources are waiting on: those already open, then each new one. */
-    Rpc.make('Questions', { success: Question, stream: true }),
-    Rpc.make('Answer', { payload: { id: Schema.String, answer: Schema.NullOr(Schema.String) } }),
+    /** Picks up packages installed since the daemon started (`sedge install`). */
+    Rpc.make('ReloadKinds'),
     Rpc.make('CheckUpdate', { payload: { apply: Schema.Boolean }, success: UpdateInfo }),
     /** Stops the daemon once the current run finishes; `restart` re-launches the current binary. */
     Rpc.make('Shutdown', { payload: { restart: Schema.Boolean } }),

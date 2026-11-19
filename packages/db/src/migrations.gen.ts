@@ -20,5 +20,14 @@ export const migrations: Array<MigrationMeta> = [
         "folderMillis": 1795070002000,
         "hash": "1b5cc358209e4c3c220326a3a22d5f87d2f01e4061ea0b7db6aca352b1a17fe0",
         "name": "20261119063322_init"
+    },
+    {
+        "sql": [
+            "ALTER TABLE `outbox` ADD `extra` text;"
+        ],
+        "bps": true,
+        "folderMillis": 1795076039000,
+        "hash": "c3ae59aa74ed8b6b9db73b90945ee3ee1564af065e5b41e0d602a95068bb35fe",
+        "name": "20261119081359_outbox-extra"
     }
 ];

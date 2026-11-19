@@ -21,15 +21,61 @@ sedge -p "…"           # one reply, then exit
 sedge start --service  # keep the daemon running across logins
 sedge stop
 sedge update
-sedge pi …             # pi's own commands (install, mcp, config, …)
+sedge pi …             # the agent's own commands (packages, mcp, config, …)
 ```
 
-Reach it from your phone: in `sedge`, say "set up telegram". Sources like Telegram are packages
-(`sedge install telegram`), and you can ask sedge to write one for anything else.
+Reach it from your phone: in `sedge`, say "set up telegram". It asks for the bot token in a
+hidden field, keeps it in your keychain, and gives you a link that pairs your account.
 
-`sedge` is pi's TUI, with a daemon behind it that keeps working after you close the terminal:
-it holds an inbox, fires timers, and updates itself. pi comes bundled; credentials and extensions
-are pi's (`~/.pi/agent`).
+**Channels** are how you and sedge talk (Telegram). **Signals** wake it when something happens
+elsewhere, and you say what it should do then: "tell me when my CI fails". Both come as packages
+(`sedge install telegram`), and sedge can write a signal for anything else
+([`@sedge-hq/kit`](packages/kit)).
+
+```mermaid
+%%{init: {"theme": "base", "themeVariables": {"fontFamily": "ui-monospace, monospace", "primaryColor": "#f4f7ef", "primaryBorderColor": "#4f7a28", "primaryTextColor": "#1f2a14", "lineColor": "#6b8f47", "clusterBkg": "#fbfcf8", "clusterBorder": "#a9c08c"}}}%%
+flowchart LR
+    phone["Telegram<br/>on your phone"]
+    world["CI, feeds,<br/>anything"]
+    tui["sedge<br/>the TUI"]
+
+    subgraph daemon ["sedge daemon"]
+        direction LR
+        channels["channels"]
+        signals["signals"]
+        timers["timers"]
+        inbox[("inbox")]
+        agent["agent<br/>pi-durable"]
+        memory[("memory")]
+        approvals["approvals"]
+        outbox[("outbox")]
+    end
+
+    phone <-->|"paired by invite link"| channels
+    world --> signals
+    tui -->|"RPC, Unix socket"| inbox
+    channels --> inbox
+    signals --> inbox
+    timers --> inbox
+    inbox -->|"one run per conversation"| agent
+    memory --> agent
+    agent -->|"set_timer"| timers
+    agent -->|"risky tool call"| approvals
+    approvals --> outbox
+    agent -->|"send_message"| outbox
+    outbox -->|"retries"| channels
+
+    classDef outside fill:#1f2a14,stroke:#1f2a14,color:#f4f7ef
+    classDef store fill:#dfe9cf,stroke:#4f7a28,color:#1f2a14
+    class phone,world,tui outside
+    class inbox,memory,outbox store
+```
+
+Behind the TUI, a daemon keeps working after you close the terminal: an inbox of events, timers
+it sets itself, memory, approvals you answer from your phone, and updates. Its conversations are
+durable ([pi-durable](https://github.com/earendil-works/pi/tree/main/packages/durable)): a run a
+restart cuts short picks up where it stopped. The agent is [pi](https://github.com/earendil-works/pi),
+bundled; your logins are in `~/.pi/agent`.
 
 ## Develop
 
@@ -38,6 +84,7 @@ bun install
 bun run sedge   # from source, against ./.sedge-dev
 bun run check   # lint, format, typecheck
 bun run test
+bun run e2e:telegram   # the whole Telegram path, against a fake Bot API
 ```
 
 Releases go out through changesets: `bun run changeset`, merge the release PR.

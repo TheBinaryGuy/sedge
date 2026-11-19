@@ -14,8 +14,9 @@
     ],
     "type": "module",
     "exports": {
-        ".": "./src/source.ts",
-        "./bot": "./src/bot.ts"
+        ".": "./src/telegram.ts",
+        "./bot": "./src/bot.ts",
+        "./format": "./src/format.ts"
     },
     "publishConfig": {
         "access": "public"
@@ -25,19 +26,19 @@
         "test": "bun --bun vitest run --passWithNoTests"
     },
     "dependencies": {
+        "@sedge-hq/kit": "workspace:*",
         "effect": "4.1.4"
     },
     "devDependencies": {
         "@effect/vitest": "4.1.4",
         "@sedge-hq/config": "workspace:*",
-        "@sedge-hq/source": "workspace:*",
         "@types/bun": "1.4.4",
         "typescript": "7.0.2",
         "vitest": "5.1.1"
     },
     "sedge": {
-        "sources": {
-            "telegram": "./src/source.ts"
-        }
+        "plugins": [
+            "./src/telegram.ts"
+        ]
     }
 }

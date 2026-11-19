@@ -1,7 +1,20 @@
 import { Agent } from '@sedge-hq/agent';
 import { Inbox, Timers, type InboxItem } from '@sedge-hq/db';
 import { type AgentEvent, type AgentRunError, Completion } from '@sedge-hq/protocol';
-import { Context, Cron, type Duration, Effect, Layer, PubSub, Queue, Ref, Result } from 'effect';
+import {
+    Context,
+    Cron,
+    Fiber,
+    type Duration,
+    Effect,
+    Layer,
+    PubSub,
+    Queue,
+    Ref,
+    Result,
+    Schedule,
+} from 'effect';
+import { Connections } from './connections';
 import { supervise } from './supervise';
 
 /** One message on the daemon's internal bus, for the inbox events it concerns. */
@@ -41,20 +54,23 @@ export class WorkerWake extends Context.Service<
 }
 
 const time = (ms: number) =>
-    new Date(ms).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    new Date(ms).toLocaleString([], {
+        weekday: 'short',
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit',
+    });
 
 /**
- * A batch becomes one prompt. A single terminal task stays as typed; anything else is labelled
- * with where and when it came from, so the agent can tell a timer from a chat message.
+ * What the agent reads for an event. A terminal task stays as typed; anything else is labelled
+ * with where and when it came from, so the agent can tell a timer from a chat message. The time
+ * lives here rather than in the system prompt, which would otherwise change every run.
  */
-export const formatBatch = (items: ReadonlyArray<InboxItem>): string => {
-    const [only] = items;
-    if (items.length === 1 && only?.source === 'cli') return only.prompt;
-    const lines = items.map((item) => `[${item.source} · ${time(item.createdAt)}] ${item.prompt}`);
-    return items.length === 1
-        ? lines[0]!
-        : `${items.length} new events since your last run:\n\n${lines.join('\n\n')}`;
-};
+export const formatItem = (item: InboxItem): string =>
+    item.source === 'cli'
+        ? item.prompt
+        : `[${item.source} · ${time(item.createdAt)}] ${item.prompt}`;
 
 /**
  * The always-on loop. One worker drains the inbox a thread's batch at a time, so runs never
@@ -76,6 +92,7 @@ export class Runtime extends Context.Service<
             const timers = yield* Timers;
             const agent = yield* Agent;
             const worker = yield* WorkerWake;
+            const connections = yield* Connections;
             const bus = yield* PubSub.unbounded<BusMessage>();
             const running = yield* Ref.make<string | null>(null);
             const publish = (message: BusMessage) => PubSub.publish(bus, message);
@@ -95,17 +112,24 @@ export class Runtime extends Context.Service<
                     yield* publish({ _tag: 'Event', itemIds, event: { _tag: 'Started', itemId } });
                 }
 
+                // "typing…" on the user's channel while the run lasts.
+                const typing = yield* Effect.forkChild(
+                    connections
+                        .working(first.thread)
+                        .pipe(Effect.repeat(Schedule.spaced('4 seconds'))),
+                );
                 const outcome = yield* agent
                     .run(
                         {
                             thread: first.thread,
                             sources: [...new Set(batch.map((item) => item.source))],
                             cwd: batch[batch.length - 1]!.cwd,
-                            prompt: formatBatch(batch),
+                            items: batch.map((item) => ({ id: item.id, text: formatItem(item) })),
                         },
                         (event) => publish({ _tag: 'Event', itemIds, event }),
                     )
                     .pipe(
+                        Effect.ensuring(Fiber.interrupt(typing)),
                         Effect.map((text) => ({ ok: true as const, text })),
                         Effect.catch((error: AgentRunError) =>
                             Effect.succeed({ ok: false as const, text: error.message }),

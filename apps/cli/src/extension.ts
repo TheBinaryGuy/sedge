@@ -9,7 +9,7 @@ import { LOGO, type SedgePaths, VERSION } from '@sedge-hq/core';
 import { Effect, Fiber, ManagedRuntime, Schedule, Stream } from 'effect';
 import { Daemon, DaemonLive, waitUntil } from './client';
 import { sedgeGuide } from './guide';
-import { registerSourceTools, watchQuestions } from './source-tools';
+import { registerConnectionTools } from './connection-tools';
 
 /** A tuft of sedge, three rows tall, beside the name and the keys worth knowing. */
 const headerLines = (theme: Theme) => {
@@ -26,10 +26,7 @@ const headerLines = (theme: Theme) => {
                 hint('/', 'commands'),
                 hint('!', 'bash'),
             ].join(theme.fg('dim', ' · ')),
-            theme.fg(
-                'dim',
-                'pi runs the chat; the daemon keeps working when you close it. /sedge for its status.',
-            ),
+            theme.fg('dim', 'The daemon keeps working when you close this. /sedge for its status.'),
         ].map((text, row) => ` ${leaf((LOGO[row] ?? '').padEnd(6))}  ${text}`),
         '',
     ];
@@ -69,7 +66,6 @@ export const sedgeExtension = (paths: SedgePaths): InlineExtension => ({
         const runtime = ManagedRuntime.make(DaemonLive(paths, { autostart: false }));
         const ready = Effect.runPromise(waitUntil(paths, true));
         let watcher: Fiber.Fiber<unknown, unknown> | undefined;
-        let questions: Fiber.Fiber<unknown, unknown> | undefined;
 
         const withDaemon = async <A, E>(
             use: (daemon: Daemon['Service']) => Effect.Effect<A, E>,
@@ -82,7 +78,7 @@ export const sedgeExtension = (paths: SedgePaths): InlineExtension => ({
             );
         };
 
-        registerSourceTools(pi, withDaemon);
+        registerConnectionTools(pi, withDaemon);
 
         // The agent here knows pi; this is what it needs to know about sedge.
         const guide = sedgeGuide(paths);
@@ -118,16 +114,6 @@ export const sedgeExtension = (paths: SedgePaths): InlineExtension => ({
             ctx.ui.setHeader(sedgeHeader);
             // Never hold up pi's startup: status and the watcher fill in once the daemon answers.
             void showStatus(ctx);
-            // A source waiting on the user (a Telegram pairing code) asks here.
-            questions ??= runtime.runFork(
-                Effect.gen(function* () {
-                    yield* Effect.promise(() => ready);
-                    yield* watchQuestions(ctx)(yield* Daemon);
-                }).pipe(
-                    Effect.retry({ schedule: Schedule.spaced('2 seconds'), times: 30 }),
-                    Effect.ignore,
-                ),
-            );
             watcher ??= runtime.runFork(
                 Effect.gen(function* () {
                     yield* Effect.promise(() => ready);
@@ -188,7 +174,7 @@ export const sedgeExtension = (paths: SedgePaths): InlineExtension => ({
         );
 
         pi.on('session_shutdown', async () => {
-            for (const fiber of [watcher, questions]) {
+            for (const fiber of [watcher]) {
                 if (fiber) await Effect.runPromise(Fiber.interrupt(fiber));
             }
             await runtime.dispose();

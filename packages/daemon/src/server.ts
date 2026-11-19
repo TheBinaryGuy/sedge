@@ -7,7 +7,7 @@ import { AgentRunError, DaemonStatus, SedgeRpcs, UpdateInfo } from '@sedge-hq/pr
 import { Context, Deferred, Effect, Layer, PubSub, Ref, Result, Stream } from 'effect';
 import { RpcSerialization, RpcServer } from 'effect/rpc';
 import { Runtime, WorkerWake } from './runtime';
-import { Sources } from './sources';
+import { Connections } from './connections';
 import { Updater } from './updater';
 
 export interface ShutdownRequest {
@@ -34,7 +34,7 @@ const HandlersLive = SedgeRpcs.toLayer(
         const agent = yield* Agent;
         const updater = yield* Updater;
         const worker = yield* WorkerWake;
-        const sources = yield* Sources;
+        const connections = yield* Connections;
 
         return SedgeRpcs.of({
             Hello: () => Effect.succeed(control.info),
@@ -139,15 +139,14 @@ const HandlersLive = SedgeRpcs.toLayer(
                     });
                 }),
 
-            Sources: () => sources.list,
-            SourceTypes: () => sources.types,
-            PlanSource: ({ type, options }) => sources.plan(type, options),
-            AddSource: (input) => sources.add(input),
-            RemoveSource: ({ name }) => sources.remove(name),
-            AddSourceType: ({ name, code }) => sources.addType(name, code),
-            ReloadSourceTypes: () => sources.reloadTypes,
-            Questions: () => sources.questions,
-            Answer: ({ id, answer }) => sources.answer(id, answer),
+            Connections: () => connections.list,
+            Kinds: () => connections.kinds,
+            CheckSettings: ({ kind, settings }) => connections.check(kind, settings),
+            Connect: (input) => connections.connect(input),
+            Disconnect: ({ name }) => connections.disconnect(name),
+            Invite: ({ name }) => connections.invite(name),
+            AddKind: ({ name, code }) => connections.addKind(name, code),
+            ReloadKinds: () => connections.reloadKinds,
 
             // Answer first, then stop: the reply must leave before the socket closes.
             Shutdown: ({ restart }) =>

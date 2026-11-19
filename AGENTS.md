@@ -22,22 +22,27 @@
   it takes about a second to load. Load pi only through `load-pi.ts`.
 - The TUI never waits for the daemon: `sedge` starts it in the background and the extension
   connects when the socket is up.
-- pi's interactive session lives in the TUI process. The daemon has its own pi sessions for
-  background work (`packages/agent`), stored under `~/.sedge/sessions/<cwd>`. The two never share a
-  session file.
+- pi's interactive session lives in the TUI process. The daemon's agent is pi-durable
+  (`packages/agent`): one durable conversation per thread ("main" is the root) in
+  `~/.sedge/agent/durable.sqlite`, with your pi logins and default model. Inbox items are submitted
+  with their id as the request id, so a repeat is answered once. pi-durable is experimental: keep
+  its packages pinned to one exact version, matching pi's.
 - The client and daemon talk only through `packages/protocol` (Effect RPC, NDJSON over a Unix
   socket). Adding or removing an RPC changes `PROTOCOL`, which makes clients replace older daemons.
 - The daemon follows the always-on primitives: events go into the inbox (`packages/db`), one
   worker drains it per thread (`runtime.ts`), timers fire into it, memory lives in
   `~/.sedge/memory` and is loaded by `host.ts`, risky tool calls are deferred to approvals, and
   everything the user is told goes through the outbox and `dispatcher.ts`.
-- Sources (`packages/daemon/src/sources.ts`) are config entries of a type from an installed
-  package (`"sedge": { "sources": … }` in its package.json) or a registered module. Types are
-  bundled before loading: a compiled binary can't resolve npm packages for modules from disk.
-  Secrets go to `~/.sedge/.env` as `${NAME}` references; never put one in the config. The public
-  contract is `@sedge-hq/source`; `@sedge-hq/telegram` is the reference source.
-- `bun run e2e:telegram` walks install, setup, pairing, a reply and an approval against a fake
-  Bot API (`SEDGE_BIN=…` for a compiled binary). Run it after changing sources or the daemon.
+- Channels (talk with the user) and signals (wake the agent) are connections
+  (`packages/daemon/src/connections.ts`): config entries of a kind from an installed package
+  (`"sedge": { "plugins": … }` in its package.json) or a registered module in `~/.sedge/kinds`.
+  Kinds are bundled before loading: a compiled binary can't resolve npm packages for modules from
+  disk. Secrets go to the OS keychain (`secrets.ts`); the config only names them. Channels pair
+  accounts through one-time invite links. The public contract is `@sedge-hq/kit` (`defineChannel`,
+  `defineSignal`); `@sedge-hq/telegram` is the reference channel.
+- `bun run e2e:telegram` walks install, connect, invite pairing, a reply, an approval and
+  disconnect against a fake Bot API (`SEDGE_BIN=…` for a compiled binary). Run it after changing
+  channels, signals or the daemon.
 - All agent work in the daemon goes through the inbox (`packages/db/src/inbox.ts`); never call the
   agent directly from an RPC handler.
 - Schema changes: edit `packages/db/src/schema`, run `bun run db:generate -- --name <what>`, commit

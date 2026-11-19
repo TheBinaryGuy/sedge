@@ -18,14 +18,14 @@ Usage
   sedge start [--service]       run the daemon; --service also starts it at login
   sedge stop                    stop the daemon and remove the login service
   sedge update [--check]        update sedge
-  sedge install <package>       add event sources, e.g. sedge install telegram
+  sedge install <package>       add channels and signals, e.g. sedge install telegram
   sedge pi <command>            pi's commands: install, remove, list, config, mcp, update --extensions
 
-In the TUI, ask for what you want ("set up telegram", "make a source that tells me when my CI
-fails"): sedge sets it up, and asks you for secrets in a hidden field.
+In the TUI, ask for what you want ("set up telegram", "tell me when my CI fails"): sedge
+sets it up, and asks you for secrets in a hidden field.
 
-Options for the TUI and -p are pi's: --model, --continue, --resume, --thinking and the rest.
-See them with: sedge pi --help`;
+The TUI and -p also take --model, --continue, --resume, --thinking and the rest of the agent's
+options; see them with: sedge pi --help`;
 
 /** pi subcommands that only exist under `sedge pi`. */
 const PI_COMMANDS = new Set(['remove', 'uninstall', 'list', 'config', 'mcp', 'auth']);

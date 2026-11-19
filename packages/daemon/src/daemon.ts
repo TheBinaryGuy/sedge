@@ -6,13 +6,13 @@ import { Deferred, Duration, Effect, Layer, Ref, Schedule } from 'effect';
 import { mkdir, open, rename, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { acquireDaemonLock, waitForExit } from './lock';
+import { Connections } from './connections';
 import { DispatcherLive } from './dispatcher';
 import { makeHost } from './host';
 import { ensureMemory } from './memory';
 import { Runtime, WorkerWake } from './runtime';
 import { DaemonControl, ServerLive, type ShutdownRequest } from './server';
 import { Settings } from './settings';
-import { Sources } from './sources';
 import { Updater } from './updater';
 
 const UPDATE_INTERVAL = Duration.hours(6);
@@ -90,21 +90,22 @@ export const runDaemon = (
             mkdir(config.workspace ?? paths.workspace, { recursive: true }),
         );
 
-        // Stores and the worker wake-up first; sources and the dispatcher on top of them; the
-        // agent gets a host made of all of those; the runtime drives the agent.
+        // Stores and the worker wake-up first; channels, signals and the dispatcher on top of them;
+        // the agent gets a host made of all of those; the runtime drives the agent.
         const base = Layer.mergeAll(
             StoresLive(paths.database),
             WorkerWake.layer,
             Settings.layer(paths, config),
         );
         const delivery = DispatcherLive.pipe(
-            Layer.provideMerge(Sources.layer),
+            Layer.provideMerge(Connections.layer),
             Layer.provideMerge(base),
         );
+        const workspace = config.workspace ?? paths.workspace;
         const agent = Layer.unwrap(
             makeHost.pipe(
                 Effect.map((host) =>
-                    Agent.layer(defaultAgentConfig(paths.home, host, options.loadPi)),
+                    Agent.layer(defaultAgentConfig(paths.home, workspace, host, options.loadPi)),
                 ),
             ),
         ).pipe(Layer.provide(delivery));

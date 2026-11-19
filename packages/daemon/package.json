@@ -15,8 +15,8 @@
         "@sedge-hq/agent": "workspace:*",
         "@sedge-hq/core": "workspace:*",
         "@sedge-hq/db": "workspace:*",
+        "@sedge-hq/kit": "workspace:*",
         "@sedge-hq/protocol": "workspace:*",
-        "@sedge-hq/source": "workspace:*",
         "effect": "4.1.4"
     },
     "devDependencies": {

@@ -154,6 +154,38 @@ export const makeBot = (token: string, api = 'https://api.telegram.org') => {
             call('answerCallbackQuery', { callback_query_id: id, text }, ignore),
         sendChatAction: (chatId: number, action: 'typing') =>
             call('sendChatAction', { chat_id: chatId, action }, ignore),
+        /** Uploads a local file: as a photo when it is an image, otherwise as a document. */
+        sendFile: (chatId: number, path: string, caption?: string) =>
+            Effect.tryPromise({
+                try: async (signal) => {
+                    const photo = /\.(png|jpe?g|gif|webp)$/i.test(path);
+                    const form = new FormData();
+                    form.append('chat_id', String(chatId));
+                    form.append(photo ? 'photo' : 'document', Bun.file(path));
+                    if (caption) form.append('caption', caption.slice(0, 1024));
+                    const method = photo ? 'sendPhoto' : 'sendDocument';
+                    const response = await fetch(`${api}/bot${token}/${method}`, {
+                        method: 'POST',
+                        body: form,
+                        signal: AbortSignal.any([signal, AbortSignal.timeout(120_000)]),
+                    });
+                    const payload = (await response.json().catch(() => ({}))) as {
+                        ok?: boolean;
+                        description?: string;
+                    };
+                    if (!payload.ok) {
+                        throw new TelegramError({
+                            method,
+                            message: payload.description ?? `HTTP ${response.status}`,
+                            status: response.status,
+                        });
+                    }
+                },
+                catch: (cause) =>
+                    cause instanceof TelegramError
+                        ? cause
+                        : new TelegramError({ method: 'sendFile', message: String(cause) }),
+            }),
     };
 };
 
