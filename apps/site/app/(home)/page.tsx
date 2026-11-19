@@ -11,7 +11,7 @@ const POINTS = [
     },
     {
         title: 'It reaches you.',
-        text: 'Write to it on Telegram. It answers there, and asks before anything risky with Approve and Deny buttons.',
+        text: 'Write to it on Telegram or Slack. It answers there, and asks before anything risky with Approve and Deny buttons.',
     },
     {
         title: 'It remembers.',

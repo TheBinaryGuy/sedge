@@ -28,7 +28,7 @@ sedge pi …             # the agent's own commands (packages, mcp, config, …)
 Reach it from your phone: in `sedge`, say "set up telegram". It asks for the bot token in a
 hidden field, keeps it in your keychain, and gives you a link that pairs your account.
 
-**Channels** are how you and sedge talk (Telegram). **Signals** wake it when something happens
+**Channels** are how you and sedge talk (Telegram, Slack). **Signals** wake it when something happens
 elsewhere, and you say what it should do then: "tell me when my CI fails". Both come as packages
 (`sedge install telegram`), and sedge can write a signal for anything else
 ([`@sedge-hq/kit`](packages/kit)).
