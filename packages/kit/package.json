@@ -2,6 +2,14 @@
     "name": "@sedge-hq/kit",
     "version": "0.1.0",
     "description": "Build channels and signals for sedge, the always-on agent.",
+    "keywords": [
+        "agent",
+        "channel",
+        "effect",
+        "sedge",
+        "signal"
+    ],
+    "homepage": "https://sedge.sh",
     "license": "MIT",
     "repository": {
         "type": "git",

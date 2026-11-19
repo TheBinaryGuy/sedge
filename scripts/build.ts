@@ -1,7 +1,7 @@
-import { cp, mkdir, realpath, rm, writeFile } from 'node:fs/promises';
+import { cp, mkdir, readFile, realpath, rm, writeFile } from 'node:fs/promises';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CLI_PACKAGE, platformPackage } from '../packages/core/src/packages';
+import { CLI_PACKAGE, platformPackage, REPOSITORY } from '../packages/core/src/packages';
 
 /*
  * Compiles `sedge` into one self-contained binary per platform and lays each out as an npm
@@ -121,13 +121,31 @@ for (const { os, cpu } of targets) {
     );
 }
 
+/**
+ * npm shows the README with no access to the repository's files, so relative links and images
+ * become absolute GitHub URLs: images from raw.githubusercontent.com, the rest on github.com.
+ */
+const forNpm = (readme: string) =>
+    readme.replace(
+        /(src="|srcset="|href="|\]\()(?!https?:|#|mailto:)([^")\s]+)/g,
+        (_, before: string, path: string) => {
+            const clean = path.replace(/^\.\//, '');
+            const url = /\.(svg|png|jpe?g|gif|webp)$/.test(clean)
+                ? `https://raw.githubusercontent.com/${REPOSITORY}/main/${clean}`
+                : `https://github.com/${REPOSITORY}/blob/main/${clean}`;
+            return `${before}${url}`;
+        },
+    );
+
 // The package people install: the launcher, depending on every platform build.
 const launcher = join(out, 'sedge');
 await mkdir(join(launcher, 'bin'), { recursive: true });
 await cp(join(cli, 'bin/sedge.js'), join(launcher, 'bin/sedge.js'));
-await cp(join(root, 'README.md'), join(launcher, 'README.md'));
+await writeFile(
+    join(launcher, 'README.md'),
+    forNpm(await readFile(join(root, 'README.md'), 'utf8')),
+);
 await cp(join(root, 'LICENSE'), join(launcher, 'LICENSE'));
-await cp(join(root, 'docs'), join(launcher, 'docs'), { recursive: true });
 await writeFile(
     join(launcher, 'package.json'),
     `${JSON.stringify(
@@ -136,9 +154,21 @@ await writeFile(
             version,
             description: manifest.description,
             license: manifest.license,
+            homepage: 'https://sedge.sh',
             repository: manifest.repository,
+            bugs: `https://github.com/${REPOSITORY}/issues`,
+            keywords: [
+                'agent',
+                'ai',
+                'always-on',
+                'daemon',
+                'telegram',
+                'pi',
+                'coding-agent',
+                'cli',
+            ],
             bin: { sedge: 'bin/sedge.js' },
-            files: ['bin', 'docs'],
+            files: ['bin'],
             engines: { node: '>=18' },
             optionalDependencies: Object.fromEntries(
                 TARGETS.map(({ os, cpu }) => [platformPackage(os, cpu), version]),

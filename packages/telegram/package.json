@@ -2,6 +2,13 @@
     "name": "@sedge-hq/telegram",
     "version": "0.1.0",
     "description": "Telegram for sedge: message your agent from anywhere, and it answers there.",
+    "keywords": [
+        "agent",
+        "bot",
+        "sedge",
+        "telegram"
+    ],
+    "homepage": "https://sedge.sh",
     "license": "MIT",
     "repository": {
         "type": "git",
