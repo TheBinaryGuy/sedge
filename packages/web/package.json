@@ -1,0 +1,49 @@
+{
+    "name": "@sedge-hq/web",
+    "version": "0.0.0",
+    "description": "Web pages and feeds for sedge: tell me when this page changes, or something new is posted.",
+    "keywords": [
+        "atom",
+        "rss",
+        "sedge",
+        "sedge-kit",
+        "web"
+    ],
+    "homepage": "https://sedge.sh",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/sedge-hq/sedge.git",
+        "directory": "packages/web"
+    },
+    "files": [
+        "src",
+        "!src/**/*.test.ts"
+    ],
+    "type": "module",
+    "exports": {
+        ".": "./src/page.ts"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "typecheck": "tsc --noEmit",
+        "test": "bun --bun vitest run --passWithNoTests"
+    },
+    "dependencies": {
+        "@sedge-hq/kit": "workspace:*"
+    },
+    "devDependencies": {
+        "@sedge-hq/config": "workspace:*",
+        "@types/bun": "1.4.4",
+        "typescript": "7.0.2",
+        "vitest": "5.1.1"
+    },
+    "sedge": {
+        "plugins": [
+            "./src/page.ts",
+            "./src/feed.ts"
+        ]
+    }
+}

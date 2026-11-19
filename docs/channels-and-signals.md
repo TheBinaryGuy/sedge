@@ -28,9 +28,9 @@ The tools it uses, if you want to ask for them by name: `channels`, `signals`,
 
 ## Pairing a channel
 
-A channel answers only accounts you paired. Connecting one gives you an **invite link** (for
-Telegram, `https://t.me/<your bot>?start=<code>`). Open it on the account you want: that account
-is paired, and the code is spent. Codes expire after 30 minutes. Anyone else who writes to your
+A channel answers only accounts you paired. Connecting one gives you an **invite** with a one-time
+code: on Telegram a link (`https://t.me/<your bot>?start=<code>`) to open on your phone; on Slack
+a message to send the bot (`pair <code>`). That account is paired, and the code is spent. Codes expire after 30 minutes. Anyone else who writes to your
 bot, with or without a code, gets no answer at all.
 
 To pair another account, or after a link expired, ask for a new invite (`invite` tool).
@@ -54,13 +54,25 @@ into the `main` conversation, so a follow-up question on Telegram has the contex
 
 ## Kinds
 
-| Kind       | Type    | Package                                                                               |
-| ---------- | ------- | ------------------------------------------------------------------------------------- |
-| `telegram` | channel | [`@sedge-hq/telegram`](https://github.com/sedge-hq/sedge/blob/main/packages/telegram) |
+| Kind        | Type    | Package                                                                                                                        |
+| ----------- | ------- | ------------------------------------------------------------------------------------------------------------------------------ |
+| `telegram`  | channel | [`@sedge-hq/telegram`](https://github.com/sedge-hq/sedge/blob/main/packages/telegram)                                          |
+| `slack`     | channel | [`@sedge-hq/slack`](https://github.com/sedge-hq/sedge/blob/main/packages/slack)                                                |
+| `github-ci` | signal  | [`@sedge-hq/github`](https://github.com/sedge-hq/sedge/blob/main/packages/github): Actions runs that fail                      |
+| `github`    | signal  | [`@sedge-hq/github`](https://github.com/sedge-hq/sedge/blob/main/packages/github): reviews asked of you, assignments, mentions |
+| `web-page`  | signal  | [`@sedge-hq/web`](https://github.com/sedge-hq/sedge/blob/main/packages/web): a page whose text changes                         |
+| `feed`      | signal  | [`@sedge-hq/web`](https://github.com/sedge-hq/sedge/blob/main/packages/web): new posts on an RSS or Atom feed                  |
 
 Install a package with `sedge install <name>` (a short name means `@sedge-hq/<name>`), a full npm
 name, or the path of a package folder. A folder is packed the way it would be published, along
 with the workspace packages it depends on, so you can try a package before it's on npm.
+
+## Slack
+
+Slack connects with Socket Mode, so nothing has to be reachable from the internet. It needs a
+Slack app of your own with two tokens; the
+[`@sedge-hq/slack` README](https://github.com/sedge-hq/sedge/blob/main/packages/slack) walks
+through making one in a few minutes. Then say "set up slack".
 
 ## Community packages
 

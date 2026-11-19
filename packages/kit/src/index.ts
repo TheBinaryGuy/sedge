@@ -186,8 +186,8 @@ interface Common<F extends Fields> {
 export type SignalSpec<F extends Fields> = Common<F> &
     (
         | {
-              /** How often to check. */
-              readonly every: Duration;
+              /** How often to check: a duration, or one worked out from the settings. */
+              readonly every: Duration | ((settings: Settings<F>) => Duration);
               /** Look, and return what happened. A happening with a key seen before is dropped. */
               readonly check: (
                   settings: Settings<F>,
@@ -221,7 +221,13 @@ export const defineSignal = <F extends Fields>(spec: SignalSpec<F>): Plugin => {
                               try: async () => [...(await spec.check(settings, kit))],
                               catch: toError,
                           }),
-                          Schedule.spaced(millis(spec.every)),
+                          Schedule.spaced(
+                              millis(
+                                  typeof spec.every === 'function'
+                                      ? spec.every(settings)
+                                      : spec.every,
+                              ),
+                          ),
                       ).pipe(Stream.flatMap((found) => Stream.fromIterable(found)))
                     : Stream.suspend(() =>
                           Stream.fromAsyncIterable(spec.watch(settings, kit), toError),

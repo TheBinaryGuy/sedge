@@ -46,8 +46,12 @@ Not yet in the daemon:
 
 - **Project files** (`.pi/mcp.json` in a repository) are ignored, so a repository can't add tools
   to runs nobody watches.
-- **Servers that sign in with OAuth**, and servers that use a `/login` provider (`"auth"`), only
-  work in the TUI for now. Give an HTTP server an `Authorization` header to use it in the daemon.
+- **Servers that use a `/login` provider's token** (`"auth"`) only work in the TUI for now.
+
+Servers that **sign in with OAuth** work in the daemon once you've signed in from the TUI: run
+`/mcp` in `sedge`, sign in, then restart the daemon (`sedge stop && sedge start`). The daemon uses
+the same sign-in and refreshes it the way pi does, without the two ever refreshing at once. If a
+sign-in expires, the server's status says so; sign in again from the TUI.
 
 ### Skills
 

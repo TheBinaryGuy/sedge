@@ -204,7 +204,7 @@ export const registerConnectionTools = (pi: ExtensionAPI, withDaemon: WithDaemon
                 return text(`Not connected: ${message(connected.failure)}`);
             return text(
                 connected.success.invite
-                    ? `Connected. Give the user this invite link to open on the account they want to use: ${connected.success.invite}\nIt pairs whoever opens it, works once and expires in 30 minutes; until then the channel answers no one.`
+                    ? `Connected. To pair their account, give the user this, exactly: ${connected.success.invite}\nIt pairs whoever uses it, works once and expires in 30 minutes; until then the channel answers no one.`
                     : `Connected; ${params.name} is running.`,
             );
         },

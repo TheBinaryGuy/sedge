@@ -11,13 +11,15 @@ import {
 } from '@earendil-works/pi-mcp';
 import { readFile } from 'node:fs/promises';
 import { homedir } from 'node:os';
-import { join, resolve } from 'node:path';
+import { dirname, join, resolve } from 'node:path';
+import type { McpOAuthSettings } from '@earendil-works/pi-mcp/oauth';
+import { daemonAuthProvider, hasSignedIn } from './mcp-auth';
 
 /**
  * The MCP servers in your `mcp.json` (pi's, in its agent directory), for the daemon's runs. Every
  * tool is deferred: the agent finds one with `tool_search` when it needs it, so a large set costs
  * nothing until then. Only the global file is read: a repository can't add servers to runs
- * nobody watches. Servers that sign in through OAuth stay in the TUI for now.
+ * nobody watches. Servers that sign in with OAuth use the TUI's sign-in (see mcp-auth.ts).
  */
 
 type Exposure = 'codemode' | 'deferred' | 'direct' | 'hidden';
@@ -100,6 +102,7 @@ export const openMcp = async (options: {
     readonly cwd: string;
     readonly version: string;
 }) => {
+    const agentDir = dirname(options.file);
     const raw: { mcpServers?: Record<string, unknown> } = await readFile(options.file, 'utf8').then(
         (text) => JSON.parse(text) as { mcpServers?: Record<string, unknown> },
         (error: NodeJS.ErrnoException) => {
@@ -117,19 +120,42 @@ export const openMcp = async (options: {
         if (checked.kind === 'invalid') return states.push({ name, status: checked.error });
         const config = checked.config as ServerConfig;
         if (config.enabled === false) return states.push({ name, status: 'off' });
-        if (
-            config.url &&
-            (config.oauth ||
-                config.auth ||
-                !Object.keys(config.headers ?? {}).some((h) => h.toLowerCase() === 'authorization'))
-        ) {
-            return states.push({ name, status: 'signs in with OAuth: only in the TUI for now' });
+        if (config.url && config.auth) {
+            return states.push({
+                name,
+                status: 'uses a /login provider’s token: only in the TUI for now',
+            });
         }
+        // An HTTP server without an Authorization header signs in with OAuth: the daemon uses the
+        // TUI's sign-in, and can't start one itself (that needs a browser).
+        const oauth =
+            config.url !== undefined &&
+            !Object.keys(config.headers ?? {}).some((h) => h.toLowerCase() === 'authorization');
+        if (oauth && !hasSignedIn(agentDir, name, config.url!)) {
+            return states.push({
+                name,
+                status: 'not signed in: run /mcp in sedge to sign in, then sedge stop && sedge start',
+            });
+        }
+        let signInNeeded = false;
         try {
             const transport = config.url
                 ? new StreamableHttpTransport({
                       url: config.url,
                       headers: await resolveAll(config.headers),
+                      ...(oauth
+                          ? {
+                                authProvider: daemonAuthProvider({
+                                    agentDir,
+                                    name,
+                                    serverUrl: config.url,
+                                    settings: (config.oauth ?? {}) as McpOAuthSettings,
+                                    onSignInNeeded: () => {
+                                        signInNeeded = true;
+                                    },
+                                }),
+                            }
+                          : {}),
                   })
                 : new StdioTransport({
                       command: expandHome(config.command!),
@@ -176,6 +202,12 @@ export const openMcp = async (options: {
             }
             states.push({ name, status: `ready (${count} tools)` });
         } catch (error) {
+            if (signInNeeded) {
+                return states.push({
+                    name,
+                    status: 'sign-in expired: run /mcp in sedge to sign in again',
+                });
+            }
             states.push({
                 name,
                 status: `failed: ${error instanceof Error ? error.message : String(error)}`,

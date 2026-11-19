@@ -13,10 +13,15 @@ jobs:
     check:
         runs-on: ${{ matrix.os }}
         timeout-minutes: 20
+        # Windows is new: it reports, but doesn't block, until it has passed for a while.
+        continue-on-error: ${{ matrix.os == 'windows-latest' }}
         strategy:
             fail-fast: false
             matrix:
-                os: [ubuntu-latest, macos-latest]
+                os: [ubuntu-latest, macos-latest, windows-latest]
+        defaults:
+            run:
+                shell: bash
         steps:
             - uses: actions/checkout@v5
             - uses: oven-sh/setup-bun@v2
@@ -29,4 +34,4 @@ jobs:
             - run: bun run test
             # Compiles this runner's binary and checks that it starts.
             - run: bun scripts/build.ts
-            - run: ./dist/npm/sedge-*/bin/sedge --version
+            - run: ./dist/npm/sedge-*/bin/sedge* --version
