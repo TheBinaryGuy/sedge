@@ -1,0 +1,54 @@
+packages/kit/src/index.test.ts
+  s_fe732417ee9cdb::t_a259bce68260f6 1-55
+  s_fe732417ee9cdb::t_54724c8145f60d 56-64
+apps/cli/src/connection-tools.ts
+  s_fe732417ee9cdb::t_69f298b3691ec2 61-75,264-265,268-272,289-319,323,326
+  s_fe732417ee9cdb::t_1507cbf32bd353 320-322,324-325
+packages/telegram/src/telegram.ts
+  s_fe732417ee9cdb::t_9295b616b7d20d 1-11,28
+  s_fe732417ee9cdb::t_4ed5c7a1e40852 29-30
+packages/kit/src/index.ts
+  s_fe732417ee9cdb::t_2e1040b9e35300 3,23-27,30,33-37,299-352
+  s_fe732417ee9cdb::t_b9301a5b93d7df 353-354
+docs/channels-and-signals.md
+  s_fe732417ee9cdb::t_52960d6bae599d 26-27,65-77
+  s_fe732417ee9cdb::t_e601575aabdeca 78
+packages/kit/README.md
+  s_fe732417ee9cdb::t_2c25794c40b2cd 10-14,17,20-21,24-38,43-45
+packages/telegram/package.json
+  s_fe732417ee9cdb::t_9295b616b7d20d 9,37
+packages/kit/vitest.config.ts
+  s_fe732417ee9cdb::t_a259bce68260f6 1-3
+apps/cli/src/guide.ts
+  s_fe732417ee9cdb::t_2c25794c40b2cd 37-41,44-45,47-49,51-66,69
+  s_fe732417ee9cdb::t_52960d6bae599d 29
+packages/kit/package.json
+  s_fe732417ee9cdb::t_a259bce68260f6 10,32-33,41-42
+packages/telegram/src/bot.ts
+  s_fe732417ee9cdb::t_9295b616b7d20d 1
+docs/commands.md
+  s_fe732417ee9cdb::t_52960d6bae599d 39-55
+docs/kit.md
+  s_fe732417ee9cdb::t_52960d6bae599d 117-138
+  s_fe732417ee9cdb::t_2c25794c40b2cd 6-10,20-24,30-31,34-48,61-64,69
+.changeset/kit-one-import.md
+  s_fe732417ee9cdb::t_e38cfd13f51af4 1-7
+bun.lock
+  s_fe732417ee9cdb::t_64da186facb1a2 158
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "79111832712f12ecc90e6b76da4797eb749f7722",
+  "prompts": {},
+  "sessions": {
+    "s_fe732417ee9cdb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b6666194-df82-46a7-a1ef-33e06788ffe9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "TheBinaryGuy <hello@thebinary.dev>"
+    }
+  }
+}
