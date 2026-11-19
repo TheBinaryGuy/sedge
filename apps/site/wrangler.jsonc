@@ -1,7 +1,7 @@
 {
     "$schema": "../../node_modules/wrangler/config-schema.json",
     "name": "sedge-site",
-    "main": "src/worker.ts",
+    "main": "worker.ts",
     "compatibility_date": "2026-11-01",
     // The page is a static asset; the worker runs first so `curl sedge.sh` gets the installer.
     "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": true },

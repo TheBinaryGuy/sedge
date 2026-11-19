@@ -1,4 +1,4 @@
-import installer from '../../../scripts/install.sh';
+import installer from '../../scripts/install.sh';
 
 interface Env {
     readonly ASSETS: Fetcher;
