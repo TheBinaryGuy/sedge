@@ -7,7 +7,10 @@ sedge is an agent that keeps working after you close the terminal. You talk to i
 your computer, or from your phone on Telegram. It wakes when something happens (a message, a
 timer, your CI failing), does the work, tells you what matters, and goes back to sleep.
 
-![How sedge works](./architecture.svg)
+<picture>
+  <source media="(prefers-color-scheme: dark)" srcset="./architecture-dark.svg">
+  <img src="./architecture-light.svg" alt="How sedge works: channels, signals, timers and the terminal put events into the inbox; a durable run works with memory, skills, MCP servers, tools and approvals; what it sends leaves through the outbox to you, and your reply comes back as an event." width="100%">
+</picture>
 
 It has two halves:
 
