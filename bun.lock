@@ -20,7 +20,7 @@
     },
     "apps/cli": {
       "name": "@sedge-hq/sedge",
-      "version": "0.4.0",
+      "version": "0.5.0",
       "bin": {
         "sedge": "./bin/sedge.js",
       },
@@ -150,7 +150,7 @@
     },
     "packages/github": {
       "name": "@sedge-hq/github",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "dependencies": {
         "@sedge-hq/kit": "workspace:*",
       },
@@ -163,7 +163,7 @@
     },
     "packages/kit": {
       "name": "@sedge-hq/kit",
-      "version": "0.3.0",
+      "version": "0.3.1",
       "dependencies": {
         "effect": "4.1.4",
       },
@@ -189,7 +189,7 @@
     },
     "packages/slack": {
       "name": "@sedge-hq/slack",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "dependencies": {
         "@sedge-hq/kit": "workspace:*",
       },
@@ -202,7 +202,7 @@
     },
     "packages/telegram": {
       "name": "@sedge-hq/telegram",
-      "version": "0.2.0",
+      "version": "0.2.1",
       "dependencies": {
         "@sedge-hq/kit": "workspace:*",
       },
@@ -216,7 +216,7 @@
     },
     "packages/web": {
       "name": "@sedge-hq/web",
-      "version": "0.0.0",
+      "version": "0.1.0",
       "dependencies": {
         "@sedge-hq/kit": "workspace:*",
       },
