@@ -34,7 +34,7 @@ your logins. `SEDGE_BIN=dist/npm/sedge-<os>-<cpu>/bin/sedge` runs it against a c
 | Path                | What                                                                        |
 | ------------------- | --------------------------------------------------------------------------- |
 | `apps/cli`          | The `sedge` command: dispatch, the TUI extension and its tools, the client. |
-| `apps/site`         | sedge.sh: the page and the `curl … \| sh` installer.                        |
+| `apps/site`         | sedge.sh on Fumadocs: the home page, these docs, the installer.             |
 | `packages/daemon`   | The daemon: connections, runtime, dispatcher, host, server, updater.        |
 | `packages/agent`    | The daemon's agent on pi-durable: tools, MCP, skills, recall.               |
 | `packages/db`       | Inbox, timers, outbox, approvals (SQLite, Drizzle).                         |
@@ -52,6 +52,20 @@ your logins. `SEDGE_BIN=dist/npm/sedge-<os>-<cpu>/bin/sedge` runs it against a c
 A change people would notice updates these pages in the same change. `bun run test` fails when a
 command, tool, setting or environment variable is missing from [Commands](./commands.md) or
 [Configuration](./configuration.md).
+
+## The site
+
+sedge.sh is `apps/site`: [Fumadocs](https://fumadocs.dev) on Next.js, exported as static files
+and served by a Cloudflare Worker that also hands `curl sedge.sh` the installer. The docs pages
+are this folder, copied in at build time, so GitHub and the site always show the same text.
+
+```sh
+cd apps/site
+bun run dev       # the site with hot reload
+bun run preview   # the built site through the Worker
+```
+
+Pushing to `main` deploys it (`.github/workflows/site.yml`).
 
 ## Releases
 
