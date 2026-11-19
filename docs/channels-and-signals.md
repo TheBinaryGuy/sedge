@@ -3,7 +3,7 @@ title: Channels and signals
 description: Talk to sedge from Telegram or Slack, and wake it when something happens elsewhere.
 ---
 
-- A **channel** is a conversation between you and sedge: Telegram today, others as packages.
+- A **channel** is a conversation between you and sedge: Telegram, Slack, or whatever else you can imagine.
   Your messages wake it; its answers and questions come back there.
 - A **signal** is something happening elsewhere: CI failed, a feed changed, a price moved. It
   wakes sedge with your instruction for what to do then.

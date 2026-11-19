@@ -40,9 +40,11 @@ you were waiting on comes out. sedge is the coding agent that's still there.
 - **It's yours.** It runs on your machine, with your model logins, MCP servers and skills. There
   is no sedge server, and it sends no telemetry.
 
+[Use cases](./use-cases.md) has more, from watering plants to catching a spike in errors.
+
 ## Use it
 
-[Getting started](./getting-started.md) · [Channels and signals](./channels-and-signals.md) ·
+[Getting started](./getting-started.md) · [Use cases](./use-cases.md) · [Channels and signals](./channels-and-signals.md) ·
 [Agents](./agents.md) · [Memory](./memory.md) · [MCP and skills](./mcp-and-skills.md)
 
 ## Understand it
