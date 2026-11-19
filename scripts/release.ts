@@ -40,8 +40,14 @@ const onNpm = (name: string, version: string) =>
         .stdout.toString()
         .trim() === version;
 
-if (onNpm(CLI_PACKAGE, version)) {
-    console.log(`${CLI_PACKAGE}@${version} is already on npm.`);
+// A tag means this version went out already, even if npm doesn't show it yet (a staged publish
+// waiting for approval): publishing again would fail, and so would tagging.
+const tagged = (tag: string) =>
+    Bun.spawnSync(['git', 'ls-remote', '--exit-code', '--tags', 'origin', tag], { cwd: root })
+        .exitCode === 0;
+
+if (onNpm(CLI_PACKAGE, version) || (process.env.GITHUB_ACTIONS && tagged(`v${version}`))) {
+    console.log(`${CLI_PACKAGE}@${version} is already released.`);
 } else {
     await run(['bun', 'scripts/build.ts', '--all']);
     const platforms = (await readdir(out)).filter((name) => name !== 'sedge');
@@ -95,6 +101,7 @@ for (const dir of ['packages/kit', 'packages/telegram']) {
         cwd: join(root, dir),
     });
     const tarball = pack.stdout.toString().trim().split('\n').pop()!;
-    await run(['npm', 'publish', join(out, tarball), '--access', 'public', ...provenance]);
+    // bun prints the tarball's path, absolute in newer versions; resolve takes either.
+    await run(['npm', 'publish', resolve(out, tarball), '--access', 'public', ...provenance]);
     console.log(`Released ${pkg.name}@${pkg.version}`);
 }
