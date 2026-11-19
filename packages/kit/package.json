@@ -7,6 +7,7 @@
         "channel",
         "effect",
         "sedge",
+        "sedge-kit",
         "signal"
     ],
     "homepage": "https://sedge.sh",
@@ -28,7 +29,8 @@
         "access": "public"
     },
     "scripts": {
-        "typecheck": "tsc --noEmit"
+        "typecheck": "tsc --noEmit",
+        "test": "bun --bun vitest run --passWithNoTests"
     },
     "dependencies": {
         "effect": "4.1.4"
@@ -36,6 +38,7 @@
     "devDependencies": {
         "@sedge-hq/config": "workspace:*",
         "@types/bun": "1.4.4",
-        "typescript": "7.0.2"
+        "typescript": "7.0.2",
+        "vitest": "5.1.1"
     }
 }

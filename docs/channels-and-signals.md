@@ -23,8 +23,8 @@ sedge finds or installs the kind, shows you what it will connect, and asks for a
 libsecret on Linux, Windows Credential Manager); the config file only names them. Where there's
 no keychain, an owner-only file in `~/.sedge` stands in.
 
-The tools it uses, if you want to ask for them by name: `channels`, `signals`, `install`,
-`connect`, `disconnect`, `invite`, `create_signal`. See [Commands](./commands.md).
+The tools it uses, if you want to ask for them by name: `channels`, `signals`,
+`find_packages`, `install`, `connect`, `disconnect`, `invite`, `create_signal`. See [Commands](./commands.md).
 
 ## Pairing a channel
 
@@ -61,6 +61,20 @@ into the `main` conversation, so a follow-up question on Telegram has the contex
 Install a package with `sedge install <name>` (a short name means `@sedge-hq/<name>`), a full npm
 name, or the path of a package folder. A folder is packed the way it would be published, along
 with the workspace packages it depends on, so you can try a package before it's on npm.
+
+## Community packages
+
+Anyone can publish channels and signals. Ask sedge to look ("is there a Slack channel?") and it
+searches npm for packages tagged `sedge-kit` (`find_packages`), showing who published each. Install
+one by its npm name, or straight from a repository:
+
+```sh
+sedge install sedge-slack
+sedge install github:someone/sedge-rss
+```
+
+A community package's code runs inside the daemon with your rights, and sedge didn't write or
+review it: `install` says so and links the package before you confirm. Read it first.
 
 ## Your own
 

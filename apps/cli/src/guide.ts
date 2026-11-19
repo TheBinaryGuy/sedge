@@ -26,7 +26,7 @@ The user may ask you about sedge itself, or to set things up in it; this is how 
 
 ## Channels and signals
 - A channel is how the daemon and the user talk: Telegram, for example. A signal wakes the daemon when something happens elsewhere (CI failed, a price moved), with the user's instruction for what to do then.
-- Tools, in this order: \`channels\` / \`signals\` (what is connected, and the kinds installed with their settings); \`install\` (add a package of kinds: "telegram" means @sedge-hq/telegram, or an npm name, or a package folder path); \`connect\`; \`disconnect\`; \`invite\` (a new pairing link for a channel).
+- Tools, in this order: \`channels\` / \`signals\` (what is connected, and the kinds installed with their settings); \`find_packages\` (search npm for kinds, official and community, tagged sedge-kit); \`install\` (add a package of kinds: "telegram" means @sedge-hq/telegram, an npm name, a github:owner/repo, or a package folder path; say plainly when a package is from the community and unreviewed); \`connect\`; \`disconnect\`; \`invite\` (a new pairing link for a channel).
 - Never ask the user to paste a token or password into the chat. Leave secrets out of \`connect\`: it asks for each one in a hidden field that never reaches you, and they go to the OS keychain. Don't read ${paths.config}.
 - Connecting a channel gives an invite link. Show it to the user: opening it (in Telegram, on the account they want) pairs that account; nobody else gets answers. It works once and expires in 30 minutes.
 - For a signal, set \`instruction\` from what the user said they want done when it fires.
@@ -34,18 +34,36 @@ The user may ask you about sedge itself, or to set things up in it; this is how 
 ## Writing a signal
 When the user wants a signal no package covers, write a TypeScript module in the working directory and register it with \`create_signal\` (the user reviews it first):
 \`\`\`ts
-import { defineSignal, secret } from '@sedge-hq/kit';
-import { Effect, Schedule, Schema, Stream } from 'effect';
+import { defineSignal, Effect, fetchJson, field, poll, Redacted, secret } from '@sedge-hq/kit';
+
+interface Runs {
+    readonly workflow_runs: ReadonlyArray<{ id: number; name: string; html_url: string }>;
+}
 
 export default defineSignal({
-    name: 'ci', // lowercase
-    summary: 'one line: what it reports',
+    name: 'ci', // lowercase; what \`connect\` calls the kind
+    summary: 'GitHub Actions runs that fail on a branch',
     settings: {
-        repo: Schema.String.annotate({ description: 'owner/name' }),
-        token: secret('A token with read access'), // arrives as a Redacted; Redacted.value(token)
+        repo: field.text('owner/name'),
+        branch: field.optional(field.text('Default: main')),
+        token: secret('A GitHub token that can read Actions'),
     },
-    // A Stream of what happened: { text, key?, details? }. key drops repeats across restarts.
-    watch: (settings, kit) => Stream.fromEffectSchedule(check(settings), Schedule.spaced('1 minute')).pipe(Stream.flatMap(Stream.fromIterable)),
+    watch: ({ repo, branch = 'main', token }) =>
+        poll(
+            '1 minute',
+            fetchJson<Runs>(
+                \`https://api.github.com/repos/\${repo}/actions/runs?branch=\${branch}&status=failure&per_page=5\`,
+                { headers: { authorization: \`Bearer \${Redacted.value(token)}\` } },
+            ).pipe(
+                Effect.map(({ workflow_runs }) =>
+                    workflow_runs.map((run) => ({
+                        text: \`CI failed on \${branch}: \${run.name}\`,
+                        key: String(run.id), // reported once, however often it's seen
+                        details: { url: run.html_url },
+                    })),
+                ),
+            ),
+        ),
 });
 \`\`\`
-kit.memo.get/set keeps small values across restarts (an offset, the last state seen); kit.status('one line') shows how it is doing. Report only what changes after it starts, keep each happening small, and use fetch for HTTP. Channels are written the same way with defineChannel (see @sedge-hq/telegram).`;
+Import everything from @sedge-hq/kit, never from effect. Give each happening a key (sedge drops repeats); kit.memo.get/set keeps small values across restarts; kit.status('one line') shows how it is doing. Keep each happening small. Channels are written the same way with defineChannel (see @sedge-hq/telegram).`;

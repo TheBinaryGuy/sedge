@@ -1,5 +1,14 @@
-import { defineChannel, type Message, type Picked, secret } from '@sedge-hq/kit';
-import { Effect, Option, Redacted, Schema, Stream } from 'effect';
+import {
+    defineChannel,
+    Effect,
+    field,
+    type Message,
+    Option,
+    type Picked,
+    Redacted,
+    secret,
+    Stream,
+} from '@sedge-hq/kit';
 import { makeBot, splitMessage, type Update } from './bot';
 import { toTelegramHtml } from './format';
 
@@ -16,9 +25,9 @@ export default defineChannel({
     summary: 'your Telegram: message sedge from anywhere, and it answers there',
     settings: {
         token: secret('The bot token. Create a bot by writing /newbot to @BotFather in Telegram.'),
-        api: Schema.optional(Schema.String).annotate({
-            description: "The address of a Bot API server of your own. Default: Telegram's.",
-        }),
+        api: field.optional(
+            field.text("The address of a Bot API server of your own. Default: Telegram's."),
+        ),
     },
     connect: (settings, kit) =>
         Effect.gen(function* () {

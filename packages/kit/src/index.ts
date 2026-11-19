@@ -1,10 +1,10 @@
 import {
     Cause,
+    Duration,
     Effect,
     Exit,
     Fiber,
     Option,
-    Redacted,
     Schedule,
     Schema,
     SchemaAST,
@@ -20,19 +20,21 @@ import type { Scope } from 'effect';
  * - A **channel** is a conversation with the user: Telegram, Slack, email. Their messages reach the
  *   agent; its replies, and its questions with choices, go back.
  *
- * Settings are an Effect Schema. Use `secret(...)` for tokens and passwords: the user types them
- * into a hidden field, sedge keeps them in the OS keychain, and your code gets a `Redacted`.
+ * Everything a kind needs comes from this one import: the kit, and the parts of Effect it uses
+ * (`Effect`, `Stream`, `Schedule`, `Schema`, `Option`, `Redacted`, `Duration`), so a package needs
+ * no `effect` dependency of its own and always matches the version sedge runs. Settings are
+ * `field.*` (Effect Schemas underneath); `secret(...)` is typed by the user into a hidden field,
+ * kept in the OS keychain, and given to you as a `Redacted`.
  *
  * ```ts
- * import { defineSignal } from '@sedge-hq/kit';
- * import { Schema, Stream } from 'effect';
+ * import { defineSignal, Effect, fetchJson, field, poll, Redacted, secret } from '@sedge-hq/kit';
  *
  * export default defineSignal({
- *     name: 'heartbeat',
- *     summary: 'a beat every few minutes',
- *     settings: { minutes: Schema.Number.annotate({ description: 'how often' }) },
- *     watch: ({ minutes }) =>
- *         Stream.tick(`${minutes} minutes`).pipe(Stream.map(() => ({ text: 'beat' }))),
+ *     name: 'ci',
+ *     summary: 'GitHub Actions runs that fail',
+ *     settings: { repo: field.text('owner/name'), token: secret('A token that can read Actions') },
+ *     watch: ({ repo, token }, kit) =>
+ *         poll('1 minute', failedRuns(repo, Redacted.value(token), kit)),
  * });
  * ```
  */
@@ -294,4 +296,59 @@ export const defineChannel = <F extends Fields>(spec: ChannelSpec<F>): Plugin =>
 export const isPlugin = (value: unknown): value is Plugin =>
     typeof value === 'object' && value !== null && (value as { sedge?: unknown }).sedge === 1;
 
-export { Redacted };
+// ── Effect, through the kit ────────────────────────────────────────────────────────────────────
+
+export { Duration, Effect, Option, Redacted, Schedule, Schema, Stream } from 'effect';
+export type { Scope } from 'effect';
+
+// ── Settings ───────────────────────────────────────────────────────────────────────────────────
+
+/**
+ * Settings fields. The description is what the user and the agent see when connecting, so write
+ * it for a person. Wrap a field in `field.optional(...)` when it may be left out.
+ */
+export const field = {
+    text: (description: string) => Schema.String.annotate({ description }),
+    number: (description: string) => Schema.Number.annotate({ description }),
+    flag: (description: string) => Schema.Boolean.annotate({ description }),
+    list: (description: string) => Schema.Array(Schema.String).annotate({ description }),
+    oneOf: <const V extends ReadonlyArray<string>>(values: V, description: string) =>
+        Schema.Literals(values).annotate({ description }),
+    optional: <S extends Schema.Top>(schema: S) =>
+        Schema.optional(schema).annotate({
+            description: SchemaAST.resolveDescription(schema.ast) ?? '',
+        }),
+};
+
+// ── Helpers for watching ───────────────────────────────────────────────────────────────────────
+
+/**
+ * Runs `check` now and then every `every`, and reports what each check found: the usual shape of
+ * a signal. Give each happening a `key` so one seen before isn't reported again.
+ */
+export const poll = <E>(
+    every: Duration.Input,
+    check: Effect.Effect<Iterable<Happening>, E>,
+): Stream.Stream<Happening, E> =>
+    Stream.fromEffectSchedule(check, Schedule.spaced(every)).pipe(
+        Stream.flatMap((found) => Stream.fromIterable(found)),
+    );
+
+/** GETs (or sends `init`) and parses the JSON answer; anything but a 2xx fails with its status. */
+export const fetchJson = <A = unknown>(
+    url: string | URL,
+    init?: RequestInit,
+): Effect.Effect<A, Error> =>
+    Effect.tryPromise({
+        try: async () => {
+            const response = await fetch(url, init);
+            if (!response.ok) {
+                const body = await response.text().catch(() => '');
+                throw new Error(
+                    `${response.status} ${response.statusText}${body ? `: ${body.slice(0, 200)}` : ''}`,
+                );
+            }
+            return (await response.json()) as A;
+        },
+        catch: (error) => (error instanceof Error ? error : new Error(String(error))),
+    });

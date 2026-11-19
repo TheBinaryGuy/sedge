@@ -1,4 +1,4 @@
-import { Effect, Schema } from 'effect';
+import { Effect, Schema } from '@sedge-hq/kit';
 
 /**
  * The few Bot API calls Sedge needs, over plain fetch. Updates are decoded with Schema: they are

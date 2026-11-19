@@ -58,6 +58,21 @@ export const bundleModule = async (file: string): Promise<{ code: string } | { e
     return { code: await readFile(out, 'utf8') };
 };
 
+/** The npm keyword that marks a package of channels and signals. */
+const KEYWORD = 'sedge-kit';
+
+interface NpmSearch {
+    readonly objects: ReadonlyArray<{
+        readonly package: {
+            readonly name: string;
+            readonly version: string;
+            readonly description?: string;
+            readonly publisher?: { readonly username?: string };
+            readonly links?: { readonly npm?: string };
+        };
+    }>;
+}
+
 const message = (error: unknown) =>
     error && typeof error === 'object' && 'message' in error
         ? String(error.message)
@@ -246,9 +261,15 @@ export const registerConnectionTools = (pi: ExtensionAPI, withDaemon: WithDaemon
         }),
         execute: async (_id, params, _signal, _update, ctx) => {
             const spec = packageSpec(params.name);
+            const official = spec.startsWith('@sedge-hq/');
+            const local = spec.startsWith('.') || spec.startsWith('/') || spec.startsWith('~');
             const ok = await ctx.ui.confirm(
                 `Install ${spec}?`,
-                'A package of channels and signals. Its code runs inside the sedge daemon with your rights.',
+                official
+                    ? 'An official package of channels and signals, from sedge.'
+                    : local
+                      ? 'A package folder on this machine. Its code runs inside the sedge daemon with your rights.'
+                      : `A community package: sedge didn't write or review it, and its code runs inside the sedge daemon with your rights. Look at it first: https://www.npmjs.com/package/${spec.replace(/@[^@/]*$/, '')}`,
             );
             if (!ok) return text('The user declined; nothing was installed.');
             const proc = Bun.spawn(selfCommand('install', spec), {
@@ -262,6 +283,44 @@ export const registerConnectionTools = (pi: ExtensionAPI, withDaemon: WithDaemon
             ]);
             if (code !== 0) return text(`Installing ${spec} failed:\n${(err || out).trim()}`);
             return text(`${out.trim()}\nNow connect one with the connect tool.`);
+        },
+    });
+
+    pi.registerTool({
+        name: 'find_packages',
+        label: 'Find packages',
+        description:
+            'Search npm for packages of channels and signals (official ones and the community’s, all tagged "sedge-kit"), optionally for words like "slack" or "github". Shows each with its publisher, so the user can choose; install one with install.',
+        promptSnippet: 'Find channels and signals others made, on npm',
+        parameters: Type.Object({
+            query: Type.Optional(Type.String({ description: 'Words to look for, e.g. "slack".' })),
+        }),
+        execute: async (_id, params) => {
+            const url = new URL('https://registry.npmjs.org/-/v1/search');
+            url.searchParams.set(
+                'text',
+                `keywords:${KEYWORD}${params.query ? ` ${params.query}` : ''}`,
+            );
+            url.searchParams.set('size', '20');
+            const found = await fetch(url).then(
+                async (response) =>
+                    response.ok ? ((await response.json()) as NpmSearch) : undefined,
+                () => undefined,
+            );
+            if (!found) return text('npm could not be searched just now.');
+            if (found.objects.length === 0) {
+                return text(
+                    `No packages${params.query ? ` for "${params.query}"` : ''} yet. Nothing fits? Write a signal and register it with create_signal.`,
+                );
+            }
+            return text(
+                found.objects
+                    .map(({ package: pkg }) => {
+                        const official = pkg.name.startsWith('@sedge-hq/');
+                        return `- ${pkg.name}@${pkg.version}${official ? ' (official)' : ` (community, by ${pkg.publisher?.username ?? 'unknown'})`}: ${pkg.description ?? ''}\n  ${pkg.links?.npm ?? ''}`;
+                    })
+                    .join('\n'),
+            );
         },
     });
 
