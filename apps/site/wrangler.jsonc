@@ -7,7 +7,11 @@
     "assets": { "directory": "./public", "binding": "ASSETS", "run_worker_first": true },
     // scripts/install.sh is bundled into the worker as text: one source for the installer.
     "rules": [{ "type": "Text", "globs": ["**/*.sh"], "fallthrough": true }],
-    "routes": [{ "pattern": "sedge.sh", "custom_domain": true }],
+    "routes": [
+        { "pattern": "sedge.sh", "custom_domain": true },
+        // Only to redirect to sedge.sh. A route rides on the www DNS record already in the zone.
+        { "pattern": "www.sedge.sh/*", "zone_name": "sedge.sh" },
+    ],
     "workers_dev": true,
     "observability": { "enabled": true },
 }
