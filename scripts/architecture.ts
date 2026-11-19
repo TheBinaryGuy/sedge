@@ -1,8 +1,8 @@
 /*
  * Writes docs/architecture-dark.svg and -light.svg, the README's picture of how sedge works: what starts a run, what a
- * run works with, and what leaves it. Drawn in dots: a faint dot field, the title in a 5×7 dot
- * font, an ordered-dither (Bayer 4×4) wash rising from the foot of each panel, and connectors as
- * dotted lines. Edit the layout here and run `bun scripts/architecture.ts`.
+ * run works with, and what leaves it. The title is in a 5×7 dot font and the connectors are dotted
+ * lines; the rest stays plain so it reads at any size. Edit the layout here and run
+ * `bun scripts/architecture.ts`.
  */
 
 const W = 1200;
@@ -17,7 +17,6 @@ const THEMES = {
         muted: '#8b949e',
         accent: '#3fb950',
         accentInk: '#0d1117',
-        field: '#ffffff',
         panel: '#ffffff',
     },
     light: {
@@ -28,7 +27,6 @@ const THEMES = {
         muted: '#59636e',
         accent: '#1a7f37',
         accentInk: '#ffffff',
-        field: '#1f2328',
         panel: '#1f2328',
     },
 };
@@ -36,13 +34,6 @@ let C = THEMES.dark;
 const parts: Array<string> = [];
 const add = (svg: string) => parts.push(svg);
 const esc = (text: string) => text.replaceAll('&', '&amp;').replaceAll('<', '&lt;');
-
-// ── A seeded random, so the picture never changes between runs ─────────────────────────────────
-let seed = 7;
-const random = () => {
-    seed = (seed * 1_103_515_245 + 12_345) % 2 ** 31;
-    return seed / 2 ** 31;
-};
 
 // ── Dot lettering ──────────────────────────────────────────────────────────────────────────────
 const FONT: Record<string, Array<string>> = {
@@ -72,29 +63,11 @@ const dotWord = (word: string, x: number, y: number, pitch: number, fill: string
     add(`<g fill="${fill}">${dots.join('')}</g>`);
 };
 
-// ── Panels with a Bayer wash rising from the foot ──────────────────────────────────────────────
-const BAYER = [
-    [0, 8, 2, 10],
-    [12, 4, 14, 6],
-    [3, 11, 1, 9],
-    [15, 7, 13, 5],
-];
+// ── Panels ──────────────────────────────────────────────────────────────────────────────────
 const panel = (x: number, y: number, w: number, h: number, title: string) => {
     add(
         `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="16" fill="${C.panel}" fill-opacity="0.035"/>`,
     );
-    const step = 8;
-    const dots: Array<string> = [];
-    for (let j = 0; j * step < h - 8; j++) {
-        for (let i = 0; i * step < w - 8; i++) {
-            const t = (j * step) / h;
-            const density = Math.max(0, (t - 0.5) / 0.5) ** 1.3 * 0.8;
-            if (density > (BAYER[j % 4]![i % 4]! + 0.5) / 16) {
-                dots.push(`<circle cx="${x + 8 + i * step}" cy="${y + 8 + j * step}" r="1.6"/>`);
-            }
-        }
-    }
-    add(`<g fill="${C.accent}" fill-opacity="0.28">${dots.join('')}</g>`);
     add(`<text class="head" x="${x + 20}" y="${y + 30}" fill="${C.ink}">${esc(title)}</text>`);
 };
 
@@ -163,9 +136,8 @@ const wire = (
 
 // ── The picture ────────────────────────────────────────────────────────────────────────────────
 const draw = () => {
-    // The dot field and the title.
+    // The ground and the title.
     add(`<rect width="${W}" height="${H}" rx="20" fill="${C.ground}"/>`);
-    add(`<rect width="${W}" height="${H}" rx="20" fill="url(#field)"/>`);
     dotWord('HOW SEDGE WORKS', 34, 34, 5, C.ink);
 
     const Y = 92; // top of the panels
@@ -221,7 +193,7 @@ const draw = () => {
         w: 502,
         h: 72,
         title: 'A run',
-        sub: 'pi-durable · a conversation per thread · resumes after a restart',
+        sub: 'one per agent at a time · durable: resumes after a restart',
         center: true,
     };
     wire(
@@ -394,28 +366,6 @@ const draw = () => {
 
     for (const b of [...sources, inbox, run, memory, skills, mcp, tools, approvals, outbox]) box(b);
 
-    // A few loose dots that twinkle, as the field's only motion.
-    const twinkles: Array<string> = [];
-    const panels: Array<[number, number]> = [
-        [20, 300],
-        [320, 870],
-        [890, 1060],
-    ];
-    for (let i = 0; i < 90 && twinkles.length < 30; i++) {
-        const x = 15 + Math.round((random() * (W - 30)) / 10) * 10;
-        const y = 15 + Math.round((random() * (H - 30)) / 10) * 10;
-        // Only on the open field: not on the title, the panels, You, or the return line.
-        if (x < 500 && y < 80) continue;
-        if (y > Y - 8 && y < Y + 488 && panels.some(([a, b]) => x > a - 8 && x < b + 8)) continue;
-        if (x > 1080 && y > 300 && y < 460) continue;
-        if (Math.abs(y - (H - 38)) < 14) continue;
-        const opacity = (0.2 + random() * 0.35).toFixed(2);
-        twinkles.push(
-            `<circle class="n" cx="${x}" cy="${y}" r="2.6" opacity="${opacity}" style="--a:${opacity};animation-delay:${Math.round(random() * 1800)}ms"/>`,
-        );
-    }
-    add(`<g fill="${C.accent}">${twinkles.join('')}</g>`);
-
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-labelledby="title desc">
     <title id="title">How sedge works</title>
     <desc id="desc">Channels, signals, timers and the terminal put events into the inbox. It starts a run on pi-durable, which works with memory, skills, MCP servers, tools and approvals. What the run sends leaves through the outbox to you on your channel, and your reply comes back as an event.</desc>
@@ -425,11 +375,7 @@ const draw = () => {
     .title { font-size: 15px; font-weight: 700; }
     .sub, .tag { font-family: "Geist Mono", ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 11px; }
     .tag { font-size: 9px; font-weight: 700; letter-spacing: 0.5px; }
-    @keyframes f { 0%, 100% { opacity: var(--a); } 50% { opacity: 0; } }
-    .n { animation: f 1.8s steps(3) infinite; }
-    @media (prefers-reduced-motion: reduce) { .n { animation: none; } }
-    </style>
-    <defs><pattern id="field" width="10" height="10" patternUnits="userSpaceOnUse"><circle cx="5" cy="5" r="1.1" fill="${C.field}" opacity="0.1"/></pattern></defs>
+            @media (prefers-reduced-motion: reduce) {     </style>
     ${parts.join('\n')}
     </svg>
     `;
@@ -440,7 +386,6 @@ const draw = () => {
 for (const [name, palette] of Object.entries(THEMES)) {
     C = palette;
     parts.length = 0;
-    seed = 7;
     const svg = draw();
     await Bun.write(new URL(`../docs/architecture-${name}.svg`, import.meta.url), svg);
     console.log(`docs/architecture-${name}.svg: ${(svg.length / 1024).toFixed(0)} KB`);

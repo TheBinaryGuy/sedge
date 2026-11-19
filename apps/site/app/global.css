@@ -57,8 +57,10 @@ html > body[data-scroll-locked] {
     --removed-body-scroll-bar-size: 0px !important;
 }
 
-/* The field of faint dots behind the home page, as in the README diagram. */
+/* A band of faint dots across the top of the home page, as in the README diagram. It fades out
+   before the text starts, so nothing is read over it. */
 .dot-field {
+    mask-image: linear-gradient(to bottom, black, transparent);
     background-image: radial-gradient(
         circle at center,
         color-mix(in srgb, var(--color-fd-foreground) 12%, transparent) 1.1px,

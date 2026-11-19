@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { CopyCommand } from '@/components/copy-command';
+import { Diagram } from '@/components/diagram';
 import { Logo } from '@/components/logo';
 import { repositoryUrl } from '@/lib/shared';
 
@@ -24,8 +25,12 @@ const POINTS = [
 
 export default function HomePage() {
     return (
-        <main className="dot-field flex flex-1 justify-center px-4 py-16 sm:py-24">
-            <div className="w-full max-w-xl">
+        <main className="relative flex flex-1 justify-center px-4 py-16 sm:py-24">
+            <div
+                aria-hidden="true"
+                className="dot-field pointer-events-none absolute inset-x-0 top-0 h-40"
+            />
+            <div className="relative w-full max-w-xl">
                 <Logo className="mb-7 h-11 w-auto text-fd-primary" />
                 <h1 className="mb-2 text-[28px] leading-tight font-semibold tracking-tight text-balance">
                     An always-on agent that lives on your machine.
@@ -49,17 +54,7 @@ export default function HomePage() {
                         </li>
                     ))}
                 </ul>
-                <picture>
-                    <source
-                        media="(prefers-color-scheme: dark)"
-                        srcSet="/docs/architecture-dark.svg"
-                    />
-                    <img
-                        src="/docs/architecture-light.svg"
-                        alt="How sedge works: channels, signals, timers and the terminal put events into the inbox; a durable run works with memory, skills, MCP servers, tools and approvals; what it sends leaves through the outbox to you, and your reply comes back as an event."
-                        className="mb-10 w-full rounded-2xl border"
-                    />
-                </picture>
+                <Diagram />
                 <footer className="flex gap-4 text-sm text-fd-muted-foreground">
                     <Link href="/docs" className="hover:text-fd-foreground">
                         Docs
