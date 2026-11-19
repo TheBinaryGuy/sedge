@@ -1,5 +1,11 @@
 # sedge
 
+## 0.2.0
+
+### Minor Changes
+
+- [`8dc3ac6`](https://github.com/sedge-hq/sedge/commit/8dc3ac6758982eba53d8a5c76602a25c25d13452) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - Agents. Besides `main`, you can have agents with a purpose of their own ("watch my CI and only tell me when main breaks"), each with its own durable conversation and memory, handling the channels and signals you give it. They run side by side and message each other through the inbox with `tell`. Ask for one in the TUI; `/sedge` opens a dashboard of agents, the inbox, the outbox, timers and memory, and `/sedge tell <agent> <task>` hands one a task.
+
 ## 0.1.1
 
 ### Patch Changes
