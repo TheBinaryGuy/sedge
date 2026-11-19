@@ -74,3 +74,13 @@ failure. Messages can carry buttons (your pick comes back as an event) and files
 - **The daemon** (`sedge start`) runs everything above. The two talk over a Unix socket
   (`~/.sedge/sedge.sock`). `sedge` never waits for the daemon: it starts it in the background and
   connects when it's up.
+
+## Prior art
+
+- [Building always-on agents](https://claude.com/resources/articles/building-always-on-agents),
+  from Claude: the pattern above. An event inbox, short runs that survive restarts, timers,
+  memory, approvals and an outbox.
+- [The components of agent memory](https://www.anthropic.com/research/components-of-agent-memory),
+  from Anthropic: how [memory](./memory.md) is laid out, and the nightly review.
+- [Pine](https://github.com/pmndre/pine), a reactive harness for agents: another agent that runs
+  in the background and wakes when something happens.

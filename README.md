@@ -47,6 +47,16 @@ bundled; your logins are in `~/.pi/agent`.
 **[Read the docs](docs/index.md)**: getting started, how it works, channels and signals, memory,
 MCP and skills, security, configuration, and writing your own.
 
+## Prior art
+
+- [Building always-on agents](https://claude.com/resources/articles/building-always-on-agents),
+  from Claude: the pattern sedge follows. An event inbox, short runs that survive restarts,
+  timers, memory, approvals and an outbox.
+- [The components of agent memory](https://www.anthropic.com/research/components-of-agent-memory),
+  from Anthropic: how sedge's memory is laid out, and the nightly review.
+- [Pine](https://github.com/pmndre/pine), a reactive harness for agents: another agent that runs
+  in the background and wakes when something happens.
+
 ## Develop
 
 ```sh
