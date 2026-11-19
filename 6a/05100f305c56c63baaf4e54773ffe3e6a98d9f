@@ -1,0 +1,22 @@
+scripts/release.ts
+  s_fe732417ee9cdb::t_c10fe3ce09ff98 104-105
+  s_fe732417ee9cdb::t_caf863f85baf6c 43-50
+apps/site/worker.ts
+  s_fe732417ee9cdb::t_155c6bc3d27101 1-42
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "6a05100f305c56c63baaf4e54773ffe3e6a98d9f",
+  "prompts": {},
+  "sessions": {
+    "s_fe732417ee9cdb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b6666194-df82-46a7-a1ef-33e06788ffe9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "TheBinaryGuy <hello@thebinary.dev>"
+    }
+  }
+}
