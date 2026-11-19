@@ -1,0 +1,262 @@
+packages/protocol/package.json
+  s_fe732417ee9cdb::t_f61e51b7a87128 6-8,12-14,16-21
+  s_fe732417ee9cdb::t_2b91efa39d6b24 11
+  s_fe732417ee9cdb::t_fe39aa4f97d545 1-5,9-10,15,22
+.github/workflows/ci.yml
+  s_fe732417ee9cdb::t_b13cd6177763ea 1-32
+.changeset/first-release.md
+  s_fe732417ee9cdb::t_42af350e82f7b6 1-5
+packages/protocol/tsconfig.json
+  s_fe732417ee9cdb::t_fe39aa4f97d545 1
+packages/db/src/migrations.gen.ts
+  s_fe732417ee9cdb::t_715f3f23c20d46 2-12,14,16-17
+  s_fe732417ee9cdb::t_84979801420443 1,13,15
+packages/daemon/src/daemon.ts
+  s_fe732417ee9cdb::t_699413b8645104 1,86
+  s_fe732417ee9cdb::t_4a40755a0b74ba 57-66
+  s_fe732417ee9cdb::t_f61e51b7a87128 88-91,98-100
+  s_fe732417ee9cdb::t_025dcfa4ff825a 4,70-76
+  s_fe732417ee9cdb::t_463e91bfc73365 2-3,5-48,53-56,67-69,77-85,87,92-97,101-121
+  s_fe732417ee9cdb::t_be6d0be113e889 49-52
+packages/config/package.json
+  s_fe732417ee9cdb::t_e59b6049bac1e2 1-17
+packages/agent/package.json
+  s_fe732417ee9cdb::t_f61e51b7a87128 6-8,12-17,19-25
+  s_fe732417ee9cdb::t_2b91efa39d6b24 11
+  s_fe732417ee9cdb::t_fe39aa4f97d545 1-5,9-10,18,26
+.github/workflows/release.yml
+  s_fe732417ee9cdb::t_b13cd6177763ea 1-46
+scripts/release.ts
+  s_fe732417ee9cdb::t_b13cd6177763ea 1-13,17-23,27-51,63-65
+  s_fe732417ee9cdb::t_f61e51b7a87128 14-16,24-26,52-62
+packages/core/src/paths.ts
+  s_fe732417ee9cdb::t_3b7b5321ae3fd5 1-37
+package.json
+  s_fe732417ee9cdb::t_e59b6049bac1e2 1-43
+packages/core/package.json
+  s_fe732417ee9cdb::t_f61e51b7a87128 6-8,12-14,16-22
+  s_fe732417ee9cdb::t_2b91efa39d6b24 11
+  s_fe732417ee9cdb::t_fe39aa4f97d545 1-5,9-10,15,23
+apps/cli/src/client.ts
+  s_fe732417ee9cdb::t_025dcfa4ff825a 4,89
+  s_fe732417ee9cdb::t_f61e51b7a87128 9-14,45-48,67-70
+  s_fe732417ee9cdb::t_091b41aaead825 1-3,5-8,15-19,27,30-44,49,51,54-57,61-66,71-88,90-108
+  s_fe732417ee9cdb::t_1e05ec99e501f1 20-26,28-29
+  s_fe732417ee9cdb::t_c65c66d99f4791 50,52-53,58-60
+packages/core/vitest.config.ts
+  s_fe732417ee9cdb::t_b49e4d5431a280 3,5
+  s_fe732417ee9cdb::t_b5a5bed5537ba1 1-2,4,6
+packages/db/drizzle.config.ts
+  s_fe732417ee9cdb::t_715f3f23c20d46 1-7
+packages/db/src/index.ts
+  s_fe732417ee9cdb::t_b5a5bed5537ba1 1-4
+packages/protocol/vitest.config.ts
+  s_fe732417ee9cdb::t_b5a5bed5537ba1 1-2,4,6
+  s_fe732417ee9cdb::t_b49e4d5431a280 3,5
+packages/db/package.json
+  s_fe732417ee9cdb::t_fe39aa4f97d545 1-11,14-29
+  s_fe732417ee9cdb::t_84979801420443 13
+  s_fe732417ee9cdb::t_2b91efa39d6b24 12
+packages/core/src/version.test.ts
+  s_fe732417ee9cdb::t_3b7b5321ae3fd5 1-15
+packages/daemon/src/updater.ts
+  s_fe732417ee9cdb::t_13997cf968e3d8 1-3,5,7-53,58-64,68-75,80-82,86,90-95,98-99,106-112,115-162
+  s_fe732417ee9cdb::t_f61e51b7a87128 54-57,76-79,83-85,87-89,113-114
+  s_fe732417ee9cdb::t_f4dcb738c32176 4,6,65-67,96-97,100-105
+apps/cli/src/load-pi.ts
+  s_fe732417ee9cdb::t_699413b8645104 1-9
+apps/cli/tsconfig.json
+  s_fe732417ee9cdb::t_fe39aa4f97d545 1
+packages/db/src/inbox.test.ts
+  s_fe732417ee9cdb::t_b5a5bed5537ba1 1-36
+.changeset/config.json
+  s_fe732417ee9cdb::t_e59b6049bac1e2 1-12
+packages/core/src/process.ts
+  s_fe732417ee9cdb::t_3b7b5321ae3fd5 1-18
+packages/db/drizzle/20261119054654_init/snapshot.json
+  s_fe732417ee9cdb::t_84979801420443 1-272
+apps/cli/bin/sedge.js
+  s_fe732417ee9cdb::t_4950aeb565be8e 1-24
+packages/db/src/schema/index.ts
+  s_fe732417ee9cdb::t_715f3f23c20d46 1-52
+packages/core/src/version.ts
+  s_fe732417ee9cdb::t_3b7b5321ae3fd5 1-27
+packages/agent/src/index.ts
+  s_fe732417ee9cdb::t_0671c751ef6845 5-6,74-76,78,80,84-86,91-92,95,98-99,171-177
+  s_fe732417ee9cdb::t_c57de23d520ec7 144
+  s_fe732417ee9cdb::t_699413b8645104 2,9,11-12,15-19,22-26,28,72-73,77,79,81-83,87-88,90,93
+  s_fe732417ee9cdb::t_d19b9de94af14c 1,8
+  s_fe732417ee9cdb::t_bc5c2f23df8b1a 3-4,7,10,13-14,20-21,27,29-71,89,94,96-97,100-103,107-143,145-170,178-180
+  s_fe732417ee9cdb::t_f61e51b7a87128 104-106
+AGENTS.md
+  s_fe732417ee9cdb::t_f61e51b7a87128 1-18,25-35,38-39
+  s_fe732417ee9cdb::t_451de6bb1b061e 36-37
+  s_fe732417ee9cdb::t_16db930cabdcd1 19-24
+.changeset/README.md
+  s_fe732417ee9cdb::t_e59b6049bac1e2 1-4
+packages/daemon/tsconfig.json
+  s_fe732417ee9cdb::t_fe39aa4f97d545 1
+README.md
+  s_fe732417ee9cdb::t_451de6bb1b061e 1,3-4,25-26
+  s_fe732417ee9cdb::t_16db930cabdcd1 19-21,43,77-80
+  s_fe732417ee9cdb::t_f61e51b7a87128 2,5-18,22-24,27-42,44-76
+packages/daemon/src/index.ts
+  s_fe732417ee9cdb::t_463e91bfc73365 1-4
+packages/daemon/src/lock.ts
+  s_fe732417ee9cdb::t_13997cf968e3d8 1-68
+packages/config/oxfmt.ts
+  s_fe732417ee9cdb::t_e59b6049bac1e2 1-19
+packages/daemon/src/server.ts
+  s_fe732417ee9cdb::t_f61e51b7a87128 59-63,67-69,73-75,118-120,135-139
+  s_fe732417ee9cdb::t_b046242a9b47d1 1-4,8-58,64-65,71-72,79-88,104-117,121-134,140-150
+  s_fe732417ee9cdb::t_afa55baa5e24c6 5-6
+  s_fe732417ee9cdb::t_c57de23d520ec7 7,66,70,76-78,89-102
+  s_fe732417ee9cdb::t_c49eda395aab3a 103
+packages/daemon/src/service.ts
+  s_fe732417ee9cdb::t_4a40755a0b74ba 26,45
+  s_fe732417ee9cdb::t_e98cdd98af8c92 1-25,27-44,46-68,72-77,83-89,93-101,107-110
+  s_fe732417ee9cdb::t_f61e51b7a87128 69-71,78-82,90-92,102-106
+LICENSE
+  s_fe732417ee9cdb::t_16db930cabdcd1 1-21
+packages/db/src/inbox.ts
+  s_fe732417ee9cdb::t_c57de23d520ec7 21,98-108
+  s_fe732417ee9cdb::t_fe206a67509d35 1,51
+  s_fe732417ee9cdb::t_b5a5bed5537ba1 2-20,22-50,52-97,109-111
+docs/logo.svg
+  s_fe732417ee9cdb::t_ae657dab928678 1
+.gitignore
+  s_fe732417ee9cdb::t_e59b6049bac1e2 27
+  s_fe732417ee9cdb::t_467713a0247cfb 1-26
+apps/cli/src/utils/image-resize-worker.ts
+  s_fe732417ee9cdb::t_4950aeb565be8e 1-3
+scripts/build.ts
+  s_fe732417ee9cdb::t_f61e51b7a87128 89-91,95-98
+  s_fe732417ee9cdb::t_4950aeb565be8e 2-17,20-88,92-94,99-126,130-139,141-151
+  s_fe732417ee9cdb::t_2fd2c8ce578984 1,18-19
+  s_fe732417ee9cdb::t_16db930cabdcd1 127-129,140
+scripts/logo.ts
+  s_fe732417ee9cdb::t_11894336c95d2b 1-4,6-24,26,28-29,31-37,43,48-54
+  s_fe732417ee9cdb::t_451de6bb1b061e 44-47
+  s_fe732417ee9cdb::t_ae657dab928678 25,27,42
+  s_fe732417ee9cdb::t_d798d745f0c5e8 30
+  s_fe732417ee9cdb::t_4ed9775af0b183 5,38-41
+apps/cli/src/pi.ts
+  s_fe732417ee9cdb::t_1b521664c7bcea 14,28-30,35,38-42
+  s_fe732417ee9cdb::t_857343c05cb26c 5,19-24,26,43-60
+  s_fe732417ee9cdb::t_805314b6340832 1-4,7-13,15-18,25,27,31-34,36-37,61
+  s_fe732417ee9cdb::t_699413b8645104 6
+packages/db/vitest.config.ts
+  s_fe732417ee9cdb::t_b49e4d5431a280 3,5
+  s_fe732417ee9cdb::t_b5a5bed5537ba1 1-2,4,6
+packages/daemon/package.json
+  s_fe732417ee9cdb::t_2b91efa39d6b24 11
+  s_fe732417ee9cdb::t_fe39aa4f97d545 1-5,9-10,20,28
+  s_fe732417ee9cdb::t_f61e51b7a87128 6-8,12-19,21-27
+packages/config/tsconfig.json
+  s_fe732417ee9cdb::t_e59b6049bac1e2 1
+packages/db/scripts/generate.ts
+  s_fe732417ee9cdb::t_84979801420443 1-30
+apps/cli/src/main.ts
+  s_fe732417ee9cdb::t_5cd56c4c2009d3 29,32,46,49
+  s_fe732417ee9cdb::t_03ddee43f55bbc 1-3,28
+  s_fe732417ee9cdb::t_805314b6340832 4-27,30-31,33-45,47-48
+packages/db/tsconfig.json
+  s_fe732417ee9cdb::t_fe39aa4f97d545 1
+packages/core/tsconfig.json
+  s_fe732417ee9cdb::t_fe39aa4f97d545 1
+packages/core/src/index.ts
+  s_fe732417ee9cdb::t_4ed9775af0b183 4
+  s_fe732417ee9cdb::t_3b7b5321ae3fd5 1-3
+packages/daemon/vitest.config.ts
+  s_fe732417ee9cdb::t_b49e4d5431a280 3,5
+  s_fe732417ee9cdb::t_b5a5bed5537ba1 1-2,4,6
+packages/protocol/src/index.ts
+  s_fe732417ee9cdb::t_c57de23d520ec7 44-52,74-75
+  s_fe732417ee9cdb::t_025dcfa4ff825a 15-16,80-85
+  s_fe732417ee9cdb::t_56c9232f81360f 1-14,17-43,53-73,76-79
+apps/cli/src/commands.ts
+  s_fe732417ee9cdb::t_1b521664c7bcea 63-65
+  s_fe732417ee9cdb::t_805314b6340832 1-6,8-62,66-117
+  s_fe732417ee9cdb::t_699413b8645104 7
+packages/core/src/logo.ts
+  s_fe732417ee9cdb::t_4ed9775af0b183 1-2
+apps/cli/package.json
+  s_fe732417ee9cdb::t_fe39aa4f97d545 1-16,18-21,23-25,28-38
+  s_fe732417ee9cdb::t_c49eda395aab3a 26-27
+  s_fe732417ee9cdb::t_f61e51b7a87128 17
+  s_fe732417ee9cdb::t_2b91efa39d6b24 22
+packages/db/src/timers.ts
+  s_fe732417ee9cdb::t_b5a5bed5537ba1 1-45
+apps/cli/src/pi-setup.ts
+  s_fe732417ee9cdb::t_5cd56c4c2009d3 1-7
+apps/cli/src/extension.ts
+  s_fe732417ee9cdb::t_f61e51b7a87128 15-16,87-91,181-182,185-187
+  s_fe732417ee9cdb::t_3b0b2b1179aa36 105-107
+  s_fe732417ee9cdb::t_be6d0be113e889 71-73,136
+  s_fe732417ee9cdb::t_919a02ee009dda 11,51-63,69-70,76-79,81-84,95-96,98-102,110-111,113-117,119-120,122,129-133,165-180,183-184,188-206,208-214
+  s_fe732417ee9cdb::t_d50fe35151ea8d 9-10,64-68,74-75,80,108-109,112,134-135,137-138
+  s_fe732417ee9cdb::t_857343c05cb26c 13,35-40
+  s_fe732417ee9cdb::t_451de6bb1b061e 143-164
+  s_fe732417ee9cdb::t_3860bb9a7ce8e4 1-6,12,14,17-18,32-34,41,85-86,92-94,97,207
+  s_fe732417ee9cdb::t_11894336c95d2b 7,42-50,118,121,123-128,139-142
+  s_fe732417ee9cdb::t_1b521664c7bcea 103-104
+  s_fe732417ee9cdb::t_4ed9775af0b183 8,19-31
+scripts/install.sh
+  s_fe732417ee9cdb::t_b13cd6177763ea 1-33
+apps/cli/src/extensions/codemode/worker.ts
+  s_fe732417ee9cdb::t_4950aeb565be8e 1-3
+packages/config/oxlint.json
+  s_fe732417ee9cdb::t_e59b6049bac1e2 1-11
+packages/db/src/database.ts
+  s_fe732417ee9cdb::t_83b6807aaa0e5e 20
+  s_fe732417ee9cdb::t_b5a5bed5537ba1 1-19,21-35
+packages/db/drizzle/20261119054654_init/migration.sql
+  s_fe732417ee9cdb::t_84979801420443 1-27
+packages/agent/vitest.config.ts
+  s_fe732417ee9cdb::t_b5a5bed5537ba1 1-2,4,6
+  s_fe732417ee9cdb::t_b49e4d5431a280 3,5
+packages/agent/tsconfig.json
+  s_fe732417ee9cdb::t_fe39aa4f97d545 1
+apps/cli/vitest.config.ts
+  s_fe732417ee9cdb::t_b49e4d5431a280 3,5
+  s_fe732417ee9cdb::t_b5a5bed5537ba1 1-2,4,6
+packages/daemon/src/runtime.ts
+  s_fe732417ee9cdb::t_afa55baa5e24c6 3-4,69-78,80
+  s_fe732417ee9cdb::t_c57de23d520ec7 10-11,82,84-96
+  s_fe732417ee9cdb::t_87943259bd979e 1-2,5-9,12-37,40-46,52-68,79,81,83,97-104,108-115,119-121,127-141
+  s_fe732417ee9cdb::t_f61e51b7a87128 38-39,47-51,105-107,116-118,122-126
+.editorconfig
+  s_fe732417ee9cdb::t_7169c2bd76a6b2 1-9
+.gitattributes
+  s_fe732417ee9cdb::t_91fb1eafdaeca4 1-2
+.oxlintrc.json
+  s_fe732417ee9cdb::t_174b60daab8516 1-5
+bun.lock
+  s_fe732417ee9cdb::t_28f2fbe4345f01 1-768
+oxfmt.config.ts
+  s_fe732417ee9cdb::t_57511ab009213c 1-3
+tsconfig.base.json
+  s_fe732417ee9cdb::t_b4a2c582a324fe 1-21
+tsconfig.json
+  s_fe732417ee9cdb::t_bb8ad83c66d859 1-4
+turbo.json
+  s_fe732417ee9cdb::t_c410bb49d00eb9 1-22
+vitest.config.ts
+  s_fe732417ee9cdb::t_4920315829dc00 1-8
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c24677fb967582d400df6085dc4a670136a68a40",
+  "prompts": {},
+  "sessions": {
+    "s_fe732417ee9cdb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b6666194-df82-46a7-a1ef-33e06788ffe9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "TheBinaryGuy <hello@thebinary.dev>"
+    }
+  }
+}
