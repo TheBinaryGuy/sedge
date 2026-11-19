@@ -1,5 +1,13 @@
 # sedge
 
+## 0.3.0
+
+### Minor Changes
+
+- [`6779ee2`](https://github.com/sedge-hq/sedge/commit/6779ee254845e9c29bb12acba58daf93432c7077) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - `sedge dash`: the dashboard on its own, full screen, with the daemon's status on top, a tab each for agents, the inbox, the outbox, timers and memory, an agent filter, and the selected item in full; it refreshes every two seconds. `/sedge` in the TUI is the same view. The TUI's theme now shades thinking levels in sedge's green. `SEDGE_SECRET_STORE=file` keeps secrets in a file instead of the keychain. The docs have screenshots.
+
+- [`7911183`](https://github.com/sedge-hq/sedge/commit/79111832712f12ecc90e6b76da4797eb749f7722) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - Channels and signals import everything from `@sedge-hq/kit`: it hands you Effect's `Effect`, `Stream`, `Schedule`, `Schema`, `Option`, `Redacted` and `Duration`, plus `field.*` settings, `poll(every, check)` and `fetchJson`, so a package needs no `effect` dependency of its own. Community packages: anything tagged `sedge-kit` on npm shows up when you ask sedge to look (`find_packages`), and installing one says plainly that sedge didn't review it. The docs explain how to publish your own.
+
 ## 0.2.0
 
 ### Minor Changes
