@@ -18,7 +18,13 @@ const text = (value: string, isError = false): ToolExecutionResult => ({
 });
 
 /** sedge's own tools never need approval: they only write to its stores. */
-export const SEDGE_TOOLS = new Set(['send_message', 'set_timer', 'list_timers', 'cancel_timer']);
+export const SEDGE_TOOLS = new Set([
+    'send_message',
+    'tell',
+    'set_timer',
+    'list_timers',
+    'cancel_timer',
+]);
 
 /**
  * The always-on primitives as a durable extension: the outbox (`send_message`), timers, memory in
@@ -68,6 +74,17 @@ export const sedgeExtension = (host: AgentHost, runFor: (conversationId: number)
                 }),
                 execute: async (args, api) =>
                     text(await host.send(runFor(api.conversationId), args)),
+            }),
+            defineTool({
+                name: 'tell',
+                description:
+                    "Message another agent (see the agents in your instructions): a task, a question, or the answer to one. It goes into that agent's inbox and wakes it; what it says back arrives as a new event. Say what you need and what to send back.",
+                parameters: obj({
+                    agent: str({ description: 'The agent’s name, e.g. "main" or "ci".' }),
+                    message: str(),
+                }),
+                execute: async (args, api) =>
+                    text(await host.tell(runFor(api.conversationId), args.agent, args.message)),
             }),
             defineTool({
                 name: 'set_timer',

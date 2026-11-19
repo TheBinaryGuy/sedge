@@ -19,6 +19,9 @@ import { DREAM_PROMPT } from './memory';
 import { Settings } from './settings';
 import { supervise } from './supervise';
 
+/** How many runs (each for a different thread) may go at once. */
+const MAX_RUNS = 4;
+
 /** The conversation dreaming happens in, apart from the user's. */
 export const DREAM_THREAD = 'dream';
 const DREAM_CRON = '30 3 * * *';
@@ -87,8 +90,8 @@ export class Runtime extends Context.Service<
     Runtime,
     {
         readonly bus: PubSub.PubSub<BusMessage>;
-        /** The thread a run is in progress for, if any. */
-        readonly running: Effect.Effect<string | null>;
+        /** The threads with a run in progress. */
+        readonly running: Effect.Effect<ReadonlyArray<string>>;
     }
 >()('sedge/daemon/Runtime') {
     static readonly layer = Layer.effect(
@@ -100,7 +103,8 @@ export class Runtime extends Context.Service<
             const worker = yield* WorkerWake;
             const connections = yield* Connections;
             const bus = yield* PubSub.unbounded<BusMessage>();
-            const running = yield* Ref.make<string | null>(null);
+            const running = yield* Ref.make<ReadonlySet<string>>(new Set());
+            const scope = yield* Effect.scope;
             const publish = (message: BusMessage) => PubSub.publish(bus, message);
 
             // Dreaming: once a night the agent reads back over its recent conversations and tidies
@@ -129,76 +133,99 @@ export class Runtime extends Context.Service<
                 yield* Effect.logWarning(`Requeued ${recovered} interrupted event(s)`);
             }
 
-            const processNext = Effect.gen(function* () {
-                const batch = yield* inbox.claimBatch;
-                const first = batch[0];
-                if (!first) return false;
-                const itemIds = batch.map((item) => item.id);
-                yield* Ref.set(running, first.thread);
-                for (const itemId of itemIds) {
-                    yield* publish({ _tag: 'Event', itemIds, event: { _tag: 'Started', itemId } });
-                }
-
-                // "typing…" on the user's channel while the run lasts.
-                const typing = yield* Effect.forkChild(
-                    connections
-                        .working(first.thread)
-                        .pipe(Effect.repeat(Schedule.spaced('4 seconds'))),
-                );
-                const outcome = yield* agent
-                    .run(
-                        {
-                            thread: first.thread,
-                            sources: [...new Set(batch.map((item) => item.source))],
-                            cwd: batch[batch.length - 1]!.cwd,
-                            items: batch.map((item) => ({ id: item.id, text: formatItem(item) })),
-                        },
-                        (event) => publish({ _tag: 'Event', itemIds, event }),
-                    )
-                    .pipe(
-                        Effect.ensuring(Fiber.interrupt(typing)),
-                        Effect.map((text) => ({ ok: true as const, text })),
-                        Effect.catch((error: AgentRunError) =>
-                            Effect.succeed({ ok: false as const, text: error.message }),
-                        ),
-                        Effect.ensuring(Ref.set(running, null)),
-                    );
-
-                yield* inbox.finish(
-                    itemIds,
-                    outcome.ok ? { result: outcome.text } : { error: outcome.text },
-                );
-                if (outcome.ok) {
+            /** One run: a thread's batch, from start to the outcome everyone waiting hears. */
+            const process = (batch: ReadonlyArray<InboxItem>) =>
+                Effect.gen(function* () {
+                    const first = batch[0]!;
+                    const itemIds = batch.map((item) => item.id);
                     for (const itemId of itemIds) {
                         yield* publish({
                             _tag: 'Event',
-                            itemIds: [itemId],
-                            event: { _tag: 'Finished', itemId, text: outcome.text },
+                            itemIds,
+                            event: { _tag: 'Started', itemId },
                         });
                     }
-                } else {
-                    yield* publish({ _tag: 'Failed', itemIds, message: outcome.text });
-                    yield* Effect.logError(`Run for ${first.thread} failed: ${outcome.text}`);
-                }
-                for (const item of batch) {
-                    yield* publish({
-                        _tag: 'Completed',
-                        itemIds: [item.id],
-                        completion: new Completion({
-                            itemId: item.id,
-                            source: item.source,
-                            prompt: item.prompt,
-                            ok: outcome.ok,
-                            text: outcome.text,
-                        }),
-                    });
-                }
-                return true;
-            });
 
-            // Drain everything pending, then sleep until woken or the next poll.
+                    // "typing…" on the user's channel while the run lasts.
+                    const typing = yield* Effect.forkChild(
+                        connections
+                            .working(first.thread)
+                            .pipe(Effect.repeat(Schedule.spaced('4 seconds'))),
+                    );
+                    const outcome = yield* agent
+                        .run(
+                            {
+                                thread: first.thread,
+                                sources: [...new Set(batch.map((item) => item.source))],
+                                cwd: batch[batch.length - 1]!.cwd,
+                                items: batch.map((item) => ({
+                                    id: item.id,
+                                    text: formatItem(item),
+                                })),
+                            },
+                            (event) => publish({ _tag: 'Event', itemIds, event }),
+                        )
+                        .pipe(
+                            Effect.ensuring(Fiber.interrupt(typing)),
+                            Effect.map((text) => ({ ok: true as const, text })),
+                            Effect.catch((error: AgentRunError) =>
+                                Effect.succeed({ ok: false as const, text: error.message }),
+                            ),
+                        );
+
+                    yield* inbox.finish(
+                        itemIds,
+                        outcome.ok ? { result: outcome.text } : { error: outcome.text },
+                    );
+                    if (outcome.ok) {
+                        for (const itemId of itemIds) {
+                            yield* publish({
+                                _tag: 'Event',
+                                itemIds: [itemId],
+                                event: { _tag: 'Finished', itemId, text: outcome.text },
+                            });
+                        }
+                    } else {
+                        yield* publish({ _tag: 'Failed', itemIds, message: outcome.text });
+                        yield* Effect.logError(`Run for ${first.thread} failed: ${outcome.text}`);
+                    }
+                    for (const item of batch) {
+                        yield* publish({
+                            _tag: 'Completed',
+                            itemIds: [item.id],
+                            completion: new Completion({
+                                itemId: item.id,
+                                source: item.source,
+                                prompt: item.prompt,
+                                ok: outcome.ok,
+                                text: outcome.text,
+                            }),
+                        });
+                    }
+                });
+
+            // Start a run for each thread with pending events, up to MAX_RUNS at once and never
+            // two for one thread; then sleep until a run ends, an event arrives, or the next poll.
             const drain = Effect.gen(function* () {
-                while (yield* processNext) {}
+                while ((yield* Ref.get(running)).size < MAX_RUNS) {
+                    const batch = yield* inbox.claimBatch([...(yield* Ref.get(running))]);
+                    const thread = batch[0]?.thread;
+                    if (thread === undefined) break;
+                    yield* Ref.update(running, (set) => new Set(set).add(thread));
+                    yield* process(batch).pipe(
+                        Effect.catchCause((cause) =>
+                            Effect.logError(`Run for ${thread} crashed`, cause),
+                        ),
+                        Effect.ensuring(
+                            Ref.update(running, (set) => {
+                                const next = new Set(set);
+                                next.delete(thread);
+                                return next;
+                            }).pipe(Effect.andThen(worker.wake)),
+                        ),
+                        Effect.forkIn(scope),
+                    );
+                }
                 yield* worker.wait('5 seconds');
             });
 
@@ -235,7 +262,10 @@ export class Runtime extends Context.Service<
             yield* Effect.forkScoped(supervise('Inbox worker', drain));
             yield* Effect.forkScoped(supervise('Scheduler', tick));
 
-            return Runtime.of({ bus, running: Ref.get(running) });
+            return Runtime.of({
+                bus,
+                running: Ref.get(running).pipe(Effect.map((set) => [...set])),
+            });
         }),
     );
 }

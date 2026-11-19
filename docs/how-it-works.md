@@ -22,9 +22,10 @@ Everything that should wake the agent becomes an event in the inbox, a table in
 - your answer to an approval;
 - a task from the terminal (`/sedge bg <task>` in the TUI).
 
-Each event has an id from its source, so one that arrives twice is stored once. One worker drains
-the inbox, one conversation at a time. Events that arrive while it works are answered together
-in the next run, so three quick messages get one reply, not three.
+Each event has an id from its source, so one that arrives twice is stored once. The worker
+drains the inbox: up to four runs at once, never two for the same conversation. Events that
+arrive while a conversation's run is going are answered together in its next run, so three
+quick messages get one reply, not three.
 
 ## The run
 
@@ -37,7 +38,8 @@ after a restart is answered once.
 
 Conversations are called threads:
 
-- `main`: you and sedge, on every channel. Signals report here too.
+- `main`: you and sedge, on every channel. Signals report here too, unless they belong to an agent.
+- `agent:<name>`: each [agent](./agents.md) you made. Agents message each other with `tell`.
 - `cli:<folder>`: a task from the terminal, one per folder.
 - `dream`: the nightly [memory](./memory.md) review.
 

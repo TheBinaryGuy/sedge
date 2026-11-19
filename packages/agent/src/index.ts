@@ -115,7 +115,17 @@ export class Agent extends Context.Service<
         Layer.effect(
             Agent,
             Effect.gen(function* () {
-                const lock = yield* Semaphore.make(1);
+                // One run at a time per thread; different threads (agents) run side by side.
+                const locks = new Map<string, Semaphore.Semaphore>();
+                const lockFor = (thread: string) =>
+                    Effect.sync(() => {
+                        let lock = locks.get(thread);
+                        if (!lock) {
+                            lock = Semaphore.makeUnsafe(1);
+                            locks.set(thread, lock);
+                        }
+                        return lock;
+                    });
                 let opening: Promise<Durable> | undefined;
                 const open = () =>
                     (opening ??= (async () => {
@@ -154,19 +164,25 @@ export class Agent extends Context.Service<
                     }),
                 );
 
-                const run = Effect.fn('Agent.run')(function* (
-                    input: RunInput,
-                    onEvent: (event: AgentEvent) => Effect.Effect<void>,
-                ) {
-                    const services = yield* Effect.context<never>();
-                    const emit = (event: AgentEvent) => {
-                        Effect.runForkWith(services)(onEvent(event));
-                    };
-                    return yield* Effect.tryPromise({
-                        try: async () => (await open()).run(input, emit),
-                        catch: (cause) => new AgentRunError({ message: describe(cause) }),
-                    });
-                }, lock.withPermits(1));
+                const run = Effect.fn('Agent.run')(
+                    function* (
+                        input: RunInput,
+                        onEvent: (event: AgentEvent) => Effect.Effect<void>,
+                    ) {
+                        const services = yield* Effect.context<never>();
+                        const emit = (event: AgentEvent) => {
+                            Effect.runForkWith(services)(onEvent(event));
+                        };
+                        return yield* Effect.tryPromise({
+                            try: async () => (await open()).run(input, emit),
+                            catch: (cause) => new AgentRunError({ message: describe(cause) }),
+                        });
+                    },
+                    (effect, input) =>
+                        Effect.flatMap(lockFor(input.thread), (lock) =>
+                            lock.withPermits(1)(effect),
+                        ),
+                );
 
                 const abort = Effect.promise(async () => {
                     const durable = await opening?.catch(() => undefined);

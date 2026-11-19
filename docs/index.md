@@ -22,7 +22,7 @@ It has two halves:
 ## Use it
 
 [Getting started](./getting-started.md) · [Channels and signals](./channels-and-signals.md) ·
-[Memory](./memory.md) · [MCP and skills](./mcp-and-skills.md)
+[Agents](./agents.md) · [Memory](./memory.md) · [MCP and skills](./mcp-and-skills.md)
 
 ## Understand it
 

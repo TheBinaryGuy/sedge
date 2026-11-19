@@ -1,0 +1,75 @@
+---
+title: Agents
+description: Give sedge more than one agent, each with a purpose of its own, and see what each is doing.
+---
+
+`main` is sedge itself: it talks with you and handles whatever no other agent does. You can add
+agents for work that runs on its own: one that watches your CI, one that reads a feed, one that
+looks after a project.
+
+## What an agent is
+
+- **A name and a purpose**, in your words: what it watches or does, when to bother you, what to
+  hand to `main`. It reads its purpose at the start of every run.
+- **Its own conversation**, durable like `main`'s, so its context stays its own.
+- **Its own memory**: a folder inside `~/.sedge/memory/agents/<name>/`, with its own `MEMORY.md`.
+  The nightly [dream](./memory.md) tidies every agent's memory.
+- **The channels and signals you give it.** What they bring wakes that agent instead of `main`.
+
+Agents run side by side (up to four runs at once), and each one handles one run at a time.
+
+## Make one
+
+Ask in the TUI:
+
+> make an agent that watches the CI signal and only tells me when main breaks
+
+sedge proposes a name and a purpose, shows you, and creates it when you say yes (`create_agent`).
+Ask the same way to change its purpose, give it another channel or signal, or remove it.
+Removing an agent gives its channels and signals back to `main` and stops its timers; its memory
+folder stays.
+
+## How agents talk
+
+Each agent has a `tell` tool. A message from one agent goes into the other's inbox and wakes it,
+like any event; the answer comes back the same way. An agent that finds something you need to
+know can tell you itself (`send_message`) or hand it to `main`.
+
+Messages from an agent other than `main` reach you with its name in front ("**ci**: main is red
+again"), on the channel you last wrote from, or on a channel that belongs to it.
+
+From the TUI you can hand any agent a task and wait for the answer (`tell_agent`), or fire and
+forget: `/sedge tell ci check the last three runs`.
+
+## See what they're doing
+
+`/sedge` opens the dashboard, with a tab for each of these:
+
+| Tab      | Shows                                                                   |
+| -------- | ----------------------------------------------------------------------- |
+| `agents` | Each agent's purpose, what it handles, whether it's working, its queue. |
+| `inbox`  | The events that woke each agent, from where, and how the run went.      |
+| `outbox` | What each agent sent you, and whether it arrived.                       |
+| `timers` | Follow-ups and schedules, by agent.                                     |
+| `memory` | Each agent's `MEMORY.md` and the files beside it.                       |
+
+← and → switch tabs, ↑ and ↓ scroll, `r` refreshes, Esc closes. `/sedge inbox ci` opens one tab
+for one agent. In the chat, the TUI's agent can read the same things for you (`inbox`, `outbox`,
+`timers`), and change what an agent remembers if you ask.
+
+## In the config
+
+Agents live in `~/.sedge/config.json` (see [Configuration](./configuration.md)):
+
+```json
+{
+    "agents": {
+        "ci": {
+            "purpose": "Watch the CI signal. Tell me only when main breaks, with the failing job."
+        }
+    },
+    "connections": {
+        "github-ci": { "kind": "ci", "settings": { "repo": "me/app" }, "agent": "ci" }
+    }
+}
+```

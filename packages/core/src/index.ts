@@ -10,5 +10,12 @@ export {
     registryPath,
     REPOSITORY,
 } from './packages';
-export { type ConnectionEntry, loadConfig, saveConfig, SedgeConfig, type Policy } from './config';
+export {
+    type AgentEntry,
+    type ConnectionEntry,
+    loadConfig,
+    saveConfig,
+    SedgeConfig,
+    type Policy,
+} from './config';
 export { ABOUT } from './about';

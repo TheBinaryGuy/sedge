@@ -13,6 +13,8 @@ sedge's memory is a folder of files: `~/.sedge/memory`. It follows
   instructions, current goals). Keeping it short keeps it cheap and keeps it followed.
 - **Everything else** in the folder is organized by sedge itself and read when a task calls for
   it.
+- **Each [agent](./agents.md)** has its own folder, `memory/agents/<name>/`, with its own
+  `MEMORY.md`, loaded into its runs instead of `main`'s.
 
 ## What it writes down
 
@@ -38,7 +40,8 @@ conversations with `recall` and checks its memory against them. It:
 - corrects notes that turned out wrong or out of date;
 - merges duplicates and deletes what no longer matters;
 - records what it learned and didn't write down;
-- keeps `MEMORY.md` small, moving details into other files and leaving a link.
+- keeps `MEMORY.md` small, moving details into other files and leaving a link;
+- does the same for each agent's folder, from that agent's conversations.
 
 If little happened, it changes little. It doesn't message you.
 
@@ -46,5 +49,5 @@ To turn dreaming off, set `"dreaming": false` in `~/.sedge/config.json` and rest
 
 ## Editing it yourself
 
-It's your folder. Edit any file; sedge reads it fresh on the next run. In the TUI you can ask the
-agent to change what the daemon remembers.
+It's your folder. Edit any file; sedge reads it fresh on the next run. `/sedge memory` shows each
+agent's index and files, and in the TUI you can ask the agent to change what one remembers.

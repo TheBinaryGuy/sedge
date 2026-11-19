@@ -168,7 +168,7 @@ export const openDurable = async (options: DurableOptions) => {
         if (Object.keys(change).length > 0) await conversation.configure(change, ctx);
     };
 
-    let active: Conversation | undefined;
+    const active = new Map<string, Conversation>();
 
     const run = async (
         input: RunContext & { readonly items: ReadonlyArray<Item> },
@@ -179,7 +179,7 @@ export const openDurable = async (options: DurableOptions) => {
         const conversation = await conversationFor(input.thread);
         await prepare(conversation, input.cwd);
         runs.set(input.thread, input);
-        active = conversation;
+        active.set(input.thread, conversation);
 
         // The live document carries the answer as it streams and each tool call's state.
         let shown = '';
@@ -254,14 +254,14 @@ export const openDurable = async (options: DurableOptions) => {
         } finally {
             await watch.stop();
             runs.delete(input.thread);
-            active = undefined;
+            active.delete(input.thread);
         }
     };
 
     return {
         run,
         abort: async () => {
-            await active?.abort(ctx);
+            await Promise.all([...active.values()].map((conversation) => conversation.abort(ctx)));
         },
         /** How each MCP server is doing, once they have connected. */
         mcp: async () => {

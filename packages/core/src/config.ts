@@ -13,9 +13,17 @@ const Connection = Schema.Struct({
     secrets: Schema.optional(Schema.Array(Schema.String)),
     /** For a signal: what the user wants done when it fires, in their words. */
     instruction: Schema.optional(Schema.String),
+    /** The agent that handles what it brings; `main` when unset. */
+    agent: Schema.optional(Schema.String),
     enabled: Schema.optional(Schema.Boolean),
 });
 export type ConnectionEntry = typeof Connection.Type;
+
+const AgentEntry = Schema.Struct({
+    /** What the agent is for, in the user's words; it reads this at the start of every run. */
+    purpose: Schema.String,
+});
+export type AgentEntry = typeof AgentEntry.Type;
 
 export const SedgeConfig = Schema.Struct({
     /** Working directory for runs that don't come from a terminal. */
@@ -25,6 +33,11 @@ export const SedgeConfig = Schema.Struct({
      * their values are in the OS keychain.
      */
     connections: Schema.optional(Schema.Record(Schema.String, Connection)),
+    /**
+     * Agents besides `main`, by name: each has its own conversation and memory, handles the
+     * channels and signals given to it, and talks to the others through the inbox.
+     */
+    agents: Schema.optional(Schema.Record(Schema.String, AgentEntry)),
     /** Nightly dreaming, when the agent reviews its conversations and tidies its memory. On by default. */
     dreaming: Schema.optional(Schema.Boolean),
     /**

@@ -12,7 +12,7 @@
  */
 import { sedgePaths } from '@sedge-hq/core';
 import { openSecretStore } from '@sedge-hq/daemon';
-import { Effect } from 'effect';
+import { Effect, Stream } from 'effect';
 import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
@@ -216,6 +216,46 @@ try {
         sentTo(mark, (m) => m.text.includes('approved-ok')),
     );
     pass(`after approval: ${output.text}`);
+
+    step('an agent of its own answers a task, and main can tell it something');
+    const agent = await withDaemon(({ client }) =>
+        client.SaveAgent({
+            name: 'helper',
+            purpose: 'Helps with small tasks. Answer briefly.',
+            connections: null,
+        }),
+    );
+    if (!agent.memory.endsWith('/memory/agents/helper'))
+        fail(`unexpected memory folder ${agent.memory}`);
+    const answer = await withDaemon(({ client }) =>
+        client
+            .Prompt({ text: 'Reply with exactly the word: helper-ok', cwd: home, agent: 'helper' })
+            .pipe(
+                Stream.runFold(
+                    () => '',
+                    (last, event) => (event._tag === 'Finished' ? event.text : last),
+                ),
+            ),
+    );
+    if (!answer.includes('helper-ok')) fail(`the agent answered: ${answer}`);
+    await withDaemon(({ client }) =>
+        client
+            .Prompt({
+                text: 'Use your tell tool to send the agent "helper" the message "ping from main", then end your turn.',
+                cwd: home,
+                agent: 'main',
+            })
+            .pipe(Stream.runDrain),
+    );
+    const inbox = await withDaemon(({ client }) => client.Inbox({ agent: 'helper', limit: 10 }));
+    if (
+        !inbox.some(
+            (item) => item.source === 'agent:main' && item.prompt.includes('ping from main'),
+        )
+    ) {
+        fail(`no message from main in helper's inbox: ${inbox.map((i) => i.source).join(', ')}`);
+    }
+    pass(`helper answered "${answer}", and main's tell reached its inbox`);
 
     step('disconnect; the token leaves the keychain');
     await withDaemon(({ client }) => client.Disconnect({ name: 'telegram' }));

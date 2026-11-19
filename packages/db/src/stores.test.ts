@@ -37,13 +37,39 @@ describe('Inbox', () => {
                 yield* inbox.enqueue(event('telegram:2', 'other chat', '2'));
                 yield* inbox.enqueue(event('telegram:1', 'two', '3'));
 
-                const first = yield* inbox.claimBatch;
+                const first = yield* inbox.claimBatch();
                 expect(first.map((e) => e.prompt)).toEqual(['one', 'two']);
                 expect(first.every((e) => e.status === 'running')).toBe(true);
 
-                const second = yield* inbox.claimBatch;
+                const second = yield* inbox.claimBatch();
                 expect(second.map((e) => e.prompt)).toEqual(['other chat']);
-                expect(yield* inbox.claimBatch).toEqual([]);
+                expect(yield* inbox.claimBatch()).toEqual([]);
+            }),
+        ),
+    );
+
+    it.effect('never starts a second run for a thread that has one going', () =>
+        fresh(
+            Effect.gen(function* () {
+                const inbox = yield* Inbox;
+                yield* inbox.enqueue(event('agent:ci', 'first', '1'));
+                const running = yield* inbox.claimBatch();
+                expect(running.map((e) => e.thread)).toEqual(['agent:ci']);
+
+                // More for the busy agent, and something for another one.
+                yield* inbox.enqueue(event('agent:ci', 'second', '2'));
+                yield* inbox.enqueue(event('main', 'hello', '3'));
+                const next = yield* inbox.claimBatch(['agent:ci']);
+                expect(next.map((e) => e.prompt)).toEqual(['hello']);
+                expect(yield* inbox.claimBatch(['agent:ci'])).toEqual([]);
+                expect(yield* inbox.pendingByThread).toEqual({ 'agent:ci': 1 });
+
+                // Once its run is over, its queue is picked up.
+                expect((yield* inbox.claimBatch()).map((e) => e.prompt)).toEqual(['second']);
+                expect((yield* inbox.list({ limit: 2 })).map((e) => e.prompt)).toEqual([
+                    'hello',
+                    'second',
+                ]);
             }),
         ),
     );
@@ -53,11 +79,11 @@ describe('Inbox', () => {
             Effect.gen(function* () {
                 const inbox = yield* Inbox;
                 yield* inbox.enqueue(event('timer:t', 'nightly'));
-                yield* inbox.claimBatch;
+                yield* inbox.claimBatch();
                 expect(yield* inbox.pendingCount).toBe(0);
 
                 expect(yield* inbox.recoverInterrupted).toBe(1);
-                expect((yield* inbox.claimBatch).map((e) => e.prompt)).toEqual(['nightly']);
+                expect((yield* inbox.claimBatch()).map((e) => e.prompt)).toEqual(['nightly']);
             }),
         ),
     );

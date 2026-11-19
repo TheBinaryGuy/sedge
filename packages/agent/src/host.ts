@@ -36,6 +36,8 @@ export interface AgentHost {
     /** Sedge's part of the system prompt: memory and how to behave. Re-read before each request. */
     readonly systemPrompt: (run: RunContext) => Promise<string>;
     readonly send: (run: RunContext, message: Outgoing) => Promise<string>;
+    /** Puts a message in another agent's inbox; its answer comes back the same way. */
+    readonly tell: (run: RunContext, agent: string, message: string) => Promise<string>;
     readonly setTimer: (run: RunContext, spec: TimerSpec) => Promise<string>;
     readonly listTimers: (run: RunContext) => Promise<string>;
     readonly cancelTimer: (run: RunContext, id: string) => Promise<boolean>;

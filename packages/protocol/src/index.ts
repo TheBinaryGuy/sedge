@@ -18,8 +18,8 @@ export class DaemonInfo extends Schema.Class<DaemonInfo>('sedge/protocol/DaemonI
 
 export class DaemonStatus extends Schema.Class<DaemonStatus>('sedge/protocol/DaemonStatus')({
     info: DaemonInfo,
-    /** The inbox item the agent is working on, if any. */
-    running: Schema.NullOr(Schema.String),
+    /** The threads with a run going: `main`, `agent:<name>`, `cli:<dir>`, `dream`. */
+    running: Schema.Array(Schema.String),
     pending: Schema.Number,
     timers: Schema.Number,
     update: Schema.NullOr(Schema.String),
@@ -89,6 +89,59 @@ export class ConnectionInfo extends Schema.Class<ConnectionInfo>('sedge/protocol
     instruction: Schema.NullOr(Schema.String),
 }) {}
 
+/** An agent: `main` (sedge itself) or one you made, and how it is doing. */
+export class AgentInfo extends Schema.Class<AgentInfo>('sedge/protocol/AgentInfo')({
+    name: Schema.String,
+    purpose: Schema.String,
+    /** The channels and signals it handles. */
+    connections: Schema.Array(Schema.String),
+    /** Its memory folder. */
+    memory: Schema.String,
+    running: Schema.Boolean,
+    pending: Schema.Number,
+}) {}
+
+/** One event in the inbox. */
+export class InboxEntry extends Schema.Class<InboxEntry>('sedge/protocol/InboxEntry')({
+    id: Schema.String,
+    /** The conversation: `main`, `agent:<name>`, `cli:<dir>`, `dream`. */
+    thread: Schema.String,
+    source: Schema.String,
+    prompt: Schema.String,
+    status: Schema.String,
+    createdAt: Schema.Number,
+    finishedAt: Schema.NullOr(Schema.Number),
+    error: Schema.NullOr(Schema.String),
+}) {}
+
+/** One message in the outbox. */
+export class OutboxEntry extends Schema.Class<OutboxEntry>('sedge/protocol/OutboxEntry')({
+    id: Schema.String,
+    thread: Schema.String,
+    kind: Schema.String,
+    text: Schema.String,
+    status: Schema.String,
+    attempts: Schema.Number,
+    createdAt: Schema.Number,
+    sentAt: Schema.NullOr(Schema.Number),
+    error: Schema.NullOr(Schema.String),
+}) {}
+
+/** A follow-up or schedule an agent set. */
+export class TimerInfo extends Schema.Class<TimerInfo>('sedge/protocol/TimerInfo')({
+    id: Schema.String,
+    thread: Schema.String,
+    name: Schema.NullOr(Schema.String),
+    kind: Schema.String,
+    cron: Schema.NullOr(Schema.String),
+    prompt: Schema.String,
+    nextRunAt: Schema.Number,
+}) {}
+
+export class AgentError extends Schema.TaggedError<AgentError>()('AgentError', {
+    message: Schema.String,
+}) {}
+
 export class ConnectionError extends Schema.TaggedError<ConnectionError>()('ConnectionError', {
     message: Schema.String,
 }) {}
@@ -99,7 +152,8 @@ export class SedgeRpcs extends RpcGroup.make(
     Rpc.make('Hello', { success: DaemonInfo }),
     Rpc.make('Status', { success: DaemonStatus }),
     Rpc.make('Prompt', {
-        payload: { text: Schema.String, cwd: Schema.String },
+        /** `agent` hands the task to that agent's conversation instead of the folder's own. */
+        payload: { text: Schema.String, cwd: Schema.String, agent: Schema.optional(Schema.String) },
         success: AgentEvent,
         error: AgentRunError,
         stream: true,
@@ -107,6 +161,31 @@ export class SedgeRpcs extends RpcGroup.make(
     Rpc.make('Abort'),
     /** Every background run as it finishes, for the TUI's notifications. */
     Rpc.make('Watch', { success: Completion, stream: true }),
+    Rpc.make('Agents', { success: Schema.Array(AgentInfo) }),
+    /** Creates or changes an agent; `connections` are given to it. */
+    Rpc.make('SaveAgent', {
+        payload: {
+            name: Schema.String,
+            purpose: Schema.String,
+            connections: Schema.NullOr(Schema.Array(Schema.String)),
+        },
+        success: AgentInfo,
+        error: AgentError,
+    }),
+    Rpc.make('RemoveAgent', { payload: { name: Schema.String }, error: AgentError }),
+    /** The latest events, newest first: one agent's (by name), or all. */
+    Rpc.make('Inbox', {
+        payload: { agent: Schema.NullOr(Schema.String), limit: Schema.Number },
+        success: Schema.Array(InboxEntry),
+    }),
+    Rpc.make('Outbox', {
+        payload: { agent: Schema.NullOr(Schema.String), limit: Schema.Number },
+        success: Schema.Array(OutboxEntry),
+    }),
+    Rpc.make('Timers', {
+        payload: { agent: Schema.NullOr(Schema.String) },
+        success: Schema.Array(TimerInfo),
+    }),
     Rpc.make('Connections', { success: Schema.Array(ConnectionInfo) }),
     Rpc.make('Kinds', { success: Schema.Array(KindInfo) }),
     /** Checks settings against a kind without connecting anything: a problem, or null. */

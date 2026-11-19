@@ -6,6 +6,7 @@ import { Deferred, Duration, Effect, Layer, Ref, Schedule } from 'effect';
 import { mkdir, open, rename, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { acquireDaemonLock, waitForExit } from './lock';
+import { Agents } from './agents';
 import { Connections } from './connections';
 import { DispatcherLive } from './dispatcher';
 import { makeHost } from './host';
@@ -37,7 +38,7 @@ const autoUpdate = Effect.gen(function* () {
         yield* Effect.logInfo(`Updating sedge ${VERSION} → ${latest}`);
         yield* updater.apply(latest);
         yield* Ref.set(control.pendingUpdate, latest);
-        while ((yield* runtime.running) !== null || (yield* inbox.pendingCount) > 0) {
+        while ((yield* runtime.running).length > 0 || (yield* inbox.pendingCount) > 0) {
             yield* Effect.sleep('5 seconds');
         }
         yield* Deferred.succeed(control.shutdown, { restart: true });
@@ -97,7 +98,8 @@ export const runDaemon = (
             WorkerWake.layer,
             Settings.layer(paths, config),
         );
-        const delivery = DispatcherLive.pipe(
+        const delivery = Agents.layer.pipe(
+            Layer.provideMerge(DispatcherLive),
             Layer.provideMerge(Connections.layer),
             Layer.provideMerge(base),
         );

@@ -24,6 +24,11 @@ export class Outbox extends Context.Service<
             error: string,
             retryAt: number | undefined,
         ) => Effect.Effect<void>;
+        /** Everything queued or sent, newest first; one thread's, or all. */
+        readonly list: (options: {
+            readonly thread?: string | undefined;
+            readonly limit: number;
+        }) => Effect.Effect<ReadonlyArray<OutboxMessage>>;
         /** The agent's latest messages to a thread, newest first: what it has already said. */
         readonly recent: (
             thread: string,
@@ -79,6 +84,22 @@ export class Outbox extends Context.Service<
                     .where(eq(outbox.id, message.id))
                     .pipe(Effect.asVoid, Effect.orDie);
 
+            const list = (options: {
+                readonly thread?: string | undefined;
+                readonly limit: number;
+            }) =>
+                db
+                    .select()
+                    .from(outbox)
+                    .where(
+                        options.thread === undefined
+                            ? undefined
+                            : eq(outbox.thread, options.thread),
+                    )
+                    .orderBy(desc(outbox.createdAt))
+                    .limit(options.limit)
+                    .pipe(Effect.orDie);
+
             const recent = (thread: string, limit: number) =>
                 db
                     .select()
@@ -88,7 +109,7 @@ export class Outbox extends Context.Service<
                     .limit(limit)
                     .pipe(Effect.orDie);
 
-            return Outbox.of({ enqueue, due, markSent, markFailed, recent });
+            return Outbox.of({ list, enqueue, due, markSent, markFailed, recent });
         }),
     );
 }

@@ -22,6 +22,7 @@ const setup = async (extras: (dir: string) => Promise<Extras> = async () => ({})
     models.setProvider(faux.provider);
     const model = faux.getModel();
     const sent: Array<Outgoing> = [];
+    const told: Array<{ from: string; agent: string; message: string }> = [];
     const blocked: Array<string> = [];
     const checked: Array<string> = [];
     const more = await extras(dir);
@@ -30,6 +31,10 @@ const setup = async (extras: (dir: string) => Promise<Extras> = async () => ({})
         send: async (_run, message) => {
             sent.push(message);
             return 'Queued for delivery.';
+        },
+        tell: async (run, agent, message) => {
+            told.push({ from: run.thread, agent, message });
+            return 'Sent.';
         },
         setTimer: async () => 'set',
         listTimers: async () => 'none',
@@ -65,7 +70,21 @@ const setup = async (extras: (dir: string) => Promise<Extras> = async () => ({})
                 );
             }),
         );
-    return { dir, faux, sent, blocked, checked, open, run };
+    const runIn = (
+        runtime: ReturnType<typeof open>,
+        thread: string,
+        items: Array<{ id: string; text: string }>,
+    ) =>
+        runtime.runPromise(
+            Effect.gen(function* () {
+                const agent = yield* Agent;
+                return yield* agent.run(
+                    { thread, sources: ['telegram'], cwd: dir, items },
+                    () => Effect.void,
+                );
+            }),
+        );
+    return { dir, faux, sent, told, blocked, checked, open, run, runIn };
 };
 
 describe('the durable agent', () => {
@@ -225,5 +244,59 @@ describe('the durable agent', () => {
         const page = await readFile(join(import.meta.dirname, '../../../docs/commands.md'), 'utf8');
         expect(tools.length).toBeGreaterThan(8);
         for (const tool of tools) expect(page, tool).toContain(`\`${tool}\``);
+    }, 30_000);
+
+    it('runs two agents at the same time, each in its own conversation', async () => {
+        const { faux, open, runIn } = await setup();
+        let reached: () => void = () => {};
+        const bReached = new Promise<void>((resolve) => (reached = resolve));
+        const lastUser = (context: {
+            messages: ReadonlyArray<{ role: string; content: unknown }>;
+        }) => JSON.stringify(context.messages.findLast((m) => m.role === 'user')?.content);
+        const respond = async (
+            context: Parameters<
+                Extract<Parameters<typeof faux.setResponses>[0][number], Function>
+            >[0],
+        ) => {
+            // A waits until B's run has started: if runs took turns, this would never finish.
+            if (lastUser(context).includes('for A')) {
+                await Promise.race([
+                    bReached,
+                    new Promise((_, reject) =>
+                        setTimeout(() => reject(new Error('B never started')), 5000),
+                    ),
+                ]);
+                return fauxAssistantMessage('A done');
+            }
+            reached();
+            return fauxAssistantMessage('B done');
+        };
+        faux.setResponses([respond, respond]);
+        const runtime = open();
+        const [a, b] = await Promise.all([
+            runIn(runtime, 'main', [{ id: 'event-a', text: 'for A' }]),
+            runIn(runtime, 'agent:ci', [{ id: 'event-b', text: 'for B' }]),
+        ]);
+        await runtime.dispose();
+        expect([a, b]).toEqual(['A done', 'B done']);
+    }, 30_000);
+
+    it('tells another agent through the host', async () => {
+        const { faux, told, open, runIn } = await setup();
+        faux.setResponses([
+            fauxAssistantMessage(
+                [fauxToolCall('tell', { agent: 'main', message: 'CI is red on main' })],
+                {
+                    stopReason: 'toolUse',
+                },
+            ),
+            fauxAssistantMessage('Told main.'),
+        ]);
+        const runtime = open();
+        expect(
+            await runIn(runtime, 'agent:ci', [{ id: 'event-8', text: 'the build failed' }]),
+        ).toBe('Told main.');
+        await runtime.dispose();
+        expect(told).toEqual([{ from: 'agent:ci', agent: 'main', message: 'CI is red on main' }]);
     }, 30_000);
 });

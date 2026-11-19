@@ -1,13 +1,25 @@
 import { BunSocketServer } from '@effect/platform-bun';
 import { Agent } from '@sedge-hq/agent';
 import { type SedgePaths, VERSION } from '@sedge-hq/core';
-import { Inbox, Timers } from '@sedge-hq/db';
+import { Inbox, Outbox, Timers } from '@sedge-hq/db';
 import type { DaemonInfo } from '@sedge-hq/protocol';
-import { AgentRunError, DaemonStatus, SedgeRpcs, UpdateInfo } from '@sedge-hq/protocol';
+import {
+    AgentError,
+    AgentInfo,
+    AgentRunError,
+    DaemonStatus,
+    InboxEntry,
+    OutboxEntry,
+    SedgeRpcs,
+    TimerInfo,
+    UpdateInfo,
+} from '@sedge-hq/protocol';
 import { Context, Deferred, Effect, Layer, PubSub, Ref, Result, Stream } from 'effect';
 import { RpcSerialization, RpcServer } from 'effect/rpc';
 import { Runtime, WorkerWake } from './runtime';
+import { Agents } from './agents';
 import { Connections } from './connections';
+import { threadOf } from './threads';
 import { Updater } from './updater';
 
 export interface ShutdownRequest {
@@ -35,6 +47,8 @@ const HandlersLive = SedgeRpcs.toLayer(
         const updater = yield* Updater;
         const worker = yield* WorkerWake;
         const connections = yield* Connections;
+        const agents = yield* Agents;
+        const outbox = yield* Outbox;
 
         return SedgeRpcs.of({
             Hello: () => Effect.succeed(control.info),
@@ -51,19 +65,19 @@ const HandlersLive = SedgeRpcs.toLayer(
                 }),
 
             // Subscribe before enqueueing so not even the first event of a fast run is missed.
-            Prompt: ({ text, cwd }) =>
+            Prompt: ({ text, cwd, agent }) =>
                 Stream.unwrap(
                     Effect.gen(function* () {
                         const subscription = yield* PubSub.subscribe(runtime.bus);
                         const item = yield* inbox.enqueue({
                             source: 'cli',
-                            thread: `cli:${cwd}`,
+                            thread: agent ? threadOf(agent) : `cli:${cwd}`,
                             prompt: text,
                             cwd,
                         });
                         if (!item) return yield* new AgentRunError({ message: 'Not queued' });
                         const ahead =
-                            (yield* inbox.pendingCount) - 1 + ((yield* runtime.running) ? 1 : 0);
+                            (yield* inbox.pendingCount) - 1 + (yield* runtime.running).length;
                         yield* worker.wake;
                         return Stream.make({
                             _tag: 'Queued' as const,
@@ -139,6 +153,95 @@ const HandlersLive = SedgeRpcs.toLayer(
                     });
                 }),
 
+            Agents: () =>
+                Effect.gen(function* () {
+                    const running = new Set(yield* runtime.running);
+                    const pending = yield* inbox.pendingByThread;
+                    return (yield* agents.list).map(
+                        (agent) =>
+                            new AgentInfo({
+                                name: agent.name,
+                                purpose: agent.purpose,
+                                connections: [...agent.connections],
+                                memory: agent.memory,
+                                running: running.has(threadOf(agent.name)),
+                                pending: pending[threadOf(agent.name)] ?? 0,
+                            }),
+                    );
+                }),
+            SaveAgent: ({ name, purpose, connections: owned }) =>
+                agents.save({ name, purpose, connections: owned ?? undefined }).pipe(
+                    Effect.map(
+                        (agent) =>
+                            new AgentInfo({
+                                name: agent.name,
+                                purpose: agent.purpose,
+                                connections: [...agent.connections],
+                                memory: agent.memory,
+                                running: false,
+                                pending: 0,
+                            }),
+                    ),
+                    Effect.mapError((error) => new AgentError({ message: error.message })),
+                ),
+            RemoveAgent: ({ name }) =>
+                agents
+                    .remove(name)
+                    .pipe(Effect.mapError((error) => new AgentError({ message: error.message }))),
+            Inbox: ({ agent, limit }) =>
+                inbox.list({ thread: agent ? threadOf(agent) : undefined, limit }).pipe(
+                    Effect.map((items) =>
+                        items.map(
+                            (item) =>
+                                new InboxEntry({
+                                    id: item.id,
+                                    thread: item.thread,
+                                    source: item.source,
+                                    prompt: item.prompt,
+                                    status: item.status,
+                                    createdAt: item.createdAt,
+                                    finishedAt: item.finishedAt ?? null,
+                                    error: item.error ?? null,
+                                }),
+                        ),
+                    ),
+                ),
+            Outbox: ({ agent, limit }) =>
+                outbox.list({ thread: agent ? threadOf(agent) : undefined, limit }).pipe(
+                    Effect.map((messages) =>
+                        messages.map(
+                            (message) =>
+                                new OutboxEntry({
+                                    id: message.id,
+                                    thread: message.thread,
+                                    kind: message.kind,
+                                    text: message.text,
+                                    status: message.status,
+                                    attempts: message.attempts,
+                                    createdAt: message.createdAt,
+                                    sentAt: message.sentAt ?? null,
+                                    error: message.error ?? null,
+                                }),
+                        ),
+                    ),
+                ),
+            Timers: ({ agent }) =>
+                timers.list(agent ? threadOf(agent) : undefined).pipe(
+                    Effect.map((active) =>
+                        active.map(
+                            (timer) =>
+                                new TimerInfo({
+                                    id: timer.id,
+                                    thread: timer.thread,
+                                    name: timer.name ?? null,
+                                    kind: timer.kind,
+                                    cron: timer.cron ?? null,
+                                    prompt: timer.prompt,
+                                    nextRunAt: timer.nextRunAt,
+                                }),
+                        ),
+                    ),
+                ),
             Connections: () => connections.list,
             Kinds: () => connections.kinds,
             CheckSettings: ({ kind, settings }) => connections.check(kind, settings),

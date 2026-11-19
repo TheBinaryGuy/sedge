@@ -9,7 +9,9 @@ import { LOGO, type SedgePaths, VERSION } from '@sedge-hq/core';
 import { Effect, Fiber, ManagedRuntime, Schedule, Stream } from 'effect';
 import { Daemon, DaemonLive, waitUntil } from './client';
 import { sedgeGuide } from './guide';
+import { registerAgentTools } from './agent-tools';
 import { registerConnectionTools } from './connection-tools';
+import { openDashboard, type Tab, TABS } from './dashboard';
 import { registerTheme } from './theme';
 
 /** A tuft of sedge, three rows tall, beside the name and the keys worth knowing. */
@@ -48,9 +50,12 @@ interface CompletionDetails {
 
 const COLLAPSED_LINES = 6;
 
-const HELP = `/sedge            daemon status
-/sedge bg <task>  hand a task to the daemon; you get a note when it's done
-/sedge stop       stop the daemon after its current run`;
+const HELP = `/sedge                         the dashboard: agents, inbox, outbox, timers, memory
+/sedge <tab> [agent]           open it on a tab, or on one agent's share
+/sedge status                  the daemon's version and what it's doing
+/sedge bg <task>               hand a task to the daemon; a note appears when it's done
+/sedge tell <agent> <task>     the same, for one agent
+/sedge stop                    stop the daemon after its current run`;
 
 /**
  * Sedge inside pi: the TUI is pi itself, and this extension is the bridge to the daemon. It shows
@@ -80,6 +85,7 @@ export const sedgeExtension = (paths: SedgePaths): InlineExtension => ({
         };
 
         registerConnectionTools(pi, withDaemon);
+        registerAgentTools(pi, withDaemon);
         registerTheme(pi, paths);
 
         // The agent here knows pi; this is what it needs to know about sedge.
@@ -93,7 +99,7 @@ export const sedgeExtension = (paths: SedgePaths): InlineExtension => ({
                 const status = await withDaemon(({ client }) => client.Status());
                 // Only news reaches the footer: background work, or an update waiting to apply.
                 const news = [
-                    status.running
+                    status.running.length > 0
                         ? 'daemon working'
                         : status.pending > 0
                           ? `${status.pending} queued`
@@ -183,38 +189,53 @@ export const sedgeExtension = (paths: SedgePaths): InlineExtension => ({
         });
 
         pi.registerCommand('sedge', {
-            description: 'Talk to the Sedge daemon: status, bg <task>, stop',
+            description: 'The daemon: its agents, inbox, outbox, timers and memory; bg, tell, stop',
             getArgumentCompletions: (prefix) =>
-                ['bg', 'stop']
+                [...TABS, 'status', 'bg', 'tell', 'stop']
                     .filter((value) => value.startsWith(prefix))
                     .map((value) => ({ value, label: value })),
             handler: async (args, ctx) => {
                 const [sub = '', ...rest] = args.trim().split(/\s+/);
-                if (sub === '' || sub === 'status') {
+                if (sub === '' || (TABS as ReadonlyArray<string>).includes(sub)) {
+                    if (ctx.mode !== 'tui') return ctx.ui.notify(HELP, 'info');
+                    return openDashboard(ctx, withDaemon, (sub || 'agents') as Tab, rest[0]);
+                }
+                if (sub === 'status') {
                     const status = await showStatus(ctx);
                     if (!status)
                         return ctx.ui.notify('The Sedge daemon is not reachable.', 'error');
                     return ctx.ui.notify(
-                        `daemon ${status.info.version} (pid ${status.info.pid}) · running: ${status.running ?? 'nothing'} · queued: ${status.pending} · timers: ${status.timers}` +
+                        `daemon ${status.info.version} (pid ${status.info.pid}) · running: ${status.running.join(', ') || 'nothing'} · queued: ${status.pending} · timers: ${status.timers}` +
                             (status.update
                                 ? ` · ${status.update} installed, applies on restart`
                                 : ''),
                         'info',
                     );
                 }
-                if (sub === 'bg') {
+                if (sub === 'bg' || sub === 'tell') {
+                    const agent = sub === 'tell' ? rest.shift() : undefined;
                     const task = rest.join(' ');
-                    if (!task) return ctx.ui.notify('Usage: /sedge bg <task>', 'warning');
+                    if (!task || (sub === 'tell' && !agent)) {
+                        return ctx.ui.notify(
+                            sub === 'tell'
+                                ? 'Usage: /sedge tell <agent> <task>'
+                                : 'Usage: /sedge bg <task>',
+                            'warning',
+                        );
+                    }
                     // Fire and forget: the daemon owns the run, Watch reports the result.
                     runtime.runFork(
                         Effect.gen(function* () {
                             const { client } = yield* Daemon;
                             yield* client
-                                .Prompt({ text: task, cwd: ctx.cwd })
+                                .Prompt({ text: task, cwd: ctx.cwd, ...(agent ? { agent } : {}) })
                                 .pipe(Stream.take(1), Stream.runDrain);
                         }),
                     );
-                    return ctx.ui.notify('Handed to the daemon.', 'info');
+                    return ctx.ui.notify(
+                        agent ? `Handed to ${agent}.` : 'Handed to the daemon.',
+                        'info',
+                    );
                 }
                 if (sub === 'stop') {
                     await withDaemon(({ client }) => client.Shutdown({ restart: false }));
