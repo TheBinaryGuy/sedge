@@ -1,5 +1,11 @@
 # sedge
 
+## 0.3.1
+
+### Patch Changes
+
+- [`710b528`](https://github.com/sedge-hq/sedge/commit/710b528aaa90b6de0c39797b3964a7d02eb6c35c) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - `@sedge-hq/kit` is plain TypeScript now: a signal is `every` plus an `async check` (or an async generator for sources that push), a channel is an `async connect` returning plain functions, and secrets arrive as strings. Effect still runs everything underneath (settings decoding, retries, clean stops), and failures now retry with exponential, jittered backoff from 2 seconds to 5 minutes, saying when in the status line. The Effect API moves to `@sedge-hq/kit/effect`. Telegram is rewritten on the plain API, as the example to copy.
+
 ## 0.3.0
 
 ### Minor Changes
