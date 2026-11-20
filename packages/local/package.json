@@ -1,6 +1,6 @@
 {
     "name": "@sedge-hq/local",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "Webhooks, files and commands for sedge: wake it when something posts to it, a folder changes, or a command prints something new.",
     "keywords": [
         "command",

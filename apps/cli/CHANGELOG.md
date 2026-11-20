@@ -1,5 +1,12 @@
 # sedge
 
+## 0.7.1
+
+### Patch Changes
+
+- [`6578312`](https://github.com/sedge-hq/sedge/commit/65783129c655d5296ae08b5c99c3dae0b027dcb1) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - `mqtt` is now one of the official packages sedge offers to install, for sensors, home automation
+  and devices that publish to an MQTT broker.
+
 ## 0.7.0
 
 ### Minor Changes
