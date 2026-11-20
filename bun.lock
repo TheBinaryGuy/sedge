@@ -20,7 +20,7 @@
     },
     "apps/cli": {
       "name": "@sedge-hq/sedge",
-      "version": "0.15.1",
+      "version": "0.15.2",
       "bin": {
         "sedge": "./bin/sedge.js",
       },
