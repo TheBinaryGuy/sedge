@@ -32,7 +32,14 @@ describe('MCP sign-ins shared with the TUI', () => {
                 order.push(`${name} ends`);
             });
         await Promise.all([refresh('one'), refresh('two')]);
-        expect(order).toEqual(['one starts', 'one ends', 'two starts', 'two ends']);
+        // Either may get the lock first; the other only starts once it has ended.
+        const [first, second] = order[0] === 'one starts' ? ['one', 'two'] : ['two', 'one'];
+        expect(order).toEqual([
+            `${first} starts`,
+            `${first} ends`,
+            `${second} starts`,
+            `${second} ends`,
+        ]);
     });
 
     it('tells you to sign in, for an OAuth server nobody signed in to', async () => {
