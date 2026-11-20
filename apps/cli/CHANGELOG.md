@@ -1,5 +1,18 @@
 # sedge
 
+## 0.10.1
+
+### Patch Changes
+
+- [`c3c53a2`](https://github.com/sedge-hq/sedge/commit/c3c53a2f12c9a0ba9b3a4357a6051fdf55f141cb) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - `sedge install <name>` scopes only the official names (telegram, slack, github, web, local, mqtt)
+  to `@sedge-hq`; any other name installs as written. Filtering `sedge dash` by agent includes its
+  subagents' events and runs. The sandbox also hides MCP sign-ins, `~/.npmrc` and git credentials,
+  and the pi logins in `SEDGE_AGENT_DIR` when it's set. The TUI's agent knows about limits, the
+  sandbox and subagents.
+
+- [`c3c53a2`](https://github.com/sedge-hq/sedge/commit/c3c53a2f12c9a0ba9b3a4357a6051fdf55f141cb) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - `sedge dash` shows today's tokens and cost in its header, against your daily limits when set. The
+  platform packages on npm get a README that points to `@sedge-hq/sedge`.
+
 ## 0.10.0
 
 ### Minor Changes
