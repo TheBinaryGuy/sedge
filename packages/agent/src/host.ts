@@ -49,6 +49,14 @@ export interface AgentHost {
      * one subagent, not two.
      */
     readonly subagent: (run: RunContext, task: string, key: string) => Promise<string>;
+    /** Named values (`mode = away`): one, or all of them, as text for the agent. */
+    readonly getState: (run: RunContext, name?: string) => Promise<string>;
+    /** Sets a named value, or forgets it when `value` is undefined. */
+    readonly setState: (
+        run: RunContext,
+        name: string,
+        value: string | number | boolean | undefined,
+    ) => Promise<string>;
     readonly setTimer: (run: RunContext, spec: TimerSpec) => Promise<string>;
     readonly listTimers: (run: RunContext) => Promise<string>;
     readonly cancelTimer: (run: RunContext, id: string) => Promise<boolean>;

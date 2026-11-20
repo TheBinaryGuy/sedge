@@ -7,7 +7,7 @@
  * the agent and get an answer in the chat (with "typing…" meanwhile), approve a shell command from
  * the chat's buttons, have main start a subagent and get its answer back, filter, batch,
  * condition, throttle, triage and label webhook signals' events, check a signal-woken run asks
- * before writing, and disconnect (the token leaves the keychain). The agent steps call the model
+ * before writing, remember and read named values, and disconnect (the token leaves the keychain). The agent steps call the model
  * through your logins. Exits non-zero on the first failure.
  *
  * SEDGE_BIN=dist/npm/sedge-<os>-<cpu>/bin/sedge runs the same walk against a compiled binary.
@@ -517,6 +517,78 @@ try {
     );
     pass(`asked first: ${asked.text.replaceAll('\n', ' ').slice(0, 80)}`);
     await withDaemon(({ client }) => client.Disconnect({ name: 'notes' }));
+
+    step('named values: a signal remembers one, another reads it, the agent sets it');
+    const modePort = freePort();
+    const doorPort = freePort();
+    await withDaemon(({ client }) =>
+        client.Connect({
+            name: 'mode',
+            kind: 'webhook',
+            settings: { port: modePort },
+            secrets: { token: 'mode-secret' },
+            instruction: null,
+            remember: 'mode',
+        }),
+    );
+    await withDaemon(({ client }) =>
+        client.Connect({
+            name: 'door',
+            kind: 'webhook',
+            settings: { port: doorPort },
+            secrets: { token: 'door-secret' },
+            instruction: 'Nothing to do: end your turn without sending anything.',
+            when: 'state.mode = away',
+        }),
+    );
+    const setMode = (mode: string) =>
+        fetch(`http://127.0.0.1:${modePort}/`, {
+            method: 'POST',
+            headers: { authorization: 'Bearer mode-secret', 'content-type': 'text/plain' },
+            body: mode,
+        }).then(
+            (response) => response.status,
+            () => 0,
+        );
+    const door = poster(doorPort, 'door-secret');
+    const modeIs = async (want: string) =>
+        (await withDaemon(({ client }) => client.State())).find((v) => v.name === 'mode')?.value ===
+        want
+            ? true
+            : undefined;
+    await poll('mode = home', async () =>
+        (await setMode('home')) === 202 ? modeIs('home') : undefined,
+    );
+    await poll('the door webhook to listen', async () =>
+        (await door({ motion: 'while home' })) === 202 ? true : undefined,
+    );
+    await setMode('away');
+    await poll('mode = away', () => modeIs('away'));
+    await door({ motion: 'while away' });
+    const doorEvents = await poll('the door event while away', async () => {
+        const items = (
+            await withDaemon(({ client }) => client.Inbox({ agent: 'main', limit: 50 }))
+        ).filter((item) => item.source === 'door');
+        return items.some((item) => item.prompt.includes('while away')) ? items : undefined;
+    });
+    if (doorEvents.some((item) => item.prompt.includes('while home')))
+        fail('the door event got through while mode was home');
+    pass('mode remembered from its signal; the door only got through while away');
+    await withDaemon(({ client }) =>
+        client
+            .Prompt({
+                text: 'Use your set_state tool to set mode to home, then end your turn.',
+                cwd: home,
+                agent: 'main',
+            })
+            .pipe(Stream.runDrain),
+    );
+    const set = (await withDaemon(({ client }) => client.State())).find((v) => v.name === 'mode');
+    if (set?.value !== 'home' || set.by !== 'agent:main')
+        fail(`the agent didn't set mode: ${JSON.stringify(set)}`);
+    pass('the agent set mode = home');
+    await withDaemon(({ client }) => client.Disconnect({ name: 'mode' }));
+    await withDaemon(({ client }) => client.Disconnect({ name: 'door' }));
 
     step('uninstall waits until nothing of the package is connected');
     const early = sedge('uninstall', 'telegram');

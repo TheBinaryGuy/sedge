@@ -41,6 +41,8 @@ const setup = async (extras: (dir: string) => Promise<Extras> = async () => ({})
             started.push({ from: run.thread, task, key });
             return `Subagent ${started.length} started.`;
         },
+        getState: async () => 'No named values.',
+        setState: async () => 'set',
         setTimer: async () => 'set',
         listTimers: async () => 'none',
         cancelTimer: async () => false,

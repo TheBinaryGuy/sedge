@@ -58,20 +58,22 @@ Ask in your own words; these are what it uses.
 | `inbox`         | What woke which agent, from where, and how it went.                          |
 | `outbox`        | What the agents sent you, and whether it arrived.                            |
 | `timers`        | The follow-ups and schedules the agents set.                                 |
+| `state`         | The named values (`mode = away`), who set them and when.                     |
 
 ## Tools the daemon's agent has
 
-| Tool                            | What it does                                                   |
-| ------------------------------- | -------------------------------------------------------------- |
-| `send_message`                  | The only way to reach you: text, buttons (`choices`), `files`. |
-| `tell`                          | Message another agent; its answer comes back as an event.      |
-| `subagent`                      | Start a helper on one task; its answer comes back as an event. |
-| `set_timer`                     | A follow-up (`in`, `at`) or a schedule (`cron`).               |
-| `list_timers`, `cancel_timer`   | See and cancel this conversation's timers.                     |
-| `recall`                        | Search all past conversations.                                 |
-| `tool_search`                   | Find tools of MCP servers.                                     |
-| `read`, `write`, `edit`, `bash` | Files and the shell (see [Security](./security.md)).           |
-| `ls`, `find`, `grep`            | Look around without the shell.                                 |
+| Tool                            | What it does                                                         |
+| ------------------------------- | -------------------------------------------------------------------- |
+| `send_message`                  | The only way to reach you: text, buttons (`choices`), `files`.       |
+| `tell`                          | Message another agent; its answer comes back as an event.            |
+| `subagent`                      | Start a helper on one task; its answer comes back as an event.       |
+| `get_state`, `set_state`        | Read and set [named values](./channels-and-signals.md#named-values). |
+| `set_timer`                     | A follow-up (`in`, `at`) or a schedule (`cron`).                     |
+| `list_timers`, `cancel_timer`   | See and cancel this conversation's timers.                           |
+| `recall`                        | Search all past conversations.                                       |
+| `tool_search`                   | Find tools of MCP servers.                                           |
+| `read`, `write`, `edit`, `bash` | Files and the shell (see [Security](./security.md)).                 |
+| `ls`, `find`, `grep`            | Look around without the shell.                                       |
 
 On Windows the shell tool is `powershell` instead of `bash`. A [subagent](./agents.md#subagents)
-has all of these except `send_message`, `tell`, `subagent` and the timer tools.
+has all of these except `send_message`, `tell`, `subagent`, `set_state` and the timer tools.

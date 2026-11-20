@@ -20,6 +20,7 @@ import { discoverKinds, type Kind, loadPlugin } from './plugins';
 import { WorkerWake } from './runtime';
 import { openSecretStore } from './secrets';
 import { Settings } from './settings';
+import { State, STATE_NAME } from './state';
 import { agentOf, MAIN, threadOf } from './threads';
 
 /** Where answers go: the channel, and the chat on it, the user last wrote from. */
@@ -44,7 +45,25 @@ export type SignalChanges = {
     readonly triage?: boolean | null | undefined;
     readonly labels?: ReadonlyArray<string> | null | undefined;
     readonly wakeOn?: ReadonlyArray<string> | null | undefined;
+    readonly remember?: string | null | undefined;
 };
+
+/** What a remembering signal keeps: a message's payload or body, else its details, else its text. */
+const rememberedValue = (happening: Happening): unknown => {
+    const details = happening.details;
+    if (details !== null && typeof details === 'object' && !Array.isArray(details)) {
+        const fields = details as Record<string, unknown>;
+        if ('payload' in fields) return fields.payload;
+        if ('body' in fields) return fields.body;
+    }
+    return details ?? happening.text;
+};
+
+/** Why `remember` can't be used, or `undefined` when it can. */
+const checkRemember = (name?: string | null) =>
+    name && !STATE_NAME.test(name)
+        ? `"${name}" can't be a named value: use letters, digits, - and _, starting with a letter.`
+        : undefined;
 
 /** Why these labels can't be used, or `undefined` when they can. */
 const checkLabels = (labels?: ReadonlyArray<string>, wakeOn?: ReadonlyArray<string>) => {
@@ -106,6 +125,7 @@ export class Connections extends Context.Service<
                     readonly triage?: boolean | undefined;
                     readonly labels?: ReadonlyArray<string> | undefined;
                     readonly wakeOn?: ReadonlyArray<string> | undefined;
+                    readonly remember?: string | undefined;
                 },
         ) => Effect.Effect<{ readonly invite: string | null }, ConnectionError>;
         readonly disconnect: (name: string) => Effect.Effect<void, ConnectionError>;
@@ -142,6 +162,7 @@ export class Connections extends Context.Service<
         Effect.gen(function* () {
             const { paths, workspace } = yield* Settings;
             const kv = yield* Kv;
+            const named = yield* State;
             const inbox = yield* Inbox;
             const approvals = yield* Approvals;
             const worker = yield* WorkerWake;
@@ -221,7 +242,15 @@ export class Connections extends Context.Service<
                         memoSet: (key, value) => run(kv.set(memo(key), value)),
                         happened: async (happening: Happening) => {
                             const { entry } = state;
-                            if (!passes(entry, happening)) return;
+                            if (!passes(entry, happening, named.snapshot())) return;
+                            // A signal that remembers keeps its value and wakes nobody.
+                            if (entry.remember) {
+                                await run(
+                                    named.set(entry.remember, rememberedValue(happening), name),
+                                );
+                                state.status = `remembers ${entry.remember}`;
+                                return;
+                            }
                             // Throttled: one event, then quiet for the window. The time is kept,
                             // so a restart doesn't open the window early.
                             const throttle =
@@ -354,6 +383,7 @@ export class Connections extends Context.Service<
                             triage: state.entry.triage ?? false,
                             labels: state.entry.labels ?? [],
                             wakeOn: state.entry.wakeOn ?? [],
+                            remember: state.entry.remember ?? null,
                         }),
                 ),
             );
@@ -379,6 +409,7 @@ export class Connections extends Context.Service<
                         readonly triage?: boolean | undefined;
                         readonly labels?: ReadonlyArray<string> | undefined;
                         readonly wakeOn?: ReadonlyArray<string> | undefined;
+                        readonly remember?: string | undefined;
                     },
             ) {
                 if (!NAME.test(input.name)) {
@@ -418,17 +449,23 @@ export class Connections extends Context.Service<
                     ...(input.triage ? { triage: true } : {}),
                     ...(input.labels?.length ? { labels: [...input.labels] } : {}),
                     ...(input.wakeOn?.length ? { wakeOn: [...input.wakeOn] } : {}),
+                    ...(input.remember ? { remember: input.remember } : {}),
                 };
                 if (
-                    (Object.keys(options).length > 0 || input.triage || input.labels?.length) &&
+                    (Object.keys(options).length > 0 ||
+                        input.triage ||
+                        input.labels?.length ||
+                        input.remember) &&
                     kind.plugin.kind !== 'signal'
                 ) {
                     return yield* fail(
-                        'match, ignore, when, throttle, batch, triage and labels are for signals.',
+                        'match, ignore, when, throttle, batch, triage, labels and remember are for signals.',
                     );
                 }
                 const optionsProblem =
-                    checkEventOptions(options) ?? checkLabels(input.labels, input.wakeOn);
+                    checkEventOptions(options) ??
+                    checkLabels(input.labels, input.wakeOn) ??
+                    checkRemember(input.remember);
                 if (optionsProblem) return yield* fail(optionsProblem);
 
                 const entry: ConnectionEntry = {
@@ -519,7 +556,8 @@ export class Connections extends Context.Service<
                         const updated = next as ConnectionEntry;
                         const problem =
                             checkEventOptions(updated) ??
-                            checkLabels(updated.labels, updated.wakeOn);
+                            checkLabels(updated.labels, updated.wakeOn) ??
+                            checkRemember(updated.remember);
                         if (problem) throw new Error(problem);
                         await saveConfig(paths, {
                             ...config,

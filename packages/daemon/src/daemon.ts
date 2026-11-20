@@ -13,6 +13,7 @@ import { DispatcherLive } from './dispatcher';
 import { makeHost } from './host';
 import { Limits } from './limits';
 import { sedgeSandbox } from './sandbox';
+import { State } from './state';
 import { ensureMemory } from './memory';
 import { Runtime, WorkerWake } from './runtime';
 import { DaemonControl, ServerLive, type ShutdownRequest } from './server';
@@ -108,6 +109,7 @@ export const runDaemon = (
             Layer.provideMerge(Limits.layer),
             Layer.provideMerge(DispatcherLive),
             Layer.provideMerge(Connections.layer),
+            Layer.provideMerge(State.layer),
             Layer.provideMerge(base),
         );
         const workspace = config.workspace ?? paths.workspace;

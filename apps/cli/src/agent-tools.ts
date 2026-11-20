@@ -188,6 +188,25 @@ export const registerAgentTools = (pi: ExtensionAPI, withDaemon: WithDaemon) => 
     });
 
     pi.registerTool({
+        name: 'state',
+        label: 'Named values',
+        description:
+            "Named values (mode = away): small facts the daemon's agents or remembering signals set, which signals' conditions read as state.<name>. To change one, the user asks the daemon's agent (set_state), or a signal with remember keeps it current.",
+        parameters: Type.Object({}),
+        execute: async () => {
+            const values = await withDaemon(({ client }) => client.State());
+            return text(
+                values
+                    .map(
+                        (v) =>
+                            `- ${v.name} = ${JSON.stringify(v.value)} · set by ${v.by} · ${when(v.at)}`,
+                    )
+                    .join('\n') || 'No named values.',
+            );
+        },
+    });
+
+    pi.registerTool({
         name: 'timers',
         label: 'Timers',
         description: 'The follow-ups and schedules the daemon’s agents have set.',

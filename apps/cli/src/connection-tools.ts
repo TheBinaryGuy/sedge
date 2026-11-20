@@ -46,6 +46,7 @@ const describeConnection = (connection: ConnectionInfo) =>
                   `    labelled: ${connection.labels.join(', ')}${connection.wakeOn?.length ? ` (wakes on ${connection.wakeOn.join(', ')})` : ''}`,
               ]
             : []),
+        ...(connection.remember ? [`    remembers its value as state.${connection.remember}`] : []),
     ].join('\n');
 
 const EVENT_OPTIONS = {
@@ -91,6 +92,12 @@ const EVENT_OPTIONS = {
                 'For a signal: labels the cheap triage model picks one of for each event, like ["person", "vehicle", "nothing"]. Turns triage on; the agent and the inbox see each label.',
         }),
     ),
+    remember: Type.Optional(
+        Type.String({
+            description:
+                "For a signal that reports a state rather than news (a mode switch, a sensor's latest reading): keep its latest value as this named value, readable in other signals' conditions as state.<name>, instead of waking the agent.",
+        }),
+    ),
     wakeOn: Type.Optional(
         Type.Array(Type.String(), {
             description:
@@ -108,6 +115,7 @@ const describeOptions = (options: {
     triage?: boolean;
     labels?: ReadonlyArray<string>;
     wakeOn?: ReadonlyArray<string>;
+    remember?: string;
 }) => [
     ...(options.match ? [`· only events matching: ${options.match}`] : []),
     ...(options.ignore ? [`· ignoring events matching: ${options.ignore}`] : []),
@@ -117,6 +125,9 @@ const describeOptions = (options: {
     ...(options.triage ? ['· triaged by a cheap model first'] : []),
     ...(options.labels?.length ? [`· labelled: ${options.labels.join(', ')}`] : []),
     ...(options.wakeOn?.length ? [`· wakes on: ${options.wakeOn.join(', ')}`] : []),
+    ...(options.remember
+        ? [`· remembers its value as state.${options.remember}, waking nobody`]
+        : []),
 ];
 
 /** The nearest package.json above `dir` that declares sedge channels or signals, if any. */
@@ -294,6 +305,7 @@ export const registerConnectionTools = (pi: ExtensionAPI, withDaemon: WithDaemon
                         ...(params.triage ? { triage: true } : {}),
                         ...(params.labels?.length ? { labels: params.labels } : {}),
                         ...(params.wakeOn?.length ? { wakeOn: params.wakeOn } : {}),
+                        ...(params.remember ? { remember: params.remember } : {}),
                     })
                     .pipe(Effect.result),
             );
@@ -329,7 +341,7 @@ export const registerConnectionTools = (pi: ExtensionAPI, withDaemon: WithDaemon
         name: 'update_signal',
         label: 'Update signal',
         description:
-            'Change what a connected signal does when it fires: its `instruction`, the `match`, `ignore` and `when` filters, the `throttle` and `batch` windows, `triage`, or its `labels` and `wakeOn`. Leave out what stays; pass an empty string, an empty list or `triage: false` to clear one. The user confirms first.',
+            'Change what a connected signal does when it fires: its `instruction`, the `match`, `ignore` and `when` filters, the `throttle` and `batch` windows, `triage`, its `labels` and `wakeOn`, or `remember`. Leave out what stays; pass an empty string, an empty list or `triage: false` to clear one. The user confirms first.',
         parameters: Type.Object({
             name: Type.String(),
             instruction: Type.Optional(Type.String()),

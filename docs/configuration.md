@@ -44,7 +44,9 @@ Each connection has a `kind`, its `settings` (never secrets), `secrets` (the nam
 settings kept in the keychain), an optional `instruction` for a signal, an optional `agent` that
 handles it (default `main`), and `enabled: false` to pause it. A signal can also have `match` and
 `ignore` (regular expressions an event's text must or must not match), `labels` and `wakeOn` (for
-triage to label each event, and the labels that wake the agent), `when` (a condition on its
+triage to label each event, and the labels that wake the agent), `remember` (keep its latest value
+as a [named value](./channels-and-signals.md#named-values) instead of waking the agent), `when` (a
+condition on its
 details, like `temperature > 30`), `throttle` (how long to stay quiet after an event, like `1h`),
 `batch` (how long to hold its events and hand them over together, like `5m`) and `triage: true`
 (a cheap model decides which events need the agent); see

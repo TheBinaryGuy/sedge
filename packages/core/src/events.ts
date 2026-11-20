@@ -79,11 +79,15 @@ export const eventText = (event: SignalEvent) =>
         : `${event.text}\n${JSON.stringify(event.details, null, 2)}`;
 
 /** Whether an event gets through `match`, `ignore` and `when`. */
-export const passes = (options: EventOptions, event: SignalEvent): boolean => {
+export const passes = (
+    options: EventOptions,
+    event: SignalEvent,
+    state: Readonly<Record<string, unknown>> = {},
+): boolean => {
     const text = eventText(event);
     return (
         (options.match === undefined || regex(options.match).test(text)) &&
         (options.ignore === undefined || !regex(options.ignore).test(text)) &&
-        (options.when === undefined || meets(parseCondition(options.when), event))
+        (options.when === undefined || meets(parseCondition(options.when), event, state))
     );
 };

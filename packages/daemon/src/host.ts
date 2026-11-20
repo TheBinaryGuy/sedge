@@ -9,6 +9,7 @@ import { Agents } from './agents';
 import { Connections } from './connections';
 import { Limits } from './limits';
 import { sedgeSandbox } from './sandbox';
+import { type NamedValue, State, STATE_NAME } from './state';
 import { WorkerWake } from './runtime';
 import { agentOf, MAIN, memoryOf, subagentOf, subagentThread } from './threads';
 
@@ -114,6 +115,7 @@ export const makeHost = Effect.gen(function* () {
     const inbox = yield* Inbox;
     const worker = yield* WorkerWake;
     const limits = yield* Limits;
+    const state = yield* State;
     const services = yield* Effect.context<never>();
     const run = <A>(effect: Effect.Effect<A>) => Effect.runPromiseWith(services)(effect);
     const { paths, config } = settings;
@@ -287,6 +289,25 @@ ${memory.head || '(empty)'}${memory.cut ? `\n\n(${MEMORY_INDEX} goes on; only it
             );
             await run(worker.wake);
             return `Subagent ${id} started. Its answer arrives as a new event; end your turn unless you have more to do now.`;
+        },
+        getState: async (_current, name) => {
+            const show = (v: NamedValue) =>
+                `${v.name} = ${JSON.stringify(v.value)} (set by ${v.by}, ${when(v.at)})`;
+            if (name) {
+                const value = await run(state.get(name));
+                return value ? show(value) : `There is no named value "${name}".`;
+            }
+            const all = await run(state.all);
+            return all.length ? all.map(show).join('\n') : 'No named values.';
+        },
+        setState: async (current, name, value) => {
+            if (!STATE_NAME.test(name)) {
+                return `"${name}" can't be a name: use letters, digits, - and _, starting with a letter.`;
+            }
+            await run(state.set(name, value, `agent:${agentOf(current.thread)}`));
+            return value === undefined
+                ? `Forgot ${name}.`
+                : `${name} = ${JSON.stringify(value)}; conditions read it as state.${name}.`;
         },
         setTimer: async (current, spec) => {
             const now = Date.now();

@@ -16,6 +16,7 @@ import {
     SedgeRpcs,
     TimerInfo,
     UpdateInfo,
+    NamedValueInfo,
 } from '@sedge-hq/protocol';
 import { Context, Deferred, Effect, Layer, PubSub, Ref, Result, Stream } from 'effect';
 import { RpcSerialization, RpcServer } from 'effect/rpc';
@@ -24,6 +25,7 @@ import { Agents } from './agents';
 import { Connections } from './connections';
 import { metrics, Telemetry } from './telemetry';
 import { Limits } from './limits';
+import { State } from './state';
 import { threadOf } from './threads';
 import { Updater } from './updater';
 
@@ -56,6 +58,7 @@ const HandlersLive = SedgeRpcs.toLayer(
         const outbox = yield* Outbox;
         const telemetry = yield* Telemetry;
         const limits = yield* Limits;
+        const state = yield* State;
 
         return SedgeRpcs.of({
             Hello: () => Effect.succeed(control.info),
@@ -269,6 +272,8 @@ const HandlersLive = SedgeRpcs.toLayer(
                 telemetry
                     .logs({ level: level ?? undefined, limit })
                     .pipe(Effect.map((logs) => logs.map((record) => new LogEntry(record)))),
+            State: () =>
+                state.all.pipe(Effect.map((all) => all.map((value) => new NamedValueInfo(value)))),
             Stats: () =>
                 Effect.all([telemetry.snapshot, limits.today, limits.current]).pipe(
                     Effect.map(([snapshot, today, set]) => {

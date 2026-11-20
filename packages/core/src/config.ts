@@ -30,6 +30,11 @@ const Connection = Schema.Struct({
     labels: Schema.optional(Schema.Array(Schema.String)),
     /** For a signal with labels: wake the agent only for events labelled one of these. */
     wakeOn: Schema.optional(Schema.Array(Schema.String)),
+    /**
+     * For a signal: keep its latest value as this named value (`state.<name>` in conditions)
+     * instead of waking the agent.
+     */
+    remember: Schema.optional(Schema.String),
     /** For a signal: hold events this long (`30s`, `5m`) after the first, then hand them over together. */
     batch: Schema.optional(Schema.String),
 });

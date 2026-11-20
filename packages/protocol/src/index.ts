@@ -98,6 +98,8 @@ export class ConnectionInfo extends Schema.Class<ConnectionInfo>('sedge/protocol
     /** Labels triage picks one of for each event, and the ones that wake the agent. */
     labels: Schema.optional(Schema.Array(Schema.String)),
     wakeOn: Schema.optional(Schema.Array(Schema.String)),
+    /** A signal that keeps its latest value as this named value instead of waking the agent. */
+    remember: Schema.optional(Schema.NullOr(Schema.String)),
 }) {}
 
 /** An agent: `main` (sedge itself) or one you made, and how it is doing. */
@@ -202,6 +204,14 @@ export class StatsInfo extends Schema.Class<StatsInfo>('sedge/protocol/StatsInfo
     ),
 }) {}
 
+/** A named value: what it is, when it was set, and by whom (a signal, or `agent:<name>`). */
+export class NamedValueInfo extends Schema.Class<NamedValueInfo>('sedge/protocol/NamedValueInfo')({
+    name: Schema.String,
+    value: Schema.Unknown,
+    at: Schema.Number,
+    by: Schema.String,
+}) {}
+
 export class AgentError extends Schema.TaggedError<AgentError>()('AgentError', {
     message: Schema.String,
 }) {}
@@ -264,6 +274,8 @@ export class SedgeRpcs extends RpcGroup.make(
         success: Schema.Array(LogEntry),
     }),
     Rpc.make('Stats', { success: StatsInfo }),
+    /** Named values (`mode = away`) that signals' conditions read as `state.<name>`. */
+    Rpc.make('State', { success: Schema.Array(NamedValueInfo) }),
     Rpc.make('Connections', { success: Schema.Array(ConnectionInfo) }),
     Rpc.make('Kinds', { success: Schema.Array(KindInfo) }),
     /** Checks settings against a kind without connecting anything: a problem, or null. */
@@ -291,6 +303,7 @@ export class SedgeRpcs extends RpcGroup.make(
             triage: Schema.optional(Schema.Boolean),
             labels: Schema.optional(Schema.Array(Schema.String)),
             wakeOn: Schema.optional(Schema.Array(Schema.String)),
+            remember: Schema.optional(Schema.String),
         },
         success: Schema.Struct({ invite: Schema.NullOr(Schema.String) }),
         error: ConnectionError,
@@ -311,6 +324,7 @@ export class SedgeRpcs extends RpcGroup.make(
             triage: Schema.optional(Schema.NullOr(Schema.Boolean)),
             labels: Schema.optional(Schema.NullOr(Schema.Array(Schema.String))),
             wakeOn: Schema.optional(Schema.NullOr(Schema.Array(Schema.String))),
+            remember: Schema.optional(Schema.NullOr(Schema.String)),
         },
         error: ConnectionError,
     }),

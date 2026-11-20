@@ -122,6 +122,29 @@ motion as `person`, `vehicle`, `animal` or `nothing`, a support email as `bug`, 
 Labels are given at triage, after `when` and the other rules have run, so a condition can't use
 them; `wakeOn` is the rule that does.
 
+### Named values
+
+Some things are a state, not news: whether you're home, the house's mode, a sensor's latest
+reading. Named values keep them, and any signal's `when` condition reads them as `state.<name>`:
+
+```json
+"home-mode": { "kind": "mqtt", "settings": { "url": "mqtt://hub.local", "topics": ["home/mode"] },
+               "remember": "mode" },
+"porch":     { "kind": "webhook", "labels": ["person", "vehicle", "nothing"],
+               "wakeOn": ["person", "vehicle"], "when": "state.mode = away" }
+```
+
+- **A signal with `remember`** keeps its latest value under that name and never wakes the agent:
+  an MQTT message's `payload`, a webhook's `body`, otherwise its details or text. Its `match`,
+  `ignore` and `when` still decide which events count.
+- **The daemon's agent** sets them too (`set_state`): say "I'm away till Sunday" and it can set
+  `mode = away`, and set it back when you're home. It reads them with `get_state`.
+- **Conditions** read them like fields: `state.mode = away`, `state.soil < 30`. A value that isn't
+  set fails the clause, as a missing field does.
+
+They're kept in sedge's store, so they survive restarts. The TUI's `state` tool lists them, with
+who set each one and when. Names are letters, digits, `-` and `_`.
+
 ### Permissions for what signals bring
 
 A signal's events are outside content: someone else wrote them. A run they wake (and what it

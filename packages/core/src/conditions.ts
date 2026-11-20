@@ -3,7 +3,8 @@
  * `temperature > 30 and room = kitchen`, `payload.status != ok or payload.retries >= 3`.
  *
  * A clause is a field, an operator and a value. The field is a path into the event's details
- * (`payload.moisture`, `sensors.0.value`), or `text` for the event's text. Operators: `=`, `!=`,
+ * (`payload.moisture`, `sensors.0.value`), `text` for the event's text, or `state.<name>` for a
+ * named value sedge keeps (`state.mode = away`). Operators: `=`, `!=`,
  * `>`, `>=`, `<`, `<=` and `contains`. A value is a number, a word, or text in quotes. `and` binds
  * tighter than `or`. A field the event doesn't have fails its clause.
  */
@@ -137,10 +138,16 @@ const holds = (clause: Clause, subject: unknown): boolean => {
  * Whether an event meets a condition. Fields are looked up in its details, and `text` is its text
  * unless the details have a `text` of their own.
  */
-export const meets = (condition: Condition, event: { text: string; details?: unknown }) => {
-    const subject =
+export const meets = (
+    condition: Condition,
+    event: { text: string; details?: unknown },
+    state: Readonly<Record<string, unknown>> = {},
+) => {
+    const own =
         event.details !== null && typeof event.details === 'object' && !Array.isArray(event.details)
             ? { text: event.text, ...(event.details as Record<string, unknown>) }
             : { text: event.text, details: event.details };
+    // `state.<name>` reads a named value, as sedge keeps them.
+    const subject = { ...own, state };
     return condition.some((group) => group.every((clause) => holds(clause, subject)));
 };

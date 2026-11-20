@@ -38,6 +38,16 @@ describe('signal filters', () => {
         expect(meets(parseCondition('status != ok'), reading({ status: 'down' }))).toBe(true);
     });
 
+    it('reads named values in a condition, as state.<name>', () => {
+        const options = { when: 'label = person and state.mode = away' };
+        const event = { text: 'motion', details: { label: 'person' } };
+        expect(passes(options, event, { mode: 'away' })).toBe(true);
+        expect(passes(options, event, { mode: 'home' })).toBe(false);
+        // Nothing set yet: the clause fails, as a missing field does.
+        expect(passes(options, event)).toBe(false);
+        expect(passes({ when: 'state.soil < 30' }, { text: 'x' }, { soil: '24' })).toBe(true);
+    });
+
     it('says what is wrong with a filter or window it can’t use', () => {
         expect(checkEventOptions({ match: '(' })).toMatch(/^match is not a regular expression/);
         expect(checkEventOptions({ batch: 'soon' })).toBe(

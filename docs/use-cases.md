@@ -60,6 +60,8 @@ export default defineSignal({
   `wakeOn` `person`, `vehicle`. A cheap model labels each motion event; only a person or a car
   wakes the agent.
 - **What you get:** "Someone's at the front door (labelled person, 14:02)", and nothing for the cat.
+  Add "only while I'm away", and it also checks a [named value](./channels-and-signals.md#named-values)
+  (`when: state.mode = away`) that it sets when you tell it you're leaving.
 
 ### Something back in stock
 

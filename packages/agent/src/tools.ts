@@ -22,6 +22,8 @@ export const SEDGE_TOOLS = new Set([
     'send_message',
     'tell',
     'subagent',
+    'get_state',
+    'set_state',
     'set_timer',
     'list_timers',
     'cancel_timer',
@@ -48,7 +50,25 @@ export const sedgeExtension = (host: AgentHost, runFor: (conversationId: number)
                 },
             }),
         ],
+        tools: [
+            defineTool({
+                name: 'get_state',
+                description:
+                    "Read named values: small facts like mode = away that you or a signal set, which signals' conditions read as state.<name>. Give a name for one, or none for all.",
+                parameters: obj({ name: opt(str()) }),
+                execute: async (args, api) =>
+                    text(await host.getState(runFor(api.conversationId), args.name)),
+            }),
+        ],
     });
+
+/** A value as given: numbers and true/false as such, so conditions compare them properly. */
+const typed = (value: string): string | number | boolean => {
+    const trimmed = value.trim();
+    if (trimmed === 'true' || trimmed === 'false') return trimmed === 'true';
+    if (trimmed !== '' && !Number.isNaN(Number(trimmed))) return Number(trimmed);
+    return value;
+};
 
 /**
  * What an agent does beyond its own work: the outbox (`send_message`), messages to other agents,
@@ -107,6 +127,20 @@ export const actionsExtension = (host: AgentHost, runFor: (conversationId: numbe
                             runFor(api.conversationId),
                             args.task,
                             `${api.conversationId}:${api.callId}`,
+                        ),
+                    ),
+            }),
+            defineTool({
+                name: 'set_state',
+                description:
+                    "Set a named value, like mode = away when the user says they're away: signals' conditions read it as state.<name> (a camera signal with when: state.mode = away), and it lasts until changed. Leave out value to forget it. Names are letters, digits, - and _.",
+                parameters: obj({ name: str(), value: opt(str()) }),
+                execute: async (args, api) =>
+                    text(
+                        await host.setState(
+                            runFor(api.conversationId),
+                            args.name,
+                            args.value === undefined ? undefined : typed(args.value),
                         ),
                     ),
             }),
