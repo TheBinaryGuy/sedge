@@ -1,5 +1,23 @@
 # sedge
 
+## 0.7.0
+
+### Minor Changes
+
+- [`97bd8a1`](https://github.com/sedge-hq/sedge/commit/97bd8a12e99a15be1ff118b53a24d8b8af2e389d) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - Agents can start subagents: helpers that each take one task, work in parallel, and report back
+  to the agent that started them as a new event, so it stays free for your messages meanwhile.
+  Every agent with work now runs at the same time, instead of four at most.
+
+- [`cab6c2d`](https://github.com/sedge-hq/sedge/commit/cab6c2d47ec5869af4310ce2822d6c28d6fc8c3b) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - Signals can be filtered and batched: `match` and `ignore` decide which events reach the agent,
+  and `batch` holds a noisy signal's events for a while and hands them over in one run. Set them
+  when connecting, or change them later with the new `update_signal` tool. The official packages
+  now include `local`, with webhook, files and command signals.
+
+### Patch Changes
+
+- [`cda5b61`](https://github.com/sedge-hq/sedge/commit/cda5b619afd47544a3ed14b12ac49d5ffeadca57) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - The last runs and log lines are written to `~/.sedge/logs` before the daemon stops, instead of
+  sometimes being lost on shutdown.
+
 ## 0.6.0
 
 ### Minor Changes
