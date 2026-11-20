@@ -1,5 +1,12 @@
 # sedge
 
+## 0.15.2
+
+### Patch Changes
+
+- [`8366da4`](https://github.com/sedge-hq/sedge/commit/8366da4f1cfd72d23ab4e1ffe81e0736504f88ac) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - sedge now has a native Windows ARM64 binary (`@sedge-hq/sedge-windows-arm64`). When npm leaves out
+  this machine's binary, `sedge` now says how to fix it: stop any running sedge and reinstall.
+
 ## 0.15.1
 
 ### Patch Changes
