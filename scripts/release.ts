@@ -33,12 +33,27 @@ const changelogFor = async (version: string) => {
 };
 
 const out = join(root, 'dist/npm');
+const REGISTRY = 'https://registry.npmjs.org';
 // Provenance needs the OIDC token GitHub Actions provides; skip it for a manual local publish.
 const provenance = process.env.GITHUB_ACTIONS ? ['--provenance'] : [];
 const onNpm = (name: string, version: string) =>
     Bun.spawnSync(['npm', 'view', `${name}@${version}`, 'version'], { stderr: 'ignore' })
         .stdout.toString()
         .trim() === version;
+
+/** Waits until installs can see `name@version`, asking the registry past its caches. */
+const visible = async (name: string, version: string) => {
+    const url = `${REGISTRY}/${name.replace('/', '%2f')}/${version}`;
+    for (let waited = 0; waited < 30 * 60; waited += 10) {
+        const response = await fetch(`${url}?t=${Date.now()}`, {
+            headers: { 'cache-control': 'no-cache' },
+        }).catch(() => undefined);
+        if (response?.ok) return;
+        if (waited % 60 === 0) console.log(`Waiting for ${name}@${version} to show on npm…`);
+        await Bun.sleep(10_000);
+    }
+    throw new Error(`${name}@${version} still isn't on npm after 30 minutes`);
+};
 
 // A tag means this version went out already, even if npm doesn't show it yet (a staged publish
 // waiting for approval): publishing again would fail, and so would tagging.
@@ -51,9 +66,22 @@ if (onNpm(CLI_PACKAGE, version) || (process.env.GITHUB_ACTIONS && tagged(`v${ver
 } else {
     await run(['bun', 'scripts/build.ts', '--all']);
     const platforms = (await readdir(out)).filter((name) => name !== 'sedge');
-    for (const name of [...platforms, 'sedge']) {
-        await run(['npm', 'publish', '--access', 'public', ...provenance], join(out, name));
-    }
+    const nameOf = async (dir: string) =>
+        ((await Bun.file(join(dir, 'package.json')).json()) as { name: string }).name;
+    const publish = async (dir: string) => {
+        const pkg = await nameOf(dir);
+        // A release that failed partway published some already; npm refuses those a second time.
+        if (onNpm(pkg, version)) {
+            console.log(`${pkg}@${version} is on npm already.`);
+            return;
+        }
+        await run(['npm', 'publish', '--access', 'public', ...provenance], dir);
+    };
+    for (const name of platforms) await publish(join(out, name));
+    // npm accepts a publish minutes before installs can see it, and an install that can't find
+    // this machine's binary skips it without a word. So the launcher waits for all of them.
+    for (const name of platforms) await visible(await nameOf(join(out, name)), version);
+    await publish(join(out, 'sedge'));
 
     if (process.env.GITHUB_ACTIONS) {
         const tag = `v${version}`;

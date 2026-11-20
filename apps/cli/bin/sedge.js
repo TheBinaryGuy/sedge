@@ -12,7 +12,15 @@ let binary;
 try {
     binary = join(dirname(require.resolve(`${pkg}/package.json`)), 'bin', exe);
 } catch {
-    console.error(`sedge: no prebuilt binary for ${os}-${process.arch} (${pkg} is not installed).`);
+    // npm skips an optional dependency it can't install without saying so: one the registry
+    // doesn't show yet (or npm's cached copy of it doesn't, hence --prefer-online), or (on
+    // Windows) one whose binary is running and can't be replaced.
+    const { version } = require('../package.json');
+    console.error(
+        `sedge: no prebuilt binary for ${os}-${process.arch} (${pkg} is not installed).\n` +
+            `Stop any running sedge${process.platform === 'win32' ? '.exe' : ''}, then reinstall: ` +
+            `npm install -g @sedge-hq/sedge@${version} --prefer-online`,
+    );
     process.exit(1);
 }
 
