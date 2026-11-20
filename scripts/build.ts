@@ -33,6 +33,7 @@ export const TARGETS = [
     { os: 'linux', cpu: 'x64' },
     { os: 'linux', cpu: 'arm64' },
     { os: 'windows', cpu: 'x64' },
+    { os: 'windows', cpu: 'arm64' },
 ] as const;
 
 const host = { os: process.platform === 'win32' ? 'windows' : process.platform, cpu: process.arch };
