@@ -1,5 +1,14 @@
 # sedge
 
+## 0.12.0
+
+### Minor Changes
+
+- [`8ee26a1`](https://github.com/sedge-hq/sedge/commit/8ee26a13aab68c3de539e7f887dfc1d61bfd6600) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - Named values: small facts like `mode = away` that signals' conditions read as `state.<name>`
+  (`when: state.mode = away`). A signal with `remember` keeps its latest value under a name instead
+  of waking the agent, and the daemon's agent sets them with `set_state` ("I'm away till Sunday").
+  They survive restarts; the TUI's `state` tool lists them.
+
 ## 0.11.0
 
 ### Minor Changes
