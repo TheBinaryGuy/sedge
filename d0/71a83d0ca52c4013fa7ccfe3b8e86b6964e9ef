@@ -1,0 +1,94 @@
+packages/agent/src/durable.ts
+  s_fe732417ee9cdb::t_ca4f2ea3ffc239 73-74,230-231,236,240-244,247-248,252-253,290,399-405,408
+  s_fe732417ee9cdb::t_fcb6fbd0c47c20 234-235
+  s_fe732417ee9cdb::t_0f9bc3500b18eb 3,229,232-233,237-239,245-246,249-251
+  s_fe732417ee9cdb::t_7e6261c4aeb472 25
+  s_fe732417ee9cdb::t_6d37765a3704b1 44-45,135,161,191-196
+packages/core/src/config.ts
+  s_fe732417ee9cdb::t_eb2f63952394d4 38-43,52-53,58-62
+packages/daemon/src/daemon.ts
+  s_fe732417ee9cdb::t_eb2f63952394d4 15,112
+packages/daemon/src/runtime.test.ts
+  s_fe732417ee9cdb::t_eb2f63952394d4 12,77-81
+  s_fe732417ee9cdb::t_fea82882870114 56-60,126,372-412,419-424,428,432,435
+  s_fe732417ee9cdb::t_35f8cfa758ebb9 413-418,433-434
+  s_fe732417ee9cdb::t_b6f605ba6fc481 425-427,429-431
+docs/commands.md
+  s_fe732417ee9cdb::t_25685f958b2fad 62-63
+packages/agent/src/pi-extensions.ts
+  s_fe732417ee9cdb::t_6d37765a3704b1 56,137-139
+packages/protocol/src/index.ts
+  s_fe732417ee9cdb::t_465c4821cbc359 277-298
+packages/daemon/src/connections.ts
+  s_fe732417ee9cdb::t_f006fad83bb17f 641
+  s_fe732417ee9cdb::t_6d37765a3704b1 185-187,342
+  s_fe732417ee9cdb::t_e6cc74600197b3 630,642
+  s_fe732417ee9cdb::t_456ae25bab22e9 222-230
+apps/cli/src/agent-tools.ts
+  s_fe732417ee9cdb::t_83383e49883354 190-226,231-264
+  s_fe732417ee9cdb::t_fcb6fbd0c47c20 227-230
+.changeset/log-levels-and-terminal.md
+  s_fe732417ee9cdb::t_e0dd01aa393de5 1-8
+.changeset/models-per-agent-and-channel.md
+  s_fe732417ee9cdb::t_d8938999486ab4 2
+  s_fe732417ee9cdb::t_0cbd44366b7f90 1,3-9
+packages/daemon/src/live-config.ts
+  s_fe732417ee9cdb::t_eb2f63952394d4 1-48
+packages/core/src/model.ts
+  s_fe732417ee9cdb::t_6ab87d35d0a64f 1-17
+docs/agents.md
+  s_fe732417ee9cdb::t_38c8fe6607edeb 103-104,117-119
+docs/channels-and-signals.md
+  s_fe732417ee9cdb::t_38c8fe6607edeb 50-58
+apps/cli/src/guide.ts
+  s_fe732417ee9cdb::t_38c8fe6607edeb 21
+packages/daemon/src/server.ts
+  s_fe732417ee9cdb::t_f85e0c39065040 26,56,281-302,355
+  s_fe732417ee9cdb::t_1fffeb78e0222d 27,57
+  s_fe732417ee9cdb::t_fcb6fbd0c47c20 3,303-354,356-357
+packages/daemon/src/host.ts
+  s_fe732417ee9cdb::t_e6cc74600197b3 292,309
+packages/core/src/index.ts
+  s_fe732417ee9cdb::t_6ab87d35d0a64f 31
+packages/agent/src/index.ts
+  s_fe732417ee9cdb::t_ca4f2ea3ffc239 80-81,159-163,254-259
+  s_fe732417ee9cdb::t_7e6261c4aeb472 8
+  s_fe732417ee9cdb::t_6d37765a3704b1 103,200
+packages/agent/src/report.ts
+  s_fe732417ee9cdb::t_7e6261c4aeb472 1-13
+packages/daemon/src/runtime.ts
+  s_fe732417ee9cdb::t_eb2f63952394d4 24,112,262-266
+  s_fe732417ee9cdb::t_0f9bc3500b18eb 361-362,364-366,409-416,426,431
+  s_fe732417ee9cdb::t_9d234635045a37 2
+  s_fe732417ee9cdb::t_465c4821cbc359 28
+  s_fe732417ee9cdb::t_5e9ca4f5534ec8 363
+  s_fe732417ee9cdb::t_89877fd7deb610 503-506
+  s_fe732417ee9cdb::t_456ae25bab22e9 3,27,29,113,353-360,367-408,417-425,427-430,432-449,496-502,507-509,511
+apps/cli/scripts/e2e-telegram.ts
+  s_fe732417ee9cdb::t_9713a3d6a6c804 252-253,260,262
+  s_fe732417ee9cdb::t_a68029c5c46227 608-613
+  s_fe732417ee9cdb::t_89877fd7deb610 239-251,254-259,263
+  s_fe732417ee9cdb::t_d3fce433eeb59c 261
+packages/core/src/model.test.ts
+  s_fe732417ee9cdb::t_35f8cfa758ebb9 1-24
+docs/configuration.md
+  s_fe732417ee9cdb::t_25685f958b2fad 8-11,32,84-88,94-103
+  s_fe732417ee9cdb::t_d8938999486ab4 89-93
+  s_fe732417ee9cdb::t_09d002e11a2a67 104
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "d071a83d0ca52c4013fa7ccfe3b8e86b6964e9ef",
+  "prompts": {},
+  "sessions": {
+    "s_fe732417ee9cdb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b6666194-df82-46a7-a1ef-33e06788ffe9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "TheBinaryGuy <hello@thebinary.dev>"
+    }
+  }
+}
