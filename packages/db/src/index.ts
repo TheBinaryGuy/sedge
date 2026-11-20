@@ -1,6 +1,6 @@
 export { Approvals, type ApprovalRequest } from './approvals';
 export { Database, type DatabaseClient } from './database';
-export { Inbox, type NewEvent, type Outcome } from './inbox';
+export { Inbox, type NewEvent, type Outcome, type Waiting } from './inbox';
 export { Kv } from './kv';
 export { Outbox, type NewOutboxMessage } from './outbox';
 export { Timers, type NewTimer } from './timers';

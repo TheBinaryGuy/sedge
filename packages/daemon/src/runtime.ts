@@ -19,7 +19,8 @@ import { Telemetry, type ToolTiming } from './telemetry';
 import { DREAM_PROMPT } from './memory';
 import { Settings } from './settings';
 import { supervise } from './supervise';
-import { subagentOf } from './threads';
+import { dayOf, fromYou, Limits } from './limits';
+import { agentOf, subagentOf } from './threads';
 
 /** The conversation dreaming happens in, apart from the user's. */
 export const DREAM_THREAD = 'dream';
@@ -102,6 +103,8 @@ export class Runtime extends Context.Service<
             const worker = yield* WorkerWake;
             const connections = yield* Connections;
             const telemetry = yield* Telemetry;
+            const limits = yield* Limits;
+            const services = yield* Effect.context<never>();
             const bus = yield* PubSub.unbounded<BusMessage>();
             const running = yield* Ref.make<ReadonlySet<string>>(new Set());
             const scope = yield* Effect.scope;
@@ -157,6 +160,9 @@ export class Runtime extends Context.Service<
                                   config.triageModel,
                               )
                               .pipe(
+                                  Effect.tap((verdict) =>
+                                      verdict.spent ? limits.spend(verdict.spent) : Effect.void,
+                                  ),
                                   Effect.map((verdict) =>
                                       verdict.wake
                                           ? undefined
@@ -205,6 +211,9 @@ export class Runtime extends Context.Service<
                                               ],
                                               cwd: last.cwd,
                                               subagent: sub !== undefined,
+                                              onSpent: (spent) => {
+                                                  Effect.runForkWith(services)(limits.spend(spent));
+                                              },
                                               items: batch.map((item) => ({
                                                   id: item.id,
                                                   text: formatItem(item),
@@ -286,10 +295,55 @@ export class Runtime extends Context.Service<
             // Start a run for each thread with pending events, all at once but never two for one
             // thread; then sleep until a run ends, an event arrives, or the next poll.
             const drain = Effect.gen(function* () {
+                // Limits, as of this pass: events from you always go; automated ones wait while
+                // today's budget is used up, or their agent has had its runs for the hour.
+                const now = Date.now();
+                const set = yield* limits.current;
+                const budget = yield* limits.overBudget;
+                const channels = new Set(
+                    (yield* connections.list)
+                        .filter((connection) => connection.type === 'channel')
+                        .map((connection) => connection.name),
+                );
+                const runsThisHour = new Map<string, number>();
+                const count = (thread: string) => {
+                    const agent = agentOf(thread);
+                    runsThisHour.set(agent, (runsThisHour.get(agent) ?? 0) + 1);
+                };
+                if (set.runsPerHour !== undefined) {
+                    for (const run of yield* telemetry.runs({ limit: 1000 })) {
+                        if (run.startedAt >= now - 3_600_000) count(run.thread);
+                    }
+                    for (const thread of yield* Ref.get(running)) count(thread);
+                }
+                const held = new Map<string, string>();
+                const eligible = (item: { source: string; thread: string }) => {
+                    if (fromYou(item.source, channels)) return true;
+                    if (budget) {
+                        held.set(
+                            `budget:${dayOf(now)}`,
+                            `Sedge has paused automated work: ${budget}. Events from signals, timers and agents wait until tomorrow, or until you raise \`limits\` in config.json. Your messages still get answers.`,
+                        );
+                        return false;
+                    }
+                    const agent = agentOf(item.thread);
+                    if (
+                        set.runsPerHour !== undefined &&
+                        (runsThisHour.get(agent) ?? 0) >= set.runsPerHour
+                    ) {
+                        held.set(
+                            `runs:${agent}:${dayOf(now)}:${new Date(now).getHours()}`,
+                            `"${agent}" has had its ${set.runsPerHour} runs for this hour (\`limits.runsPerHour\`). Its events wait, and go on as the hour's runs age out. Your messages still get answers.`,
+                        );
+                        return false;
+                    }
+                    return true;
+                };
                 while (true) {
-                    const batch = yield* inbox.claimBatch([...(yield* Ref.get(running))]);
+                    const batch = yield* inbox.claimBatch([...(yield* Ref.get(running))], eligible);
                     const thread = batch[0]?.thread;
                     if (thread === undefined) break;
+                    count(thread);
                     yield* Ref.update(running, (set) => new Set(set).add(thread));
                     yield* process(batch).pipe(
                         Effect.catchCause((cause) =>
@@ -305,6 +359,7 @@ export class Runtime extends Context.Service<
                         Effect.forkIn(scope),
                     );
                 }
+                for (const [key, text] of held) yield* limits.notify(key, text);
                 yield* worker.wait('5 seconds');
             });
 

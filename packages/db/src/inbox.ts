@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, inArray, isNull, lte, notInArray, or, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, notInArray, sql } from 'drizzle-orm';
 import { Context, Effect, Layer } from 'effect';
 import { Database } from './database';
 import { inbox, type InboxItem } from './schema';
@@ -12,6 +12,14 @@ export interface NewEvent {
     readonly cwd: string;
     /** Wait until this time (ms): a batching signal's events go to the agent together. */
     readonly holdUntil?: number | undefined;
+}
+
+/** A waiting event, as `claimBatch`'s `eligible` sees it. */
+export interface Waiting {
+    readonly id: string;
+    readonly thread: string;
+    readonly source: string;
+    readonly holdUntil: number | null;
 }
 
 export type Outcome = { readonly result: string } | { readonly error: string };
@@ -29,11 +37,15 @@ export class Inbox extends Context.Service<
          * Claims every pending event of the thread whose oldest event is next in line, so several
          * messages sent in a row become one run and one reply. Threads in `busy` are skipped: they
          * have a run going, and one thread never has two. An event held until later doesn't start
-         * a run, but goes along with one that starts sooner.
+         * a run, but goes along with one that starts sooner. Events `eligible` turns down stay
+         * waiting, as if they weren't there (a limit has been reached, say).
          */
         readonly claimBatch: (
             busy?: ReadonlyArray<string>,
+            eligible?: (item: Waiting) => boolean,
         ) => Effect.Effect<ReadonlyArray<InboxItem>>;
+        /** Threads with an event waiting or being worked on. */
+        readonly activeThreads: Effect.Effect<ReadonlyArray<string>>;
         /** The latest events, newest first; one thread's, or all. */
         readonly list: (options: {
             readonly thread?: string | undefined;
@@ -62,34 +74,42 @@ export class Inbox extends Context.Service<
                 return row;
             }, Effect.orDie);
 
-            const claimBatch = (busy: ReadonlyArray<string> = []) =>
+            const claimBatch = (
+                busy: ReadonlyArray<string> = [],
+                eligible: (item: Waiting) => boolean = () => true,
+            ) =>
                 db
                     .transaction((tx) =>
                         Effect.gen(function* () {
-                            const [next] = yield* tx
-                                .select({ thread: inbox.thread })
+                            const now = Date.now();
+                            const waiting = (yield* tx
+                                .select({
+                                    id: inbox.id,
+                                    thread: inbox.thread,
+                                    source: inbox.source,
+                                    holdUntil: inbox.holdUntil,
+                                })
                                 .from(inbox)
                                 .where(
                                     and(
                                         eq(inbox.status, 'pending'),
-                                        or(
-                                            isNull(inbox.holdUntil),
-                                            lte(inbox.holdUntil, Date.now()),
-                                        ),
                                         busy.length > 0
                                             ? notInArray(inbox.thread, [...busy])
                                             : undefined,
                                     ),
                                 )
-                                .orderBy(asc(inbox.createdAt), sql`rowid`)
-                                .limit(1);
+                                .orderBy(asc(inbox.createdAt), sql`rowid`)).filter(eligible);
+                            const next = waiting.find(
+                                (item) => item.holdUntil === null || item.holdUntil <= now,
+                            );
                             if (!next) return [];
+                            const ids = waiting
+                                .filter((item) => item.thread === next.thread)
+                                .map((item) => item.id);
                             return yield* tx
                                 .update(inbox)
-                                .set({ status: 'running', startedAt: Date.now() })
-                                .where(
-                                    and(eq(inbox.thread, next.thread), eq(inbox.status, 'pending')),
-                                )
+                                .set({ status: 'running', startedAt: now })
+                                .where(and(inArray(inbox.id, ids), eq(inbox.status, 'pending')))
                                 .returning();
                         }),
                     )
@@ -170,9 +190,19 @@ export class Inbox extends Context.Service<
                     Effect.orDie,
                 );
 
+            const activeThreads = db
+                .selectDistinct({ thread: inbox.thread })
+                .from(inbox)
+                .where(inArray(inbox.status, ['pending', 'running']))
+                .pipe(
+                    Effect.map((rows) => rows.map((row) => row.thread)),
+                    Effect.orDie,
+                );
+
             return Inbox.of({
                 enqueue,
                 claimBatch,
+                activeThreads,
                 list,
                 pendingByThread,
                 get,

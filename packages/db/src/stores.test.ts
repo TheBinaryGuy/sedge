@@ -72,6 +72,25 @@ describe('Inbox', () => {
         ),
     );
 
+    it.effect('leaves the events it turns down waiting, and takes the rest of the thread', () =>
+        fresh(
+            Effect.gen(function* () {
+                const inbox = yield* Inbox;
+                yield* inbox.enqueue({ ...event('main', 'CI failed', '1'), source: 'ci' });
+                yield* inbox.enqueue(event('main', 'are you there?', '2'));
+                const notSignals = (item: { source: string }) => item.source !== 'ci';
+
+                const claimed = yield* inbox.claimBatch([], notSignals);
+                expect(claimed.map((e) => e.prompt)).toEqual(['are you there?']);
+                expect(yield* inbox.claimBatch([], notSignals)).toEqual([]);
+                expect(yield* inbox.activeThreads).toEqual(['main']);
+
+                // Once nothing turns it down, it's next.
+                expect((yield* inbox.claimBatch()).map((e) => e.prompt)).toEqual(['CI failed']);
+            }),
+        ),
+    );
+
     it.effect('never starts a second run for a thread that has one going', () =>
         fresh(
             Effect.gen(function* () {

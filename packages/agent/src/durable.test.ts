@@ -383,4 +383,33 @@ describe('the durable agent', () => {
         expect(seen[0]).toContain('soil at 48%');
         expect(seen[0]).toContain('WAKE or SKIP');
     }, 30_000);
+
+    it('reports what each run used', async () => {
+        const { faux, open, dir } = await setup();
+        faux.setResponses([fauxAssistantMessage('first answer'), fauxAssistantMessage('second')]);
+        const runtime = open();
+        const spent: Array<{ tokens: number; cost: number }> = [];
+        const ask = (id: string, text: string) =>
+            runtime.runPromise(
+                Effect.gen(function* () {
+                    const agent = yield* Agent;
+                    return yield* agent.run(
+                        {
+                            thread: 'main',
+                            sources: ['telegram'],
+                            cwd: dir,
+                            items: [{ id, text }],
+                            onSpent: (s) => spent.push(s),
+                        },
+                        () => Effect.void,
+                    );
+                }),
+            );
+        await ask('event-12', 'one');
+        await ask('event-13', 'two');
+        await runtime.dispose();
+        expect(spent).toHaveLength(2);
+        expect(spent[0]!.tokens).toBeGreaterThan(0);
+        expect(spent[1]!.tokens).toBeGreaterThan(0);
+    }, 30_000);
 });

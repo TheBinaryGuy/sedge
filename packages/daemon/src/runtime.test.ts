@@ -1,13 +1,14 @@
 import { Agent, type RunInput, type Triage } from '@sedge-hq/agent';
 import { AgentRunError } from '@sedge-hq/protocol';
 import { sedgePaths } from '@sedge-hq/core';
-import { Inbox, type InboxItem, StoresLive } from '@sedge-hq/db';
+import { Inbox, type InboxItem, Outbox, StoresLive } from '@sedge-hq/db';
 import { Effect, Layer, ManagedRuntime } from 'effect';
-import { mkdtemp } from 'node:fs/promises';
+import { mkdtemp, utimes, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { Connections } from './connections';
+import { Limits } from './limits';
 import { Runtime, WorkerWake } from './runtime';
 import { Settings } from './settings';
 import { openTelemetry } from './telemetry';
@@ -22,6 +23,13 @@ const setup = async (
     },
 ) => {
     const paths = sedgePaths(await mkdtemp(join(tmpdir(), 'sedge-runtime-')));
+    /** Writes config.json, as the user would; the runtime reads its limits from there. */
+    const configure = async (config: object) => {
+        await writeFile(paths.config, JSON.stringify(config));
+        // A new modification time, even on a coarse clock.
+        const later = new Date(Date.now() + 2000 + Math.random() * 1000);
+        await utimes(paths.config, later, later);
+    };
     const deps = Layer.mergeAll(
         StoresLive(':memory:'),
         WorkerWake.layer,
@@ -41,6 +49,7 @@ const setup = async (
         Layer.succeed(Connections)(
             Connections.of({
                 working: () => Effect.void,
+                list: Effect.succeed([{ name: 'telegram', type: 'channel' }]),
                 triaged: (sources: ReadonlyArray<string>) =>
                     Effect.succeed(
                         triage !== undefined && sources.every((s) => triage.sources.has(s)),
@@ -48,7 +57,9 @@ const setup = async (
             } as never),
         ),
     );
-    const runtime = ManagedRuntime.make(Runtime.layer.pipe(Layer.provideMerge(deps)));
+    const runtime = ManagedRuntime.make(
+        Runtime.layer.pipe(Layer.provideMerge(Limits.layer), Layer.provideMerge(deps)),
+    );
     const enqueue = (thread: string, prompt: string, source = 'telegram') =>
         runtime.runPromise(
             Effect.gen(function* () {
@@ -72,7 +83,21 @@ const setup = async (
         }
         throw new Error('The events never settled.');
     };
-    return { runtime, enqueue, settled };
+    const pending = () =>
+        runtime.runPromise(
+            Effect.gen(function* () {
+                return (yield* (yield* Inbox).list({ limit: 100 })).filter(
+                    (item) => item.status === 'pending',
+                );
+            }),
+        );
+    const told = () =>
+        runtime.runPromise(
+            Effect.gen(function* () {
+                return (yield* (yield* Outbox).list({ limit: 100 })).map((m) => m.text);
+            }),
+        );
+    return { runtime, enqueue, settled, configure, pending, told };
 };
 
 describe('the inbox worker', () => {
@@ -174,4 +199,71 @@ describe('the inbox worker', () => {
         expect(ran[0]).toContain('soil at 48%');
         expect(ran[1]).toContain('hello');
     }, 20_000);
+
+    it('holds an agent’s automated events past its runs per hour, but not your messages', async () => {
+        const ran: Array<string> = [];
+        const { runtime, enqueue, settled, configure, pending, told } = await setup(
+            async (input) => {
+                ran.push(input.items.map((item) => item.text).join(' | '));
+                return 'ok';
+            },
+        );
+        await configure({ limits: { runsPerHour: 2 } });
+        await enqueue('agent:ci', 'build 1 failed', 'ci');
+        await settled(1);
+        await enqueue('agent:ci', 'build 2 failed', 'ci');
+        await settled(2);
+        await enqueue('agent:ci', 'build 3 failed', 'ci');
+        await enqueue('agent:ci', 'what broke?', 'telegram');
+        await settled(3).catch(() => undefined);
+        await Bun.sleep(300);
+
+        expect(ran.map((r) => r.split('] ')[1])).toEqual([
+            'build 1 failed',
+            'build 2 failed',
+            'what broke?',
+        ]);
+        expect((await pending()).map((item) => item.prompt)).toEqual(['build 3 failed']);
+        const notices = await told();
+        expect(notices).toHaveLength(1);
+        expect(notices[0]).toContain('"ci" has had its 2 runs for this hour');
+
+        // Raising the limit in config.json applies without a restart.
+        await configure({ limits: { runsPerHour: 10 } });
+        await enqueue('main', 'nudge', 'telegram');
+        await settled(5);
+        await runtime.dispose();
+        expect(ran.filter((r) => r.includes('build 3 failed'))).toHaveLength(1);
+    }, 30_000);
+
+    it('pauses automated work once today’s budget is spent, and says so once', async () => {
+        const ran: Array<string> = [];
+        const { runtime, enqueue, settled, configure, pending, told } = await setup(
+            async (input) => {
+                ran.push(input.items.map((item) => item.text).join(' | '));
+                input.onSpent?.({ tokens: 1000, cost: 2 });
+                return 'ok';
+            },
+        );
+        await configure({ limits: { dailyCost: 3 } });
+        await enqueue('main', 'timer one', 'timer');
+        await settled(1);
+        await enqueue('main', 'timer two', 'timer');
+        await settled(2);
+        await Bun.sleep(100);
+        // $4 spent of $3: the next automated event waits; yours doesn't.
+        await enqueue('main', 'timer three', 'timer');
+        await enqueue('agent:ci', 'signal four', 'ci');
+        await enqueue('main', 'hello', 'telegram');
+        await settled(3).catch(() => undefined);
+        await Bun.sleep(300);
+        const waiting = (await pending()).map((item) => item.prompt).sort();
+        const notices = await told();
+        await runtime.dispose();
+
+        expect(ran.map((r) => r.split('] ')[1])).toEqual(['timer one', 'timer two', 'hello']);
+        expect(waiting).toEqual(['signal four', 'timer three']);
+        expect(notices).toHaveLength(1);
+        expect(notices[0]).toContain("today's budget of $3.00 is used up ($4.00 so far)");
+    }, 30_000);
 });

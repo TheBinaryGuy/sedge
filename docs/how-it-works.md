@@ -27,7 +27,8 @@ drains the inbox: a run for every conversation with work, all at once, never two
 arrive while a conversation's run is going are answered together in its next run, so three
 quick messages get one reply, not three. A signal with a `batch` window holds its events for that
 long, so a burst of them gets one run too, and one with `triage` on has a cheap model decide first
-whether its events need a run at all.
+whether its events need a run at all. [Limits](./configuration.md#limits), when you set them, hold
+automated events back once an agent has had its runs for the hour or the day's budget is spent.
 
 ## The run
 

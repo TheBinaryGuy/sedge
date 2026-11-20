@@ -7,6 +7,7 @@ import { MEMORY_INDEX, readMemoryIndex } from './memory';
 import { Settings } from './settings';
 import { Agents } from './agents';
 import { Connections } from './connections';
+import { Limits } from './limits';
 import { WorkerWake } from './runtime';
 import { agentOf, MAIN, memoryOf, subagentOf, subagentThread } from './threads';
 
@@ -92,6 +93,7 @@ export const makeHost = Effect.gen(function* () {
     const agents = yield* Agents;
     const inbox = yield* Inbox;
     const worker = yield* WorkerWake;
+    const limits = yield* Limits;
     const services = yield* Effect.context<never>();
     const run = <A>(effect: Effect.Effect<A>) => Effect.runPromiseWith(services)(effect);
     const { paths, config } = settings;
@@ -237,11 +239,21 @@ ${memory.head || '(empty)'}${memory.cut ? `\n\n(${MEMORY_INDEX} goes on; only it
                 return 'Not started: a subagent reports back later, and nobody hears a terminal task after it ends. Do this part yourself.';
             }
             const id = createHash('sha256').update(key).digest('hex').slice(0, 8);
+            const thread = subagentThread(current.thread, id);
+            const most = (await run(limits.current)).subagents;
+            if (most !== undefined) {
+                const working = (await run(inbox.activeThreads)).filter(
+                    (other) => other !== thread && subagentOf(other)?.parent === current.thread,
+                );
+                if (working.length >= most) {
+                    return `Not started: ${working.length} of your subagents are still working, and the limit is ${most} at once (limits.subagents). Wait for their answers, or do this part yourself.`;
+                }
+            }
             await run(
                 inbox.enqueue({
                     source: `agent:${agentOf(current.thread)}`,
                     externalId: `subagent:${key}`,
-                    thread: subagentThread(current.thread, id),
+                    thread,
                     prompt: task,
                     cwd: current.cwd,
                 }),

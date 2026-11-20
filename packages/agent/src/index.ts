@@ -4,12 +4,12 @@ import { VERSION } from '@sedge-hq/core';
 import { AgentRunError, type AgentEvent } from '@sedge-hq/protocol';
 import { Context, Effect, Layer, Semaphore } from 'effect';
 import { join } from 'node:path';
-import type { Durable, Item, ModelChoice } from './durable';
+import type { Durable, Item, ModelChoice, Spent } from './durable';
 import type { AgentHost, RunContext } from './host';
 import type { Triage } from './triage';
 
 export type { AgentHost, Outgoing, RunContext, TimerSpec, ToolDecision } from './host';
-export type { Item, ModelChoice } from './durable';
+export type { Item, ModelChoice, Spent } from './durable';
 export type { Triage } from './triage';
 
 type Pi = typeof PiModule;
@@ -55,6 +55,8 @@ export interface RunInput extends RunContext {
     readonly items: ReadonlyArray<Item>;
     /** A subagent's run: no messages to the user or other agents, no timers, no subagents. */
     readonly subagent?: boolean | undefined;
+    /** Told what the run used once it ends, whether it answered or failed. */
+    readonly onSpent?: ((spent: Spent) => void) | undefined;
 }
 
 /**

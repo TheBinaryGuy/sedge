@@ -58,7 +58,8 @@ subagent, and it carries on where it stopped once you answer.
 
 Subagents' runs show up in the inbox under the agent that started them (`main#sub:3f2a9c1d`).
 A task started from the terminal can't start subagents, because nobody hears what arrives after
-it ends.
+it ends. [`limits.subagents`](./configuration.md#limits) caps how many one agent has working at
+once, and `limits.runsPerHour` counts an agent's subagents with it.
 
 ## See what they're doing
 

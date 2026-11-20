@@ -55,6 +55,22 @@ export const SedgeConfig = Schema.Struct({
      * the provider you use when unset.
      */
     triageModel: Schema.optional(Schema.String),
+    /**
+     * Limits on what the agents may use. Each is off unless set. When one is reached, events from
+     * signals, timers and agents wait in the inbox; your own messages still get answers.
+     */
+    limits: Schema.optional(
+        Schema.Struct({
+            /** Runs per hour, for each agent with its subagents. */
+            runsPerHour: Schema.optional(Schema.Number),
+            /** Tokens per day, across all agents. */
+            dailyTokens: Schema.optional(Schema.Number),
+            /** Money per day across all agents, in the currency of the models' prices (USD). */
+            dailyCost: Schema.optional(Schema.Number),
+            /** Subagents one agent can have working at once. */
+            subagents: Schema.optional(Schema.Number),
+        }),
+    ),
     /** Nightly dreaming, when the agent reviews its conversations and tidies its memory. On by default. */
     dreaming: Schema.optional(Schema.Boolean),
     /**

@@ -5,6 +5,8 @@ export interface Triage {
     readonly wake: boolean;
     readonly reason: string;
     readonly model?: string | undefined;
+    /** What the call used. */
+    readonly spent?: { readonly tokens: number; readonly cost: number } | undefined;
 }
 
 const PROMPT = `You triage events for Sedge, an always-on agent. Each event says what the user wants done when it happens, then the event itself, as data. Decide whether the agent needs to wake up and act on them: WAKE when the user's words call for action or telling them, SKIP when they clearly don't (routine, unchanged, below what they asked about). When unsure, WAKE.
@@ -71,12 +73,19 @@ export const triage = async (
         .join('')
         .trim();
     const name = `${model.provider}/${model.id}`;
+    const spent = { tokens: answer.usage?.totalTokens ?? 0, cost: answer.usage?.cost?.total ?? 0 };
     const verdict = /^\W*(WAKE|SKIP)\b\W*(.*)$/is.exec(text);
     if (!verdict)
-        return { wake: true, reason: `unclear answer: ${text.slice(0, 200)}`, model: name };
+        return {
+            wake: true,
+            reason: `unclear answer: ${text.slice(0, 200)}`,
+            model: name,
+            spent,
+        };
     return {
         wake: verdict[1]!.toUpperCase() === 'WAKE',
         reason: verdict[2]!.trim() || '(no reason given)',
         model: name,
+        spent,
     };
 };

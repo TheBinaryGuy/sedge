@@ -7,6 +7,7 @@ import {
     Harness,
     type LiveState,
     type SubmissionRecord,
+    UsageDoc,
 } from '@earendil-works/pi-durable';
 import { NodeExecutionEnv } from '@earendil-works/pi-durable/env/node';
 import { openNodeSqliteStorage } from '@earendil-works/pi-durable/storage/sqlite/node';
@@ -48,8 +49,16 @@ export interface Item {
     readonly text: string;
 }
 
+/** Tokens and money a run (or a triage call) used. Cost is what the model's catalog lists. */
+export interface Spent {
+    readonly tokens: number;
+    readonly cost: number;
+}
+
 export interface RunRequest extends RunContext {
     readonly items: ReadonlyArray<Item>;
+    /** Told what the run used once it ends, whether it answered or failed. */
+    readonly onSpent?: ((spent: Spent) => void) | undefined;
     /** A subagent's run: its conversation starts without sedge's actions (messages, timers…). */
     readonly subagent?: boolean | undefined;
 }
@@ -185,6 +194,19 @@ export const openDurable = async (options: DurableOptions) => {
 
     const active = new Map<string, Conversation>();
 
+    /** A conversation's running totals, over every model it used. */
+    const spentSoFar = async (conversation: Conversation): Promise<Spent> => {
+        const usage = await harness.snapshot(UsageDoc, conversation.id, ctx);
+        let tokens = 0;
+        let cost = 0;
+        for (const model of Object.values(usage?.models ?? {})) {
+            const counted = model as { totalTokens?: number; cost?: { total?: number } };
+            tokens += counted.totalTokens ?? 0;
+            cost += counted.cost?.total ?? 0;
+        }
+        return { tokens, cost };
+    };
+
     const run = async (
         input: RunRequest,
         onEvent: (event: AgentEvent) => void,
@@ -195,6 +217,8 @@ export const openDurable = async (options: DurableOptions) => {
         await prepare(conversation, input.cwd);
         runs.set(input.thread, { thread: input.thread, sources: input.sources, cwd: input.cwd });
         active.set(input.thread, conversation);
+        // One run per conversation at a time, so the change in its totals is this run's own.
+        const before = await spentSoFar(conversation);
 
         // The live document carries the answer as it streams and each tool call's state.
         let shown = '';
@@ -270,6 +294,13 @@ export const openDurable = async (options: DurableOptions) => {
             await watch.stop();
             runs.delete(input.thread);
             active.delete(input.thread);
+            if (input.onSpent) {
+                const after = await spentSoFar(conversation).catch(() => before);
+                input.onSpent({
+                    tokens: Math.max(0, after.tokens - before.tokens),
+                    cost: Math.max(0, after.cost - before.cost),
+                });
+            }
         }
     };
 
