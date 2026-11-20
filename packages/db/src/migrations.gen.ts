@@ -38,5 +38,16 @@ export const migrations: Array<MigrationMeta> = [
         "folderMillis": 1795140453000,
         "hash": "61fd7e54e96dd461f60ef88af141625b37a31cd43a009c7f39e5729659ce51ff",
         "name": "20261120020733_inbox-hold"
+    },
+    {
+        "sql": [
+            "ALTER TABLE `inbox` ADD `untrusted` integer DEFAULT false NOT NULL;",
+            "\nALTER TABLE `inbox` ADD `label` text;",
+            "\nALTER TABLE `timers` ADD `untrusted` integer DEFAULT false NOT NULL;"
+        ],
+        "bps": true,
+        "folderMillis": 1795152560000,
+        "hash": "fe467fbdbab2d6094211c050a8b3763af75e689f746e4c6e7b4bec6980f4a2ee",
+        "name": "20261120052920_untrusted-and-labels"
     }
 ];

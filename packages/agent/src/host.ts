@@ -4,6 +4,11 @@ export interface RunContext {
     /** What the events in this run came from (`telegram`, `timer`, `approval`, `cli`, a signal). */
     readonly sources: ReadonlyArray<string>;
     readonly cwd: string;
+    /**
+     * Woken by outside content: a signal's events, or what a run woken by one passed on (a tell,
+     * a subagent's task or answer). Its risky tools follow the stricter `permissions.signals`.
+     */
+    readonly untrusted?: boolean | undefined;
 }
 
 export interface TimerSpec {

@@ -95,6 +95,9 @@ export class ConnectionInfo extends Schema.Class<ConnectionInfo>('sedge/protocol
     throttle: Schema.optional(Schema.NullOr(Schema.String)),
     /** A cheap model reads each event first, and only wakes the agent when it should. */
     triage: Schema.optional(Schema.Boolean),
+    /** Labels triage picks one of for each event, and the ones that wake the agent. */
+    labels: Schema.optional(Schema.Array(Schema.String)),
+    wakeOn: Schema.optional(Schema.Array(Schema.String)),
 }) {}
 
 /** An agent: `main` (sedge itself) or one you made, and how it is doing. */
@@ -122,6 +125,8 @@ export class InboxEntry extends Schema.Class<InboxEntry>('sedge/protocol/InboxEn
     error: Schema.NullOr(Schema.String),
     /** What came of it: the agent's answer, or why triage skipped it. */
     result: Schema.optional(Schema.NullOr(Schema.String)),
+    /** What triage labelled it, for a signal with labels. */
+    label: Schema.optional(Schema.NullOr(Schema.String)),
 }) {}
 
 /** One message in the outbox. */
@@ -284,6 +289,8 @@ export class SedgeRpcs extends RpcGroup.make(
             when: Schema.optional(Schema.String),
             throttle: Schema.optional(Schema.String),
             triage: Schema.optional(Schema.Boolean),
+            labels: Schema.optional(Schema.Array(Schema.String)),
+            wakeOn: Schema.optional(Schema.Array(Schema.String)),
         },
         success: Schema.Struct({ invite: Schema.NullOr(Schema.String) }),
         error: ConnectionError,
@@ -302,6 +309,8 @@ export class SedgeRpcs extends RpcGroup.make(
             when: Schema.optional(Schema.NullOr(Schema.String)),
             throttle: Schema.optional(Schema.NullOr(Schema.String)),
             triage: Schema.optional(Schema.NullOr(Schema.Boolean)),
+            labels: Schema.optional(Schema.NullOr(Schema.Array(Schema.String))),
+            wakeOn: Schema.optional(Schema.NullOr(Schema.Array(Schema.String))),
         },
         error: ConnectionError,
     }),

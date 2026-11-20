@@ -41,7 +41,13 @@ export class Agents extends Context.Service<
         /** Removes an agent: its channels and signals go back to `main`, its timers stop. */
         readonly remove: (name: string) => Effect.Effect<void, Error>;
         /** A message from one agent (by thread) into another's inbox. */
-        readonly tell: (fromThread: string, to: string, message: string) => Effect.Effect<string>;
+        /** `untrusted`: the telling run was woken by outside content, so the message is too. */
+        readonly tell: (
+            fromThread: string,
+            to: string,
+            message: string,
+            untrusted?: boolean,
+        ) => Effect.Effect<string>;
     }
 >()('sedge/daemon/Agents') {
     static readonly layer = Layer.effect(
@@ -160,6 +166,7 @@ export class Agents extends Context.Service<
                 fromThread: string,
                 to: string,
                 message: string,
+                untrusted = false,
             ) {
                 const from = agentOf(fromThread);
                 const target = yield* get(to);
@@ -173,6 +180,7 @@ export class Agents extends Context.Service<
                     thread: threadOf(target.name),
                     prompt: `Message from the agent "${from}" (answer with tell, agent "${from}"):\n\n${message}`,
                     cwd: target.workspace,
+                    untrusted,
                 });
                 yield* worker.wake;
                 return `Sent to ${target.name}. Its answer arrives as a new event; end your turn unless you have more to do now.`;

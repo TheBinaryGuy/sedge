@@ -33,6 +33,10 @@ export const inbox = sqliteTable(
         finishedAt: integer('finished_at', { mode: 'number' }),
         /** Not handed to the agent before this time, so events of a batching signal go together. */
         holdUntil: integer('hold_until', { mode: 'number' }),
+        /** From outside: a signal's event, or something a run woken by one passed on. */
+        untrusted: integer('untrusted', { mode: 'boolean' }).notNull().default(false),
+        /** What triage labelled it, for a signal with `labels`. */
+        label: text('label'),
     },
     (table) => [
         index('inbox_status_created_idx').on(table.status, table.createdAt),
@@ -55,6 +59,8 @@ export const timers = sqliteTable(
         cron: text('cron'),
         prompt: text('prompt').notNull(),
         cwd: text('cwd').notNull(),
+        /** Set by a run woken by outside content: its firing is outside content too. */
+        untrusted: integer('untrusted', { mode: 'boolean' }).notNull().default(false),
         status: text('status', { enum: ['active', 'done', 'cancelled'] })
             .notNull()
             .default('active'),

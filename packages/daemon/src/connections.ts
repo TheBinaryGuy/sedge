@@ -40,7 +40,20 @@ interface Live {
 /** Changes to a signal: a field left out stays, `null` clears it. */
 export type SignalChanges = {
     readonly [K in 'instruction' | keyof EventOptions]?: string | null | undefined;
-} & { readonly triage?: boolean | null | undefined };
+} & {
+    readonly triage?: boolean | null | undefined;
+    readonly labels?: ReadonlyArray<string> | null | undefined;
+    readonly wakeOn?: ReadonlyArray<string> | null | undefined;
+};
+
+/** Why these labels can't be used, or `undefined` when they can. */
+const checkLabels = (labels?: ReadonlyArray<string>, wakeOn?: ReadonlyArray<string>) => {
+    if (wakeOn?.length && !labels?.length) return 'wakeOn needs labels to pick from.';
+    const missing = wakeOn?.filter((label) => !labels?.includes(label)) ?? [];
+    if (missing.length > 0)
+        return `wakeOn names labels the signal doesn't have: ${missing.join(', ')}.`;
+    return undefined;
+};
 
 const fail = (message: string) => Effect.fail(new ConnectionError({ message }));
 const describe = (error: unknown) => (error instanceof Error ? error.message : String(error));
@@ -89,7 +102,11 @@ export class Connections extends Context.Service<
                 readonly settings: Readonly<Record<string, unknown>>;
                 readonly secrets: Readonly<Record<string, string>>;
                 readonly instruction: string | null;
-            } & EventOptions & { readonly triage?: boolean | undefined },
+            } & EventOptions & {
+                    readonly triage?: boolean | undefined;
+                    readonly labels?: ReadonlyArray<string> | undefined;
+                    readonly wakeOn?: ReadonlyArray<string> | undefined;
+                },
         ) => Effect.Effect<{ readonly invite: string | null }, ConnectionError>;
         readonly disconnect: (name: string) => Effect.Effect<void, ConnectionError>;
         readonly invite: (name: string) => Effect.Effect<string, ConnectionError>;
@@ -98,8 +115,14 @@ export class Connections extends Context.Service<
         /** Delivers to the user. Threads no channel reaches (a terminal task) need no delivery. */
         readonly send: (thread: string, message: Outgoing) => Effect.Effect<void, Error>;
         readonly canReach: (thread: string) => Effect.Effect<boolean>;
-        /** Whether every one of these sources is a signal with `triage` on. */
+        /** Whether every one of these sources is a signal with `triage` (or `labels`) on. */
         readonly triaged: (sources: ReadonlyArray<string>) => Effect.Effect<boolean>;
+        /** A signal's labels for triage to pick from, and the ones that wake the agent. */
+        readonly labelsOf: (
+            source: string,
+        ) =>
+            | { readonly labels: ReadonlyArray<string>; readonly wakeOn?: ReadonlyArray<string> }
+            | undefined;
         /** Shows the user that sedge is working on an answer, where the channel can. */
         readonly working: (thread: string) => Effect.Effect<void>;
         /** Gives a channel or signal to an agent: what it brings goes to that agent from now on. */
@@ -137,6 +160,7 @@ export class Connections extends Context.Service<
                 thread?: string;
                 prompt: string;
                 holdUntil?: number | undefined;
+                untrusted?: boolean | undefined;
             }) => {
                 // What a channel or signal brings goes to the agent it belongs to.
                 const owner = live.get(event.source)?.entry.agent ?? MAIN;
@@ -214,6 +238,7 @@ export class Connections extends Context.Service<
                             const created = await enqueue({
                                 source: name,
                                 externalId: happening.key,
+                                untrusted: true,
                                 ...(batch === undefined ? {} : { holdUntil: Date.now() + batch }),
                                 // Outside content is framed as data, so text in it that reads like
                                 // an instruction is not taken as one.
@@ -327,6 +352,8 @@ export class Connections extends Context.Service<
                             when: state.entry.when ?? null,
                             throttle: state.entry.throttle ?? null,
                             triage: state.entry.triage ?? false,
+                            labels: state.entry.labels ?? [],
+                            wakeOn: state.entry.wakeOn ?? [],
                         }),
                 ),
             );
@@ -348,7 +375,11 @@ export class Connections extends Context.Service<
                     readonly settings: Readonly<Record<string, unknown>>;
                     readonly secrets: Readonly<Record<string, string>>;
                     readonly instruction: string | null;
-                } & EventOptions & { readonly triage?: boolean | undefined },
+                } & EventOptions & {
+                        readonly triage?: boolean | undefined;
+                        readonly labels?: ReadonlyArray<string> | undefined;
+                        readonly wakeOn?: ReadonlyArray<string> | undefined;
+                    },
             ) {
                 if (!NAME.test(input.name)) {
                     return yield* fail('Names are lowercase letters, digits and dashes.');
@@ -385,13 +416,19 @@ export class Connections extends Context.Service<
                     ...(input.when ? { when: input.when } : {}),
                     ...(input.throttle ? { throttle: input.throttle } : {}),
                     ...(input.triage ? { triage: true } : {}),
+                    ...(input.labels?.length ? { labels: [...input.labels] } : {}),
+                    ...(input.wakeOn?.length ? { wakeOn: [...input.wakeOn] } : {}),
                 };
-                if (Object.keys(options).length > 0 && kind.plugin.kind !== 'signal') {
+                if (
+                    (Object.keys(options).length > 0 || input.triage || input.labels?.length) &&
+                    kind.plugin.kind !== 'signal'
+                ) {
                     return yield* fail(
-                        'match, ignore, when, throttle, batch and triage are for signals.',
+                        'match, ignore, when, throttle, batch, triage and labels are for signals.',
                     );
                 }
-                const optionsProblem = checkEventOptions(options);
+                const optionsProblem =
+                    checkEventOptions(options) ?? checkLabels(input.labels, input.wakeOn);
                 if (optionsProblem) return yield* fail(optionsProblem);
 
                 const entry: ConnectionEntry = {
@@ -470,11 +507,19 @@ export class Connections extends Context.Service<
                         const next: Record<string, unknown> = { ...entry };
                         for (const [key, value] of Object.entries(changes)) {
                             if (value === undefined) continue;
-                            if (value === null || value === '' || value === false) delete next[key];
+                            if (
+                                value === null ||
+                                value === '' ||
+                                value === false ||
+                                (Array.isArray(value) && value.length === 0)
+                            )
+                                delete next[key];
                             else next[key] = value;
                         }
                         const updated = next as ConnectionEntry;
-                        const problem = checkEventOptions(updated);
+                        const problem =
+                            checkEventOptions(updated) ??
+                            checkLabels(updated.labels, updated.wakeOn);
                         if (problem) throw new Error(problem);
                         await saveConfig(paths, {
                             ...config,
@@ -528,8 +573,19 @@ export class Connections extends Context.Service<
                     Effect.sync(
                         () =>
                             sources.length > 0 &&
-                            sources.every((source) => live.get(source)?.entry.triage === true),
+                            sources.every((source) => {
+                                const entry = live.get(source)?.entry;
+                                return entry?.triage === true || (entry?.labels?.length ?? 0) > 0;
+                            }),
                     ),
+                labelsOf: (source) => {
+                    const entry = live.get(source)?.entry;
+                    if (!entry?.labels?.length) return undefined;
+                    return {
+                        labels: entry.labels,
+                        ...(entry.wakeOn?.length ? { wakeOn: entry.wakeOn } : {}),
+                    };
+                },
                 working: (thread) =>
                     Effect.promise(async () => {
                         if (thread.startsWith('cli:')) return;

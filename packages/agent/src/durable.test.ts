@@ -412,4 +412,26 @@ describe('the durable agent', () => {
         expect(spent[0]!.tokens).toBeGreaterThan(0);
         expect(spent[1]!.tokens).toBeGreaterThan(0);
     }, 30_000);
+
+    it('labels each event with one of its own labels, and leaves out anything else', async () => {
+        const { faux, open } = await setup();
+        faux.setResponses([
+            fauxAssistantMessage('1: Person\n2: dragon\n3: nothing\nWAKE: someone is at the door'),
+        ]);
+        const runtime = open();
+        const verdict = await runtime.runPromise(
+            Effect.gen(function* () {
+                const agent = yield* Agent;
+                return yield* agent.triage([
+                    { text: 'motion at the door', labels: ['person', 'vehicle', 'nothing'] },
+                    { text: 'motion in the yard', labels: ['person', 'vehicle', 'nothing'] },
+                    { text: 'motion in the hall', labels: ['person', 'vehicle', 'nothing'] },
+                ]);
+            }),
+        );
+        await runtime.dispose();
+        expect(verdict.wake).toBe(true);
+        // "dragon" isn't one of its labels, so that event stays unlabelled.
+        expect(verdict.labels).toEqual(['person', undefined, 'nothing']);
+    }, 30_000);
 });

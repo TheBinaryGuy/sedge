@@ -21,7 +21,7 @@ import { type McpServerState, openMcp } from './mcp';
 import { recallExtension } from './recall';
 import { actionsExtension, searchTools, sedgeExtension, skillsExtension } from './tools';
 import { type Sandbox, sandboxedEnv } from './sandbox';
-import { type Triage, triage, triageModel } from './triage';
+import { type Triage, type TriageEvent, triage, triageModel } from './triage';
 
 export interface ModelChoice {
     readonly provider: string;
@@ -97,7 +97,15 @@ export const openDurable = async (options: DurableOptions) => {
     const runs = new Map<string, RunContext>();
     const runFor = (conversationId: number): RunContext => {
         const thread = threadOf(conversationId);
-        return runs.get(thread) ?? { thread, sources: ['resumed'], cwd: options.workspace };
+        // A run a restart resumes: what woke it isn't known here, so it gets the stricter rules.
+        return (
+            runs.get(thread) ?? {
+                thread,
+                sources: ['resumed'],
+                cwd: options.workspace,
+                untrusted: true,
+            }
+        );
     };
 
     const registry = createRegistry();
@@ -223,7 +231,12 @@ export const openDurable = async (options: DurableOptions) => {
         await Promise.race([mcp, new Promise((done) => setTimeout(done, 10_000).unref())]);
         const conversation = await conversationFor(input.thread, input.subagent ?? false);
         await prepare(conversation, input.cwd);
-        runs.set(input.thread, { thread: input.thread, sources: input.sources, cwd: input.cwd });
+        runs.set(input.thread, {
+            thread: input.thread,
+            sources: input.sources,
+            cwd: input.cwd,
+            untrusted: input.untrusted ?? false,
+        });
         active.set(input.thread, conversation);
         // One run per conversation at a time, so the change in its totals is this run's own.
         const before = await spentSoFar(conversation);
@@ -314,7 +327,7 @@ export const openDurable = async (options: DurableOptions) => {
 
     /** One cheap call: do these events need the agent? Without a model, they do. */
     const triageEvents = async (
-        events: ReadonlyArray<string>,
+        events: ReadonlyArray<TriageEvent>,
         override?: string,
     ): Promise<Triage> => {
         const model = await triageModel(

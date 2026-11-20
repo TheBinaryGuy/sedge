@@ -24,7 +24,8 @@ libsecret on Linux, Windows Credential Manager); the config file only names them
 no keychain, an owner-only file in `~/.sedge` stands in.
 
 The tools it uses, if you want to ask for them by name: `channels`, `signals`,
-`find_packages`, `install`, `uninstall`, `connect`, `update_signal`, `disconnect`, `invite`,
+`find_packages`, `install`, `uninstall`, `connect` and `update_signal` (with filters, windows,
+triage and labels), `disconnect`, `invite`,
 `create_signal`. See [Commands](./commands.md).
 
 ## Pairing a channel
@@ -84,6 +85,8 @@ agent, so a noisy one doesn't start a model run for each event. They apply in th
   agent wakes, so nothing is missed. Triage only decides for a run made entirely of events from
   signals with `triage` on; when anything else wakes the same agent (your message, a timer, another
   signal), they're handled together, untriaged.
+- **`labels`** and **`wakeOn`**: triage also tags each event with one of your labels, and you
+  decide by label instead of leaving it to the model. See [Labels](#labels).
 
 The rules (`match`, `ignore`, `when`) cost nothing and are exact; triage understands what you meant
 ("only if it's my commit") at a small price. Use the rules when you can say it as one, and triage
@@ -92,6 +95,39 @@ when you can't.
 Say it when connecting ("tell me if the kitchen goes above 30, at most once an hour"), or change it
 later ("stop telling me about dependabot"): the TUI's agent sets these with `connect` and
 `update_signal`, and you confirm.
+
+### Labels
+
+Give a signal a list of `labels`, and the cheap triage model picks one for each event: a camera's
+motion as `person`, `vehicle`, `animal` or `nothing`, a support email as `bug`, `billing` or
+`spam`. Labels turn triage on.
+
+```json
+"porch": {
+    "kind": "webhook",
+    "instruction": "Tell me who's at the door.",
+    "labels": ["person", "vehicle", "animal", "nothing"],
+    "wakeOn": ["person", "vehicle"]
+}
+```
+
+- The agent reads each event with its label (`[porch · … · labelled person]`), and `sedge dash`
+  shows it in the inbox.
+- With **`wakeOn`**, the labels decide: an event wakes the agent only if it's labelled one of
+  them, and the rest are skipped ("labelled animal, not one that wakes it"). Without it, the model
+  decides as usual and the label is there to read.
+- An event the model couldn't label (it answered with something not in your list) is left
+  unlabelled and wakes the agent, so nothing is missed.
+
+Labels are given at triage, after `when` and the other rules have run, so a condition can't use
+them; `wakeOn` is the rule that does.
+
+### Permissions for what signals bring
+
+A signal's events are outside content: someone else wrote them. A run they wake (and what it
+passes on: a message to another agent, a subagent, a timer) asks before writing files, running
+commands or calling MCP tools, unless you loosen `permissions.signals`. See
+[Runs woken by outside content](./security.md#runs-woken-by-outside-content).
 
 ## Kinds
 

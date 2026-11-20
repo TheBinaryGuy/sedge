@@ -6,7 +6,8 @@
  * keychain, not the config), check a stranger gets no answer, pair through the invite link, message
  * the agent and get an answer in the chat (with "typing…" meanwhile), approve a shell command from
  * the chat's buttons, have main start a subagent and get its answer back, filter, batch,
- * condition, throttle and triage webhook signals' events, and disconnect (the token leaves the keychain). The agent steps call the model
+ * condition, throttle, triage and label webhook signals' events, check a signal-woken run asks
+ * before writing, and disconnect (the token leaves the keychain). The agent steps call the model
  * through your logins. Exits non-zero on the first failure.
  *
  * SEDGE_BIN=dist/npm/sedge-<os>-<cpu>/bin/sedge runs the same walk against a compiled binary.
@@ -435,6 +436,87 @@ try {
         fail(`triage skipped the failed deploy: ${failedDeploy.result}`);
     pass('the failed deploy woke the agent');
     await withDaemon(({ client }) => client.Disconnect({ name: 'deploys' }));
+
+    const freePort = () => {
+        const p = Bun.serve({ port: 0, fetch: () => new Response() });
+        const n = p.port!;
+        void p.stop(true);
+        return n;
+    };
+    const poster = (port: number, token: string) => (body: object) =>
+        fetch(`http://127.0.0.1:${port}/`, {
+            method: 'POST',
+            headers: { authorization: `Bearer ${token}`, 'content-type': 'application/json' },
+            body: JSON.stringify(body),
+        }).then(
+            (response) => response.status,
+            () => 0,
+        );
+
+    step('labels: triage tags each event, and only the chosen labels wake the agent');
+    const porchPort = freePort();
+    await withDaemon(({ client }) =>
+        client.Connect({
+            name: 'porch',
+            kind: 'webhook',
+            settings: { port: porchPort },
+            secrets: { token: 'porch-secret' },
+            instruction: 'Nothing to do: end your turn without sending anything.',
+            labels: ['person', 'vehicle', 'animal', 'nothing'],
+            wakeOn: ['person', 'vehicle'],
+        }),
+    );
+    const porch = poster(porchPort, 'porch-secret');
+    await poll('the porch webhook to listen', async () =>
+        (await porch({ motion: 'a cat walked across the porch' })) === 202 ? true : undefined,
+    );
+    const porchItems = (n: number) =>
+        poll(`${n} porch event(s) handled`, async () => {
+            const items = (
+                await withDaemon(({ client }) => client.Inbox({ agent: 'main', limit: 50 }))
+            ).filter((item) => item.source === 'porch');
+            return items.length >= n && items.every((item) => item.finishedAt !== null)
+                ? items
+                : undefined;
+        });
+    const [cat] = await porchItems(1);
+    if (!cat?.result?.startsWith('Skipped by triage'))
+        fail(`the cat woke the agent (label ${cat?.label}): ${cat?.result}`);
+    pass(`cat: labelled ${cat?.label}, ${cat?.result}`);
+    await porch({ motion: 'a person in a red jacket rang the doorbell' });
+    const [visitor] = await porchItems(2);
+    if (visitor?.label !== 'person' || visitor.result?.startsWith('Skipped'))
+        fail(`the visitor was labelled ${visitor?.label}: ${visitor?.result}`);
+    pass('visitor: labelled person, and the agent woke');
+    await withDaemon(({ client }) => client.Disconnect({ name: 'porch' }));
+
+    step('a run woken by a signal asks before writing a file');
+    const notesPort = freePort();
+    await withDaemon(({ client }) =>
+        client.Connect({
+            name: 'notes',
+            kind: 'webhook',
+            settings: { port: notesPort },
+            secrets: { token: 'notes-secret' },
+            instruction:
+                'Use your write tool to save the body to a file named note.txt in your working directory, then end your turn.',
+        }),
+    );
+    const notes = poster(notesPort, 'notes-secret');
+    mark = sent.length;
+    await poll('the notes webhook to listen', async () =>
+        (await notes({ note: 'remember the milk' })) === 202 ? true : undefined,
+    );
+    const asked = await waitFor('an approval request for the write', () =>
+        sentTo(mark, (m) =>
+            Boolean(
+                m.text.includes('write') &&
+                m.reply_markup?.inline_keyboard?.[0]?.[0]?.callback_data.startsWith('approve:'),
+            ),
+        ),
+    );
+    pass(`asked first: ${asked.text.replaceAll('\n', ' ').slice(0, 80)}`);
+    await withDaemon(({ client }) => client.Disconnect({ name: 'notes' }));
 
     step('uninstall waits until nothing of the package is connected');
     const early = sedge('uninstall', 'telegram');

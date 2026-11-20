@@ -115,9 +115,9 @@ const loadRows = async (
     if (tab === 'inbox') {
         const items = await withDaemon(({ client }) => client.Inbox({ agent: filter, limit: 200 }));
         return items.map((item) => ({
-            line: `${paint.dim(when(item.createdAt))}  ${paint.bold(owner(item.thread).padEnd(10))} ${status(itemStatus(item).padEnd(7))} ${paint.muted(item.source.padEnd(10))} ${oneLine(item.prompt)}`,
+            line: `${paint.dim(when(item.createdAt))}  ${paint.bold(owner(item.thread).padEnd(10))} ${status(itemStatus(item).padEnd(7))} ${paint.muted(item.source.padEnd(10))} ${item.label ? `${paint.accent(`[${item.label}]`)} ` : ''}${oneLine(item.prompt)}`,
             detail: [
-                `${paint.dim('from')} ${item.source} ${paint.dim('to')} ${owner(item.thread)} ${paint.dim('·')} ${status(itemStatus(item))}${item.finishedAt ? paint.dim(` · done ${when(item.finishedAt)}`) : ''}`,
+                `${paint.dim('from')} ${item.source} ${paint.dim('to')} ${owner(item.thread)} ${paint.dim('·')} ${status(itemStatus(item))}${item.label ? ` ${paint.dim('· labelled')} ${item.label}` : ''}${item.finishedAt ? paint.dim(` · done ${when(item.finishedAt)}`) : ''}`,
                 '',
                 item.prompt,
                 ...(item.error ? ['', paint.error(item.error)] : []),

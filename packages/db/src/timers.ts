@@ -11,6 +11,8 @@ export interface NewTimer {
     readonly prompt: string;
     readonly cwd: string;
     readonly nextRunAt: number;
+    /** Set by a run woken by outside content. */
+    readonly untrusted?: boolean | undefined;
 }
 
 export class Timers extends Context.Service<

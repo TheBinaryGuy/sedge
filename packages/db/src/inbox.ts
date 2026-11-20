@@ -12,6 +12,8 @@ export interface NewEvent {
     readonly cwd: string;
     /** Wait until this time (ms): a batching signal's events go to the agent together. */
     readonly holdUntil?: number | undefined;
+    /** From outside, or passed on by a run that was: runs it wakes get the stricter permissions. */
+    readonly untrusted?: boolean | undefined;
 }
 
 /** A waiting event, as `claimBatch`'s `eligible` sees it. */
@@ -46,6 +48,8 @@ export class Inbox extends Context.Service<
         ) => Effect.Effect<ReadonlyArray<InboxItem>>;
         /** Threads with an event waiting or being worked on. */
         readonly activeThreads: Effect.Effect<ReadonlyArray<string>>;
+        /** Keeps what triage labelled an event. */
+        readonly setLabel: (id: string, label: string) => Effect.Effect<void>;
         /** The latest events, newest first; one thread's (with its subagents'), or all. */
         readonly list: (options: {
             readonly thread?: string | undefined;
@@ -205,10 +209,15 @@ export class Inbox extends Context.Service<
                     Effect.orDie,
                 );
 
+            const setLabel = Effect.fn('Inbox.setLabel')(function* (id: string, label: string) {
+                yield* db.update(inbox).set({ label }).where(eq(inbox.id, id));
+            }, Effect.orDie);
+
             return Inbox.of({
                 enqueue,
                 claimBatch,
                 activeThreads,
+                setLabel,
                 list,
                 pendingByThread,
                 get,

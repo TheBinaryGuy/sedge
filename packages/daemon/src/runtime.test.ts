@@ -19,7 +19,12 @@ const setup = async (
     answer: (input: RunInput) => Promise<string>,
     triage?: {
         sources: ReadonlySet<string>;
-        decide: (events: ReadonlyArray<string>) => Promise<Triage>;
+        decide: (
+            events: ReadonlyArray<string>,
+            labels: ReadonlyArray<ReadonlyArray<string> | undefined>,
+        ) => Promise<Triage>;
+        /** Each source's labels and wakeOn, as a signal's config would set them. */
+        labels?: Record<string, { labels: ReadonlyArray<string>; wakeOn?: ReadonlyArray<string> }>;
     },
 ) => {
     const paths = sedgePaths(await mkdtemp(join(tmpdir(), 'sedge-runtime-')));
@@ -40,7 +45,11 @@ const setup = async (
                 run: (input) => Effect.promise(() => answer(input)),
                 triage: (events) =>
                     Effect.tryPromise({
-                        try: () => triage!.decide(events),
+                        try: () =>
+                            triage!.decide(
+                                events.map((e) => (typeof e === 'string' ? e : e.text)),
+                                events.map((e) => (typeof e === 'string' ? undefined : e.labels)),
+                            ),
                         catch: (cause) => new AgentRunError({ message: String(cause) }),
                     }),
                 abort: Effect.void,
@@ -50,6 +59,7 @@ const setup = async (
             Connections.of({
                 working: () => Effect.void,
                 list: Effect.succeed([{ name: 'telegram', type: 'channel' }]),
+                labelsOf: (source: string) => triage?.labels?.[source],
                 triaged: (sources: ReadonlyArray<string>) =>
                     Effect.succeed(
                         triage !== undefined && sources.every((s) => triage.sources.has(s)),
@@ -60,11 +70,17 @@ const setup = async (
     const runtime = ManagedRuntime.make(
         Runtime.layer.pipe(Layer.provideMerge(Limits.layer), Layer.provideMerge(deps)),
     );
-    const enqueue = (thread: string, prompt: string, source = 'telegram') =>
+    const enqueue = (thread: string, prompt: string, source = 'telegram', untrusted = false) =>
         runtime.runPromise(
             Effect.gen(function* () {
                 yield* Runtime;
-                yield* (yield* Inbox).enqueue({ source, thread, prompt, cwd: paths.workspace });
+                yield* (yield* Inbox).enqueue({
+                    source,
+                    thread,
+                    prompt,
+                    cwd: paths.workspace,
+                    untrusted,
+                });
                 yield* (yield* WorkerWake).wake;
             }),
         );
@@ -278,4 +294,69 @@ describe('the inbox worker', () => {
         expect(notices).toHaveLength(1);
         expect(notices[0]).toContain("today's budget of $3.00 is used up ($4.00 so far)");
     }, 30_000);
+
+    it('runs a signal’s events as outside content, and its subagents’ answers too', async () => {
+        const seen: Array<[string, boolean | undefined]> = [];
+        const { runtime, enqueue, settled } = await setup(async (input) => {
+            seen.push([input.thread, input.untrusted]);
+            return 'ok';
+        });
+        await enqueue('main', 'CI failed', 'ci', true);
+        await settled(1);
+        await enqueue('main', 'hello', 'telegram');
+        await settled(2);
+        // A subagent a signal-woken run started: its task and its answer stay outside content.
+        await enqueue(subagentThread('main', 'ab12'), 'look at the log', 'agent:main', true);
+        await settled(4);
+        await runtime.dispose();
+        expect(seen).toEqual([
+            ['main', true],
+            ['main', false],
+            ['main#sub:ab12', true],
+            ['main', true],
+        ]);
+    }, 20_000);
+
+    it('labels a signal’s events, and wakes only on the labels you chose', async () => {
+        const ran: Array<string> = [];
+        const { runtime, enqueue, settled } = await setup(
+            async (input) => {
+                ran.push(input.items.map((item) => item.text).join(' | '));
+                return 'Told them.';
+            },
+            {
+                sources: new Set(['cam']),
+                labels: {
+                    cam: {
+                        labels: ['person', 'vehicle', 'nothing'],
+                        wakeOn: ['person', 'vehicle'],
+                    },
+                },
+                // The model would wake for both; the labels decide.
+                decide: async (events, labels) => {
+                    expect(labels).toEqual([['person', 'vehicle', 'nothing']]);
+                    return {
+                        wake: true,
+                        reason: 'motion',
+                        model: 'cheap/one',
+                        labels: [events[0]!.includes('cat') ? 'nothing' : 'person'],
+                    };
+                },
+            },
+        );
+        await enqueue('main', 'motion: a cat on the porch', 'cam', true);
+        let items = await settled(1);
+        expect(ran).toEqual([]);
+        expect(items[0]).toMatchObject({
+            label: 'nothing',
+            result: 'Skipped by triage (cheap/one): labelled nothing, not one that wakes it',
+        });
+
+        await enqueue('main', 'motion: someone at the door', 'cam', true);
+        items = await settled(2);
+        await runtime.dispose();
+        expect(ran).toHaveLength(1);
+        expect(ran[0]).toContain('labelled person] motion: someone at the door');
+        expect(items.find((i) => i.prompt.includes('door'))?.label).toBe('person');
+    }, 20_000);
 });

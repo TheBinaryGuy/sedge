@@ -41,6 +41,11 @@ const describeConnection = (connection: ConnectionInfo) =>
         ...(connection.throttle ? [`    at most one event per: ${connection.throttle}`] : []),
         ...(connection.batch ? [`    batched: ${connection.batch}`] : []),
         ...(connection.triage ? ['    triaged by a cheap model first'] : []),
+        ...(connection.labels?.length
+            ? [
+                  `    labelled: ${connection.labels.join(', ')}${connection.wakeOn?.length ? ` (wakes on ${connection.wakeOn.join(', ')})` : ''}`,
+              ]
+            : []),
     ].join('\n');
 
 const EVENT_OPTIONS = {
@@ -80,6 +85,18 @@ const EVENT_OPTIONS = {
                 'For a signal whose events mostly need nothing: a cheap model reads each event (or batch) with the instruction first, and the agent wakes only when it should. Costs a little per event, far less than a run.',
         }),
     ),
+    labels: Type.Optional(
+        Type.Array(Type.String(), {
+            description:
+                'For a signal: labels the cheap triage model picks one of for each event, like ["person", "vehicle", "nothing"]. Turns triage on; the agent and the inbox see each label.',
+        }),
+    ),
+    wakeOn: Type.Optional(
+        Type.Array(Type.String(), {
+            description:
+                'With labels: wake the agent only for events labelled one of these, like ["person", "vehicle"]; the rest are skipped without asking the model.',
+        }),
+    ),
 };
 
 const describeOptions = (options: {
@@ -89,6 +106,8 @@ const describeOptions = (options: {
     throttle?: string;
     batch?: string;
     triage?: boolean;
+    labels?: ReadonlyArray<string>;
+    wakeOn?: ReadonlyArray<string>;
 }) => [
     ...(options.match ? [`· only events matching: ${options.match}`] : []),
     ...(options.ignore ? [`· ignoring events matching: ${options.ignore}`] : []),
@@ -96,6 +115,8 @@ const describeOptions = (options: {
     ...(options.throttle ? [`· at most one event per: ${options.throttle}`] : []),
     ...(options.batch ? [`· batched: ${options.batch}`] : []),
     ...(options.triage ? ['· triaged by a cheap model first'] : []),
+    ...(options.labels?.length ? [`· labelled: ${options.labels.join(', ')}`] : []),
+    ...(options.wakeOn?.length ? [`· wakes on: ${options.wakeOn.join(', ')}`] : []),
 ];
 
 /** The nearest package.json above `dir` that declares sedge channels or signals, if any. */
@@ -271,6 +292,8 @@ export const registerConnectionTools = (pi: ExtensionAPI, withDaemon: WithDaemon
                         ...(params.when ? { when: params.when } : {}),
                         ...(params.throttle ? { throttle: params.throttle } : {}),
                         ...(params.triage ? { triage: true } : {}),
+                        ...(params.labels?.length ? { labels: params.labels } : {}),
+                        ...(params.wakeOn?.length ? { wakeOn: params.wakeOn } : {}),
                     })
                     .pipe(Effect.result),
             );
@@ -306,7 +329,7 @@ export const registerConnectionTools = (pi: ExtensionAPI, withDaemon: WithDaemon
         name: 'update_signal',
         label: 'Update signal',
         description:
-            'Change what a connected signal does when it fires: its `instruction`, the `match`, `ignore` and `when` filters, the `throttle` and `batch` windows, or `triage`. Leave out what stays; pass an empty string (or `triage: false`) to clear one. The user confirms first.',
+            'Change what a connected signal does when it fires: its `instruction`, the `match`, `ignore` and `when` filters, the `throttle` and `batch` windows, `triage`, or its `labels` and `wakeOn`. Leave out what stays; pass an empty string, an empty list or `triage: false` to clear one. The user confirms first.',
         parameters: Type.Object({
             name: Type.String(),
             instruction: Type.Optional(Type.String()),
@@ -328,6 +351,12 @@ export const registerConnectionTools = (pi: ExtensionAPI, withDaemon: WithDaemon
                             Object.entries(changes).map(([key, value]) => [key, value || null]),
                         ) as Record<string, string | null>),
                         ...(changes.triage === undefined ? {} : { triage: changes.triage }),
+                        ...(changes.labels === undefined
+                            ? {}
+                            : { labels: changes.labels.length ? changes.labels : null }),
+                        ...(changes.wakeOn === undefined
+                            ? {}
+                            : { wakeOn: changes.wakeOn.length ? changes.wakeOn : null }),
                     })
                     .pipe(Effect.result),
             );

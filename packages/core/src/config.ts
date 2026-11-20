@@ -26,6 +26,10 @@ const Connection = Schema.Struct({
     throttle: Schema.optional(Schema.String),
     /** For a signal: a cheap model reads each event first, and only wakes the agent when it should. */
     triage: Schema.optional(Schema.Boolean),
+    /** For a signal: triage also picks one of these labels for each event (turns triage on). */
+    labels: Schema.optional(Schema.Array(Schema.String)),
+    /** For a signal with labels: wake the agent only for events labelled one of these. */
+    wakeOn: Schema.optional(Schema.Array(Schema.String)),
     /** For a signal: hold events this long (`30s`, `5m`) after the first, then hand them over together. */
     batch: Schema.optional(Schema.String),
 });
@@ -97,6 +101,17 @@ export const SedgeConfig = Schema.Struct({
             bash: Schema.optional(Policy),
             write: Schema.optional(Policy),
             mcp: Schema.optional(Policy),
+            /**
+             * For runs woken by outside content: a signal's events, or what a run woken by one
+             * passed on. The stricter of these and the ones above applies. Each defaults to `ask`.
+             */
+            signals: Schema.optional(
+                Schema.Struct({
+                    bash: Schema.optional(Policy),
+                    write: Schema.optional(Policy),
+                    mcp: Schema.optional(Policy),
+                }),
+            ),
         }),
     ),
 });

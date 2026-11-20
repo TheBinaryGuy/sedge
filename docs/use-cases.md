@@ -51,6 +51,16 @@ export default defineSignal({
 });
 ```
 
+### Who's at the door
+
+> My doorbell camera posts to a webhook on motion. Tell me when it's a person or a car, not the
+> cat.
+
+- **What it sets up:** `webhook`, with `labels` `person`, `vehicle`, `animal`, `nothing` and
+  `wakeOn` `person`, `vehicle`. A cheap model labels each motion event; only a person or a car
+  wakes the agent.
+- **What you get:** "Someone's at the front door (labelled person, 14:02)", and nothing for the cat.
+
 ### Something back in stock
 
 > Tell me when the green kettle on this page is back in stock: https://shop.example/kettle

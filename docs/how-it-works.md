@@ -62,7 +62,8 @@ needed, and every night the agent reviews and tidies it. See [Memory](./memory.m
 
 ## Permissions and approvals
 
-In runs you're not watching, risky tool calls (shell commands, MCP tools) wait for your say-so.
+In runs you're not watching, risky tool calls (shell commands, MCP tools) wait for your say-so,
+and in runs woken by a signal's content, file writes too.
 The agent's call is held, you get the command with Approve / Deny buttons, and your answer comes
 back as an event. See [Security](./security.md).
 

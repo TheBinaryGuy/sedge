@@ -1,4 +1,4 @@
-import { Agent } from '@sedge-hq/agent';
+import { Agent, type Triage } from '@sedge-hq/agent';
 import { Inbox, Timers, type InboxItem } from '@sedge-hq/db';
 import { type AgentEvent, type AgentRunError, Completion } from '@sedge-hq/protocol';
 import {
@@ -79,7 +79,7 @@ const time = (ms: number) =>
 export const formatItem = (item: InboxItem): string =>
     item.source === 'cli'
         ? item.prompt
-        : `[${item.source} · ${time(item.createdAt)}] ${item.prompt}`;
+        : `[${item.source} · ${time(item.createdAt)}${item.label ? ` · labelled ${item.label}` : ''}] ${item.prompt}`;
 
 /**
  * The always-on loop. One worker drains the inbox, starting a run for every thread with pending
@@ -143,6 +143,9 @@ export class Runtime extends Context.Service<
                     const last = batch[batch.length - 1]!;
                     const sub = subagentOf(first.thread);
                     const itemIds = batch.map((item) => item.id);
+                    // Any event from outside (a signal's, or one a run woken by one passed on) makes
+                    // the run untrusted: its risky tools follow permissions.signals.
+                    const untrusted = batch.some((item) => item.untrusted);
                     for (const itemId of itemIds) {
                         yield* publish({
                             _tag: 'Event',
@@ -153,28 +156,64 @@ export class Runtime extends Context.Service<
 
                     // Events only from signals with triage on: one cheap model call decides
                     // whether they need the agent. When it can't tell, or fails, the agent wakes.
-                    const skipped = (yield* connections.triaged(batch.map((item) => item.source)))
-                        ? yield* agent
-                              .triage(
-                                  batch.map((item) => item.prompt),
-                                  config.triageModel,
-                              )
-                              .pipe(
-                                  Effect.tap((verdict) =>
-                                      verdict.spent ? limits.spend(verdict.spent) : Effect.void,
-                                  ),
-                                  Effect.map((verdict) =>
-                                      verdict.wake
-                                          ? undefined
-                                          : `Skipped by triage${verdict.model ? ` (${verdict.model})` : ''}: ${verdict.reason}`,
-                                  ),
-                                  Effect.catch((error: AgentRunError) =>
-                                      Effect.logWarning(
-                                          `Triage failed, so the agent wakes: ${error.message}`,
-                                      ).pipe(Effect.as(undefined)),
-                                  ),
-                              )
-                        : undefined;
+                    // Events only from signals with triage on: one cheap model call decides
+                    // whether they need the agent, and labels those whose signal has labels. When it
+                    // can't tell, or fails, the agent wakes.
+                    let skipped: string | undefined;
+                    let labelled: ReadonlyArray<InboxItem> = batch;
+                    if (yield* connections.triaged(batch.map((item) => item.source))) {
+                        const shapes = batch.map((item) => connections.labelsOf(item.source));
+                        const verdict = yield* agent
+                            .triage(
+                                batch.map((item, i) => ({
+                                    text: item.prompt,
+                                    ...(shapes[i] ? { labels: shapes[i].labels } : {}),
+                                })),
+                                config.triageModel,
+                            )
+                            .pipe(
+                                Effect.tap((verdict) =>
+                                    verdict.spent ? limits.spend(verdict.spent) : Effect.void,
+                                ),
+                                Effect.map((verdict): Triage | undefined => verdict),
+                                Effect.catch((error: AgentRunError) =>
+                                    Effect.logWarning(
+                                        `Triage failed, so the agent wakes: ${error.message}`,
+                                    ).pipe(Effect.as(undefined)),
+                                ),
+                            );
+                        if (verdict) {
+                            const picked = verdict.labels ?? [];
+                            for (const [i, item] of batch.entries()) {
+                                const label = picked[i];
+                                if (label) yield* inbox.setLabel(item.id, label);
+                            }
+                            labelled = batch.map((item, i) =>
+                                picked[i] ? { ...item, label: picked[i] } : item,
+                            );
+                            // With wakeOn, a signal's event wakes the agent only when it's labelled one
+                            // of them (or wasn't labelled at all); other events go by the model's call.
+                            const ruled = batch.map((_, i) => {
+                                const wakeOn = shapes[i]?.wakeOn;
+                                if (!wakeOn) return undefined;
+                                const label = picked[i];
+                                return label === undefined || wakeOn.includes(label);
+                            });
+                            const byRule = ruled.some((r) => r !== undefined);
+                            const wake = byRule
+                                ? ruled.some((r) => r === true) ||
+                                  (ruled.some((r) => r === undefined) && verdict.wake)
+                                : verdict.wake;
+                            if (!wake) {
+                                const labels = picked.filter(Boolean).join(', ');
+                                skipped = `Skipped by triage${verdict.model ? ` (${verdict.model})` : ''}: ${
+                                    byRule && labels
+                                        ? `labelled ${labels}, not one that wakes it`
+                                        : verdict.reason
+                                }`;
+                            }
+                        }
+                    }
 
                     // Each tool call's timing, and what the run used, for its record.
                     const startedAt = Date.now();
@@ -212,11 +251,12 @@ export class Runtime extends Context.Service<
                                               ],
                                               cwd: last.cwd,
                                               subagent: sub !== undefined,
+                                              untrusted,
                                               onSpent: (spent) => {
                                                   used = spent;
                                                   Effect.runForkWith(services)(limits.spend(spent));
                                               },
-                                              items: batch.map((item) => ({
+                                              items: labelled.map((item) => ({
                                                   id: item.id,
                                                   text: formatItem(item),
                                               })),
@@ -249,6 +289,7 @@ export class Runtime extends Context.Service<
                                 ? `Subagent ${sub.id} answered:\n\n${outcome.text}`
                                 : `Subagent ${sub.id} failed: ${outcome.text}`,
                             cwd: last.cwd,
+                            untrusted,
                         });
                     }
                     yield* inbox.finish(
@@ -389,6 +430,7 @@ export class Runtime extends Context.Service<
                         thread: timer.thread,
                         prompt: timer.name ? `${timer.name}: ${timer.prompt}` : timer.prompt,
                         cwd: timer.cwd,
+                        untrusted: timer.untrusted,
                     });
                     yield* timers.markFired(timer, now, next);
                 }

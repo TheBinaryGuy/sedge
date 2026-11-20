@@ -7,11 +7,11 @@ import { join } from 'node:path';
 import type { Durable, Item, ModelChoice, Spent } from './durable';
 import type { AgentHost, RunContext } from './host';
 import type { Sandbox } from './sandbox';
-import type { Triage } from './triage';
+import type { Triage, TriageEvent } from './triage';
 
 export type { AgentHost, Outgoing, RunContext, TimerSpec, ToolDecision } from './host';
 export type { Item, ModelChoice, Spent } from './durable';
-export type { Triage } from './triage';
+export type { Triage, TriageEvent } from './triage';
 export {
     type Sandbox,
     type SandboxPolicy,
@@ -130,7 +130,7 @@ export class Agent extends Context.Service<
          * `provider/model`; the cheapest of your provider's models otherwise.
          */
         readonly triage: (
-            events: ReadonlyArray<string>,
+            events: ReadonlyArray<TriageEvent>,
             model?: string,
         ) => Effect.Effect<Triage, AgentRunError>;
         readonly abort: Effect.Effect<void>;
@@ -215,7 +215,7 @@ export class Agent extends Context.Service<
                     await durable?.abort();
                 });
 
-                const triage = (events: ReadonlyArray<string>, model?: string) =>
+                const triage = (events: ReadonlyArray<TriageEvent>, model?: string) =>
                     Effect.tryPromise({
                         try: async () => (await open()).triage(events, model),
                         catch: (cause) => new AgentRunError({ message: describe(cause) }),

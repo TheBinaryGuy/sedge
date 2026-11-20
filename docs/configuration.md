@@ -26,23 +26,25 @@ daemon starts: after editing those, restart it with `sedge stop && sedge start`.
 }
 ```
 
-| Setting             | What it does                                                                                         | Default              |
-| ------------------- | ---------------------------------------------------------------------------------------------------- | -------------------- |
-| `workspace`         | Where unwatched runs work (files they create land here).                                             | `~/.sedge/workspace` |
-| `sandbox`           | Commands in the OS sandbox: `enabled`, `network`, `writable`, `hidden`. See [Sandbox](./sandbox.md). | off                  |
-| `limits`            | What the agents may use: runs, tokens, money, subagents. See [Limits and costs](./limits.md).        | unlimited            |
-| `triageModel`       | The model that triages signals with `triage` on, as `provider/model`.                                | see below            |
-| `dreaming`          | The nightly memory review. `false` turns it off. See [Memory](./memory.md).                          | on                   |
-| `permissions.bash`  | Shell commands in unwatched runs: `allow`, `ask` or `deny`.                                          | `ask`                |
-| `permissions.write` | File writes and edits in unwatched runs.                                                             | `allow`              |
-| `permissions.mcp`   | MCP tools and other tools in unwatched runs.                                                         | `ask`                |
-| `agents`            | Agents besides `main`, by name, each with its `purpose`. See [Agents](./agents.md).                  | none                 |
-| `connections`       | Channels and signals by name. Written by `connect`; edit with care.                                  | none                 |
+| Setting                                      | What it does                                                                                                                               | Default              |
+| -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------- |
+| `workspace`                                  | Where unwatched runs work (files they create land here).                                                                                   | `~/.sedge/workspace` |
+| `sandbox`                                    | Commands in the OS sandbox: `enabled`, `network`, `writable`, `hidden`. See [Sandbox](./sandbox.md).                                       | off                  |
+| `limits`                                     | What the agents may use: runs, tokens, money, subagents. See [Limits and costs](./limits.md).                                              | unlimited            |
+| `triageModel`                                | The model that triages signals with `triage` on, as `provider/model`.                                                                      | see below            |
+| `dreaming`                                   | The nightly memory review. `false` turns it off. See [Memory](./memory.md).                                                                | on                   |
+| `permissions.bash`                           | Shell commands in unwatched runs: `allow`, `ask` or `deny`.                                                                                | `ask`                |
+| `permissions.write`                          | File writes and edits in unwatched runs.                                                                                                   | `allow`              |
+| `permissions.mcp`                            | MCP tools and other tools in unwatched runs.                                                                                               | `ask`                |
+| `permissions.signals.bash`, `.write`, `.mcp` | The same, for runs woken by outside content; the stricter of the two applies. See [Security](./security.md#runs-woken-by-outside-content). | `ask`                |
+| `agents`                                     | Agents besides `main`, by name, each with its `purpose`. See [Agents](./agents.md).                                                        | none                 |
+| `connections`                                | Channels and signals by name. Written by `connect`; edit with care.                                                                        | none                 |
 
 Each connection has a `kind`, its `settings` (never secrets), `secrets` (the names of the
 settings kept in the keychain), an optional `instruction` for a signal, an optional `agent` that
 handles it (default `main`), and `enabled: false` to pause it. A signal can also have `match` and
-`ignore` (regular expressions an event's text must or must not match), `when` (a condition on its
+`ignore` (regular expressions an event's text must or must not match), `labels` and `wakeOn` (for
+triage to label each event, and the labels that wake the agent), `when` (a condition on its
 details, like `temperature > 30`), `throttle` (how long to stay quiet after an event, like `1h`),
 `batch` (how long to hold its events and hand them over together, like `5m`) and `triage: true`
 (a cheap model decides which events need the agent); see

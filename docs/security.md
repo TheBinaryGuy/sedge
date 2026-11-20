@@ -14,18 +14,44 @@ sedge runs with your rights on your machine. These are the limits it keeps.
 
 ## The permission policy
 
-| Tool                                                                          | Unwatched runs                         |
-| ----------------------------------------------------------------------------- | -------------------------------------- |
-| Reading and searching (`read`, `grep`, `find`, `ls`, `recall`, `tool_search`) | allowed                                |
-| Writing files (`write`, `edit`)                                               | `permissions.write`, default **allow** |
-| Shell (`bash`)                                                                | `permissions.bash`, default **ask**    |
-| MCP tools and anything else                                                   | `permissions.mcp`, default **ask**     |
-| sedge's own (`send_message`, `tell`, `subagent`, timers)                      | allowed                                |
+| Tool                                                                          | Unwatched runs                         | Runs woken by outside content                     |
+| ----------------------------------------------------------------------------- | -------------------------------------- | ------------------------------------------------- |
+| Reading and searching (`read`, `grep`, `find`, `ls`, `recall`, `tool_search`) | allowed                                | allowed                                           |
+| Writing files (`write`, `edit`)                                               | `permissions.write`, default **allow** | also `permissions.signals.write`, default **ask** |
+| Shell (`bash`)                                                                | `permissions.bash`, default **ask**    | also `permissions.signals.bash`, default **ask**  |
+| MCP tools and anything else                                                   | `permissions.mcp`, default **ask**     | also `permissions.signals.mcp`, default **ask**   |
+| sedge's own (`send_message`, `tell`, `subagent`, timers)                      | allowed                                | allowed                                           |
 
 `ask` holds the call and sends you the exact command with **Approve** / **Deny** buttons on your
 channel. Approving lets that exact call (same tool, same input) through once; the agent makes it
 again. Denying tells the agent to find another way. With no channel connected, an `ask` call is
 refused. Set any of the three to `allow`, `ask` or `deny` in the [config](./configuration.md).
+
+### Runs woken by outside content
+
+What a signal reports was written by someone else: a CI log, a webhook body, a feed, a message on
+an MQTT topic. Text in it that reads like an instruction is framed as data, but a model can still
+be talked into things. So a run that has outside content in it gets stricter rules: for each kind
+of tool, the stricter of `permissions` and `permissions.signals`, which **asks for everything by
+default**. Writing files, which unwatched runs may otherwise do freely, needs your approval there.
+
+A run counts as woken by outside content when any of its events is:
+
+- a signal's event;
+- a message, a subagent's task, or a subagent's answer passed on by such a run;
+- a timer such a run set.
+
+Your own messages, approvals and terminal tasks never are, and a run that has only those keeps the
+usual rules. A run a restart resumes is treated as outside content, since what woke it isn't known
+then. The agent is told when its run is one of these, so it doesn't try what it can't do.
+
+To let a trusted signal's runs do more, loosen `permissions.signals`:
+
+```json
+"permissions": { "signals": { "write": "allow" } }
+```
+
+It can never make them looser than `permissions` itself.
 
 ## The sandbox
 
