@@ -19,9 +19,7 @@ import { Telemetry, type ToolTiming } from './telemetry';
 import { DREAM_PROMPT } from './memory';
 import { Settings } from './settings';
 import { supervise } from './supervise';
-
-/** How many runs (each for a different thread) may go at once. */
-const MAX_RUNS = 4;
+import { subagentOf } from './threads';
 
 /** The conversation dreaming happens in, apart from the user's. */
 export const DREAM_THREAD = 'dream';
@@ -83,8 +81,8 @@ export const formatItem = (item: InboxItem): string =>
         : `[${item.source} · ${time(item.createdAt)}] ${item.prompt}`;
 
 /**
- * The always-on loop. One worker drains the inbox a thread's batch at a time, so runs never
- * compete for a session; the scheduler turns due timers into inbox events. Both are supervised:
+ * The always-on loop. One worker drains the inbox, starting a run for every thread with pending
+ * events at once and never two for one thread, so runs never compete for a session; the scheduler turns due timers into inbox events. Both are supervised:
  * a failure that keeps happening backs off instead of spinning.
  */
 export class Runtime extends Context.Service<
@@ -139,6 +137,8 @@ export class Runtime extends Context.Service<
             const process = (batch: ReadonlyArray<InboxItem>) =>
                 Effect.gen(function* () {
                     const first = batch[0]!;
+                    const last = batch[batch.length - 1]!;
+                    const sub = subagentOf(first.thread);
                     const itemIds = batch.map((item) => item.id);
                     for (const itemId of itemIds) {
                         yield* publish({
@@ -175,7 +175,8 @@ export class Runtime extends Context.Service<
                             {
                                 thread: first.thread,
                                 sources: [...new Set(batch.map((item) => item.source))],
-                                cwd: batch[batch.length - 1]!.cwd,
+                                cwd: last.cwd,
+                                subagent: sub !== undefined,
                                 items: batch.map((item) => ({
                                     id: item.id,
                                     text: formatItem(item),
@@ -194,6 +195,19 @@ export class Runtime extends Context.Service<
                             ),
                         );
 
+                    // A subagent's answer goes to the agent that started it, before the run counts as
+                    // done: a crash in between runs it again, and the inbox drops the second report.
+                    if (sub) {
+                        yield* inbox.enqueue({
+                            source: `subagent:${sub.id}`,
+                            externalId: `report:${last.id}`,
+                            thread: sub.parent,
+                            prompt: outcome.ok
+                                ? `Subagent ${sub.id} answered:\n\n${outcome.text}`
+                                : `Subagent ${sub.id} failed: ${outcome.text}`,
+                            cwd: last.cwd,
+                        });
+                    }
                     yield* inbox.finish(
                         itemIds,
                         outcome.ok ? { result: outcome.text } : { error: outcome.text },
@@ -236,10 +250,10 @@ export class Runtime extends Context.Service<
                     }
                 });
 
-            // Start a run for each thread with pending events, up to MAX_RUNS at once and never
-            // two for one thread; then sleep until a run ends, an event arrives, or the next poll.
+            // Start a run for each thread with pending events, all at once but never two for one
+            // thread; then sleep until a run ends, an event arrives, or the next poll.
             const drain = Effect.gen(function* () {
-                while ((yield* Ref.get(running)).size < MAX_RUNS) {
+                while (true) {
                     const batch = yield* inbox.claimBatch([...(yield* Ref.get(running))]);
                     const thread = batch[0]?.thread;
                     if (thread === undefined) break;

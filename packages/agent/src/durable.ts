@@ -18,7 +18,7 @@ import { dirname } from 'node:path';
 import type { AgentHost, RunContext } from './host';
 import { type McpServerState, openMcp } from './mcp';
 import { recallExtension } from './recall';
-import { searchTools, sedgeExtension, skillsExtension } from './tools';
+import { actionsExtension, searchTools, sedgeExtension, skillsExtension } from './tools';
 
 export interface ModelChoice {
     readonly provider: string;
@@ -45,6 +45,12 @@ export interface DurableOptions {
 export interface Item {
     readonly id: string;
     readonly text: string;
+}
+
+export interface RunRequest extends RunContext {
+    readonly items: ReadonlyArray<Item>;
+    /** A subagent's run: its conversation starts without sedge's actions (messages, timers…). */
+    readonly subagent?: boolean | undefined;
 }
 
 const MAIN = 'main';
@@ -85,6 +91,8 @@ export const openDurable = async (options: DurableOptions) => {
     registry.install(createCodingTools());
     registry.install(searchTools);
     registry.install(sedgeExtension(options.host, runFor));
+    const actions = actionsExtension(options.host, runFor);
+    registry.install(actions);
     registry.install(createToolSearchExtension());
     if (options.skills) {
         const skills = options.skills;
@@ -135,7 +143,7 @@ export const openDurable = async (options: DurableOptions) => {
           )
         : Promise.resolve(undefined);
 
-    const conversationFor = async (thread: string): Promise<Conversation> => {
+    const conversationFor = async (thread: string, subagent: boolean): Promise<Conversation> => {
         if (thread === MAIN) {
             const root = await harness.root(ctx);
             threads.set(MAIN, root.id as number);
@@ -145,7 +153,13 @@ export const openDurable = async (options: DurableOptions) => {
         const existing =
             known === undefined ? undefined : await harness.conversation(known as never, ctx);
         if (existing) return existing;
-        const created = await harness.createConversation({ ownership: { kind: 'ownerless' } }, ctx);
+        const created = await harness.createConversation(
+            {
+                ownership: { kind: 'ownerless' },
+                ...(subagent ? { agent: { extensions: { remove: [actions] } } } : {}),
+            },
+            ctx,
+        );
         threads.set(thread, created.id as number);
         await saveThreads();
         return created;
@@ -171,14 +185,14 @@ export const openDurable = async (options: DurableOptions) => {
     const active = new Map<string, Conversation>();
 
     const run = async (
-        input: RunContext & { readonly items: ReadonlyArray<Item> },
+        input: RunRequest,
         onEvent: (event: AgentEvent) => void,
     ): Promise<string> => {
         // The first run after a start waits a little for MCP servers, so their tools are there.
         await Promise.race([mcp, new Promise((done) => setTimeout(done, 10_000).unref())]);
-        const conversation = await conversationFor(input.thread);
+        const conversation = await conversationFor(input.thread, input.subagent ?? false);
         await prepare(conversation, input.cwd);
-        runs.set(input.thread, input);
+        runs.set(input.thread, { thread: input.thread, sources: input.sources, cwd: input.cwd });
         active.set(input.thread, conversation);
 
         // The live document carries the answer as it streams and each tool call's state.

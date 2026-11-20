@@ -23,6 +23,7 @@ const setup = async (extras: (dir: string) => Promise<Extras> = async () => ({})
     const model = faux.getModel();
     const sent: Array<Outgoing> = [];
     const told: Array<{ from: string; agent: string; message: string }> = [];
+    const started: Array<{ from: string; task: string; key: string }> = [];
     const blocked: Array<string> = [];
     const checked: Array<string> = [];
     const more = await extras(dir);
@@ -35,6 +36,10 @@ const setup = async (extras: (dir: string) => Promise<Extras> = async () => ({})
         tell: async (run, agent, message) => {
             told.push({ from: run.thread, agent, message });
             return 'Sent.';
+        },
+        subagent: async (run, task, key) => {
+            started.push({ from: run.thread, task, key });
+            return `Subagent ${started.length} started.`;
         },
         setTimer: async () => 'set',
         listTimers: async () => 'none',
@@ -74,17 +79,18 @@ const setup = async (extras: (dir: string) => Promise<Extras> = async () => ({})
         runtime: ReturnType<typeof open>,
         thread: string,
         items: Array<{ id: string; text: string }>,
+        subagent = false,
     ) =>
         runtime.runPromise(
             Effect.gen(function* () {
                 const agent = yield* Agent;
                 return yield* agent.run(
-                    { thread, sources: ['telegram'], cwd: dir, items },
+                    { thread, sources: ['telegram'], cwd: dir, items, subagent },
                     () => Effect.void,
                 );
             }),
         );
-    return { dir, faux, sent, told, blocked, checked, open, run, runIn };
+    return { dir, faux, sent, told, started, blocked, checked, open, run, runIn };
 };
 
 describe('the durable agent', () => {
@@ -298,5 +304,59 @@ describe('the durable agent', () => {
         ).toBe('Told main.');
         await runtime.dispose();
         expect(told).toEqual([{ from: 'agent:ci', agent: 'main', message: 'CI is red on main' }]);
+    }, 30_000);
+
+    it('starts several subagents in one turn, each once', async () => {
+        const { faux, started, open, run } = await setup();
+        faux.setResponses([
+            fauxAssistantMessage(
+                [
+                    fauxToolCall('subagent', { task: 'Check repo a.' }),
+                    fauxToolCall('subagent', { task: 'Check repo b.' }),
+                ],
+                { stopReason: 'toolUse' },
+            ),
+            fauxAssistantMessage('Started both.'),
+        ]);
+        const runtime = open();
+        expect(await run(runtime, [{ id: 'event-9', text: 'check both repos' }])).toBe(
+            'Started both.',
+        );
+        await runtime.dispose();
+        expect(started.map((s) => [s.from, s.task])).toEqual([
+            ['main', 'Check repo a.'],
+            ['main', 'Check repo b.'],
+        ]);
+        expect(new Set(started.map((s) => s.key)).size).toBe(2);
+    }, 30_000);
+
+    it('gives a subagent its tools but not sedge’s actions', async () => {
+        const { faux, open, runIn } = await setup();
+        const offered: Array<Array<string>> = [];
+        const names = (context: unknown) =>
+            [...JSON.stringify(context).matchAll(/"name":"([a-z_]+)","description"/g)].map(
+                (m) => m[1]!,
+            );
+        faux.setResponses([
+            (context) => {
+                offered.push(names(context));
+                return fauxAssistantMessage('sub');
+            },
+            (context) => {
+                offered.push(names(context));
+                return fauxAssistantMessage('main');
+            },
+        ]);
+        const runtime = open();
+        await runIn(runtime, 'main#sub:1', [{ id: 'event-10', text: 'a task' }], true);
+        await runIn(runtime, 'main', [{ id: 'event-11', text: 'hi' }]);
+        await runtime.dispose();
+        const [sub, main] = offered;
+        for (const action of ['send_message', 'tell', 'subagent', 'set_timer']) {
+            expect(sub, action).not.toContain(action);
+            expect(main, action).toContain(action);
+        }
+        expect(sub).toContain('bash');
+        expect(sub).toContain('read');
     }, 30_000);
 });

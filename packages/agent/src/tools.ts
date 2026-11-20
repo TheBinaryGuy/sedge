@@ -21,14 +21,15 @@ const text = (value: string, isError = false): ToolExecutionResult => ({
 export const SEDGE_TOOLS = new Set([
     'send_message',
     'tell',
+    'subagent',
     'set_timer',
     'list_timers',
     'cancel_timer',
 ]);
 
 /**
- * The always-on primitives as a durable extension: the outbox (`send_message`), timers, memory in
- * the system prompt, and the permission check in front of every other tool call.
+ * The always-on primitives as a durable extension: memory in the system prompt, and the permission
+ * check in front of every tool call that isn't sedge's own. Subagents get this one too.
  */
 export const sedgeExtension = (host: AgentHost, runFor: (conversationId: number) => RunContext) =>
     defineExtension({
@@ -47,6 +48,15 @@ export const sedgeExtension = (host: AgentHost, runFor: (conversationId: number)
                 },
             }),
         ],
+    });
+
+/**
+ * What an agent does beyond its own work: the outbox (`send_message`), messages to other agents,
+ * subagents and timers. Subagents don't get these; they only answer the agent that started them.
+ */
+export const actionsExtension = (host: AgentHost, runFor: (conversationId: number) => RunContext) =>
+    defineExtension({
+        name: 'sedge-actions',
         tools: [
             defineTool({
                 name: 'send_message',
@@ -85,6 +95,20 @@ export const sedgeExtension = (host: AgentHost, runFor: (conversationId: number)
                 }),
                 execute: async (args, api) =>
                     text(await host.tell(runFor(api.conversationId), args.agent, args.message)),
+            }),
+            defineTool({
+                name: 'subagent',
+                description:
+                    'Start a subagent: a helper with your tools (but not send_message, tell, timers or subagents) and a conversation of its own, which works on `task` while you go on. Start several at once to split up work; they run in parallel. Each answer arrives as a new event, so end your turn when you have nothing else to do now. The subagent sees nothing of this conversation: write the task so it stands on its own, and say what to send back.',
+                parameters: obj({ task: str() }),
+                execute: async (args, api) =>
+                    text(
+                        await host.subagent(
+                            runFor(api.conversationId),
+                            args.task,
+                            `${api.conversationId}:${api.callId}`,
+                        ),
+                    ),
             }),
             defineTool({
                 name: 'set_timer',

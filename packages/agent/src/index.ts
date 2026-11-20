@@ -51,6 +51,8 @@ export const defaultAgentConfig = (
 export interface RunInput extends RunContext {
     /** Inbox items, each submitted with its id so a repeat after a restart is answered once. */
     readonly items: ReadonlyArray<Item>;
+    /** A subagent's run: no messages to the user or other agents, no timers, no subagents. */
+    readonly subagent?: boolean | undefined;
 }
 
 /**
@@ -98,8 +100,8 @@ const piModels = async (config: AgentConfig) => {
 
 /**
  * The daemon's agent: pi-durable does the reasoning and keeps every conversation (one per thread)
- * in SQLite, so runs survive restarts. Runs are serialized: the daemon's worker already sends one
- * at a time, the lock makes that a guarantee rather than a convention.
+ * in SQLite, so runs survive restarts. Each thread has one run at a time: the daemon's worker
+ * already sends them that way, the lock makes that a guarantee rather than a convention.
  */
 export class Agent extends Context.Service<
     Agent,

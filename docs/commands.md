@@ -64,6 +64,7 @@ Ask in your own words; these are what it uses.
 | ------------------------------- | -------------------------------------------------------------- |
 | `send_message`                  | The only way to reach you: text, buttons (`choices`), `files`. |
 | `tell`                          | Message another agent; its answer comes back as an event.      |
+| `subagent`                      | Start a helper on one task; its answer comes back as an event. |
 | `set_timer`                     | A follow-up (`in`, `at`) or a schedule (`cron`).               |
 | `list_timers`, `cancel_timer`   | See and cancel this conversation's timers.                     |
 | `recall`                        | Search all past conversations.                                 |

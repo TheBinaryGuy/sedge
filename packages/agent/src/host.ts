@@ -38,6 +38,12 @@ export interface AgentHost {
     readonly send: (run: RunContext, message: Outgoing) => Promise<string>;
     /** Puts a message in another agent's inbox; its answer comes back the same way. */
     readonly tell: (run: RunContext, agent: string, message: string) => Promise<string>;
+    /**
+     * Starts a subagent on `task`, in a conversation of its own; its answer comes back to this
+     * conversation as a new event. `key` is the same for a call a restart runs again, so it starts
+     * one subagent, not two.
+     */
+    readonly subagent: (run: RunContext, task: string, key: string) => Promise<string>;
     readonly setTimer: (run: RunContext, spec: TimerSpec) => Promise<string>;
     readonly listTimers: (run: RunContext) => Promise<string>;
     readonly cancelTimer: (run: RunContext, id: string) => Promise<boolean>;

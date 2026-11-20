@@ -130,4 +130,12 @@ export default defineSignal({
 - **What you get:** the same CI messages, from `ci`. Over time it remembers which tests are
   flaky. It can `tell` the main agent when a failure needs something only you can do.
 
+For a job with many parts, an agent can also start [subagents](./agents.md#subagents):
+
+> Check which of our 6 services still use the old logging library, and how hard each would be to
+> move.
+
+- **What it does:** starts six subagents, one per service, which work at the same time.
+- **What you get:** one answer once they've all reported back, with a line per service.
+
 You can watch each agent's inbox, runs and memory in `sedge dash`.

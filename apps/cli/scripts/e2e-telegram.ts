@@ -5,7 +5,7 @@
  * path a user takes: install the Telegram package, connect the channel (the token must land in the
  * keychain, not the config), check a stranger gets no answer, pair through the invite link, message
  * the agent and get an answer in the chat (with "typing…" meanwhile), approve a shell command from
- * the chat's buttons, and disconnect (the token leaves the keychain). The agent steps call the model
+ * the chat's buttons, have main start a subagent and get its answer back, and disconnect (the token leaves the keychain). The agent steps call the model
  * through your logins. Exits non-zero on the first failure.
  *
  * SEDGE_BIN=dist/npm/sedge-<os>-<cpu>/bin/sedge runs the same walk against a compiled binary.
@@ -104,6 +104,15 @@ const fail = (detail: string) => {
 const waitFor = async <A>(what: string, check: () => A | undefined, seconds = 120): Promise<A> => {
     for (let i = 0; i < seconds * 4; i++) {
         const value = check();
+        if (value !== undefined) return value;
+        await Bun.sleep(250);
+    }
+    return fail(`timed out waiting for ${what}`);
+};
+/** Like waitFor, for a check that has to ask the daemon. */
+const poll = async <A>(what: string, check: () => Promise<A | undefined>, seconds = 120) => {
+    for (let i = 0; i < seconds * 4; i++) {
+        const value = await check();
         if (value !== undefined) return value;
         await Bun.sleep(250);
     }
@@ -256,6 +265,24 @@ try {
         fail(`no message from main in helper's inbox: ${inbox.map((i) => i.source).join(', ')}`);
     }
     pass(`helper answered "${answer}", and main's tell reached its inbox`);
+
+    step('main starts a subagent, and its answer comes back to main');
+    await withDaemon(({ client }) =>
+        client
+            .Prompt({
+                text: 'Use your subagent tool once, with the task "Reply with exactly the word: sub-ok". Then end your turn.',
+                cwd: home,
+                agent: 'main',
+            })
+            .pipe(Stream.runDrain),
+    );
+    const subReport = await poll('the subagent’s answer in main’s inbox', async () => {
+        const items = await withDaemon(({ client }) => client.Inbox({ agent: 'main', limit: 20 }));
+        return items.find(
+            (item) => item.source.startsWith('subagent:') && item.prompt.includes('sub-ok'),
+        );
+    });
+    pass(`main got: ${subReport.prompt.replaceAll('\n', ' ')}`);
 
     step('uninstall waits until nothing of the package is connected');
     const early = sedge('uninstall', 'telegram');

@@ -23,7 +23,7 @@ Everything that should wake the agent becomes an event in the inbox, a table in
 - a task from the terminal (`/sedge bg <task>` in the TUI).
 
 Each event has an id from its source, so one that arrives twice is stored once. The worker
-drains the inbox: up to four runs at once, never two for the same conversation. Events that
+drains the inbox: a run for every conversation with work, all at once, never two for the same one. Events that
 arrive while a conversation's run is going are answered together in its next run, so three
 quick messages get one reply, not three.
 

@@ -16,7 +16,7 @@ looks after a project.
   The nightly [dream](./memory.md) tidies every agent's memory.
 - **The channels and signals you give it.** What they bring wakes that agent instead of `main`.
 
-Agents run side by side (up to four runs at once), and each one handles one run at a time.
+Agents run side by side, as many as have work, and each one handles one run at a time.
 
 ## Make one
 
@@ -40,6 +40,25 @@ again"), on the channel you last wrote from, or on a channel that belongs to it.
 
 From the TUI you can hand any agent a task and wait for the answer (`tell_agent`), or fire and
 forget: `/sedge tell ci check the last three runs`.
+
+## Subagents
+
+An agent can split a job into parts and hand each to a subagent (`subagent`): a helper with a
+conversation of its own, started for one task. Ask `main` to check five repositories and it can
+start five subagents, one per repository, which all work at the same time.
+
+The agent doesn't wait for them. It ends its run, stays free for your messages, and each
+subagent's answer arrives in its inbox as a new event, like a reply to `tell`. A subagent that
+fails reports that instead.
+
+A subagent has the tools of the agent that started it, behind the same approvals, and can read
+its memory. It can't message you or other agents, set timers or start subagents of its own: it
+only does its task and answers. When a call needs your approval, the request comes from the
+subagent, and it carries on where it stopped once you answer.
+
+Subagents' runs show up in the inbox under the agent that started them (`main#sub:3f2a9c1d`).
+A task started from the terminal can't start subagents, because nobody hears what arrives after
+it ends.
 
 ## See what they're doing
 
