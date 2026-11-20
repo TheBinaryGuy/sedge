@@ -1,9 +1,7 @@
-import { sedgeHome, VERSION } from '@sedge-hq/core';
+import { isCompiled, sedgeHome, VERSION } from '@sedge-hq/core';
 import { mkdir, readlink, symlink, writeFile } from 'node:fs/promises';
 import { createRequire } from 'node:module';
 import { dirname, join } from 'node:path';
-
-const compiled = () => Bun.main.startsWith('/$bunfs/') || /^[A-Z]:\\~BUN\\/i.test(Bun.main);
 
 /**
  * pi names the app after the package.json it finds beside its own code: "pi" when run from
@@ -12,7 +10,7 @@ const compiled = () => Bun.main.startsWith('/$bunfs/') || /^[A-Z]:\\~BUN\\/i.tes
  * through PI_PACKAGE_DIR. Must run before any pi module is evaluated.
  */
 const brandSourceRun = async () => {
-    if (compiled() || process.env.PI_PACKAGE_DIR) return;
+    if (isCompiled() || process.env.PI_PACKAGE_DIR) return;
     const pi = dirname(
         createRequire(import.meta.url).resolve('@earendil-works/pi-coding-agent/package.json'),
     );

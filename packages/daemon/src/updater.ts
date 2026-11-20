@@ -1,6 +1,7 @@
 import {
     CLI_PACKAGE,
     compareVersions,
+    isCompiled,
     isDevBuild,
     registryPath,
     REPOSITORY,
@@ -20,7 +21,7 @@ export type InstallMethod = 'npm' | 'bun' | 'pnpm' | 'standalone' | 'source';
 /** Where the running binary came from decides how it gets replaced. */
 export const detectInstallMethod = (paths: SedgePaths): InstallMethod => {
     const exe = process.execPath;
-    if (!Bun.main.startsWith('/$bunfs/') && !/^[A-Z]:\\~BUN\\/i.test(Bun.main)) return 'source';
+    if (!isCompiled()) return 'source';
     if (exe.includes(`${sep}node_modules${sep}`)) {
         if (exe.includes(`${sep}.bun${sep}`)) return 'bun';
         if (exe.includes(`${sep}pnpm${sep}`)) return 'pnpm';
