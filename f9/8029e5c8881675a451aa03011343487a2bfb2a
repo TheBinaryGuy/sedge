@@ -1,0 +1,137 @@
+packages/db/src/schema/index.ts
+  s_fe732417ee9cdb::t_968471ad16139d 130-131
+packages/agent/src/sandbox.test.ts
+  s_fe732417ee9cdb::t_6fc97a244479ed 123-136
+  s_fe732417ee9cdb::t_48f88d3a14fe55 8,172-185
+  s_fe732417ee9cdb::t_c698d45fb44e2a 98-122
+  s_fe732417ee9cdb::t_0bda1496fb4203 186
+apps/cli/scripts/adversarial/s1-injection.ts
+  s_fe732417ee9cdb::t_4d0083fceb3545 1-224
+packages/daemon/src/host.ts
+  s_fe732417ee9cdb::t_968471ad16139d 219-225
+  s_fe732417ee9cdb::t_1902348cd91e34 3,162-164,169-173,192-196
+  s_fe732417ee9cdb::t_d6d194d5a9de8d 4,10,165,316
+  s_fe732417ee9cdb::t_ffe9106a93cbce 20,160
+  s_fe732417ee9cdb::t_e241013753127b 86-111,233-237
+  s_fe732417ee9cdb::t_5b9353824dbf2e 166-168,378-382
+  s_fe732417ee9cdb::t_26afb9ebed6f0a 258,297
+  s_fe732417ee9cdb::t_fcac659b149d04 1-2,5-9,161,182-188,317-318
+  s_fe732417ee9cdb::t_47cfb30be024cd 18,321-325,330
+packages/daemon/src/host.test.ts
+  s_fe732417ee9cdb::t_48f88d3a14fe55 2-3,35-68
+packages/agent/src/tools.ts
+  s_fe732417ee9cdb::t_ede252103f2e0d 12
+  s_fe732417ee9cdb::t_37206792bb1eab 14,196
+apps/cli/scripts/adversarial/guard.ts
+  s_fe732417ee9cdb::t_1902348cd91e34 91,113-115
+  s_fe732417ee9cdb::t_4d0083fceb3545 1-90,92-112,116-124
+docs/development.md
+  s_fe732417ee9cdb::t_a41db77bd74abc 27-34
+packages/db/src/approvals.ts
+  s_fe732417ee9cdb::t_968471ad16139d 11-12
+apps/cli/scripts/adversarial/s4-credentials.ts
+  s_fe732417ee9cdb::t_4d0083fceb3545 1-7,9-78,82-185
+  s_fe732417ee9cdb::t_eab8bf745be992 8,79-81
+packages/daemon/src/private.test.ts
+  s_fe732417ee9cdb::t_52b0e339a8be3c 1-7,12-34,38-44,46,49-57
+  s_fe732417ee9cdb::t_d6d194d5a9de8d 8-11,35-37
+  s_fe732417ee9cdb::t_897351d256e910 45,47-48
+packages/daemon/src/daemon.ts
+  s_fe732417ee9cdb::t_5fd878114941c7 15,124
+apps/cli/scripts/e2e-telegram.ts
+  s_fe732417ee9cdb::t_4d0083fceb3545 404
+  s_fe732417ee9cdb::t_295b53cde0d7b8 493-494,502,510,513,518-524
+packages/agent/src/durable.ts
+  s_fe732417ee9cdb::t_b789bf5fccf591 145-147,150
+  s_fe732417ee9cdb::t_6fc97a244479ed 148
+  s_fe732417ee9cdb::t_5fd878114941c7 51-52,118-123
+docs/sandbox.md
+  s_fe732417ee9cdb::t_813577a91456e5 38-47,74-78
+apps/cli/scripts/adversarial/s3-crashes.ts
+  s_fe732417ee9cdb::t_4d0083fceb3545 1-270
+apps/cli/scripts/adversarial.ts
+  s_fe732417ee9cdb::t_4d0083fceb3545 1-5,8,11-24,26-48,51-61,65-70,72,79-80
+  s_fe732417ee9cdb::t_26afb9ebed6f0a 76-78
+  s_fe732417ee9cdb::t_01d6231023de93 6-7,9-10,25,49-50,62-64,71,73-75,81-84
+apps/cli/scripts/adversarial/summarize.ts
+  s_fe732417ee9cdb::t_4d0083fceb3545 1-74
+.changeset/hardening.md
+  s_fe732417ee9cdb::t_295b53cde0d7b8 18-20,25
+  s_fe732417ee9cdb::t_813577a91456e5 1-17
+  s_fe732417ee9cdb::t_37206792bb1eab 21-24
+package.json
+  s_fe732417ee9cdb::t_a41db77bd74abc 27
+apps/cli/scripts/adversarial/s6-approval-taint.ts
+  s_fe732417ee9cdb::t_295b53cde0d7b8 12,20-21,82-87,90-101,103,106,110-117,119-120
+  s_fe732417ee9cdb::t_4d0083fceb3545 1-11,13-19,22-33,36-46,48-81,107-109,121-125
+  s_fe732417ee9cdb::t_745321af77c3dd 34-35,47,88-89,102,104-105,118
+apps/cli/scripts/adversarial/world.ts
+  s_fe732417ee9cdb::t_1902348cd91e34 405-411,735-755
+  s_fe732417ee9cdb::t_4d0083fceb3545 1-404,413-734,756-768
+  s_fe732417ee9cdb::t_26afb9ebed6f0a 412
+docs/channels-and-signals.md
+  s_fe732417ee9cdb::t_295b53cde0d7b8 152-153
+  s_fe732417ee9cdb::t_37206792bb1eab 141-142
+packages/daemon/src/private.ts
+  s_fe732417ee9cdb::t_ffe9106a93cbce 2,4-7,9-10,14-16,20,31
+  s_fe732417ee9cdb::t_d6d194d5a9de8d 1,3,28
+  s_fe732417ee9cdb::t_5a706e1d625dee 8,11-13,17-19,21-27,29-30
+docs/how-it-works.md
+  s_fe732417ee9cdb::t_5d65f789d9a90f 28-29
+packages/db/src/stores.test.ts
+  s_fe732417ee9cdb::t_48f88d3a14fe55 20-48
+docs/security.md
+  s_fe732417ee9cdb::t_26afb9ebed6f0a 37-38
+  s_fe732417ee9cdb::t_37206792bb1eab 39-41,83-84
+  s_fe732417ee9cdb::t_5d65f789d9a90f 25-27,47-54,65-67,78-82,85-91
+apps/cli/scripts/adversarial/s2-subagents.ts
+  s_fe732417ee9cdb::t_4d0083fceb3545 1-155
+packages/daemon/src/connections.ts
+  s_fe732417ee9cdb::t_968471ad16139d 62-66,69-73,209-219,238-240
+  s_fe732417ee9cdb::t_47cfb30be024cd 67-68
+packages/db/drizzle/20261120064332_approvals-untrusted/snapshot.json
+  s_fe732417ee9cdb::t_47cfb30be024cd 1-688
+apps/cli/scripts/adversarial/s7-escalation.ts
+  s_fe732417ee9cdb::t_4d0083fceb3545 1-2,6-8,10-87,98-103
+  s_fe732417ee9cdb::t_87227a9eed1db8 3-5,9,88-97
+packages/agent/src/index.ts
+  s_fe732417ee9cdb::t_d6d194d5a9de8d 21
+  s_fe732417ee9cdb::t_5fd878114941c7 45-46,191
+  s_fe732417ee9cdb::t_fcac659b149d04 20
+packages/db/drizzle/20261120064332_approvals-untrusted/migration.sql
+  s_fe732417ee9cdb::t_47cfb30be024cd 1
+apps/cli/scripts/adversarial/escape.ts
+  s_fe732417ee9cdb::t_4d0083fceb3545 1-31
+packages/agent/src/sandbox.ts
+  s_fe732417ee9cdb::t_b789bf5fccf591 108-114
+  s_fe732417ee9cdb::t_6fc97a244479ed 115-118,183-193,202-203
+  s_fe732417ee9cdb::t_1e4f894ce98711 131-132
+  s_fe732417ee9cdb::t_f5b463ec375d53 133
+  s_fe732417ee9cdb::t_d6d194d5a9de8d 5,50-55,227
+packages/db/src/migrations.gen.ts
+  s_fe732417ee9cdb::t_47cfb30be024cd 52-60
+apps/cli/scripts/adversarial/s5-runbook.ts
+  s_fe732417ee9cdb::t_27a927b60e6411 10,75-76,87,101-128,130-166,212-231,240-249
+  s_fe732417ee9cdb::t_4d0083fceb3545 1-9,11-74,77-86,88-100,167-211,232-239,250-261
+  s_fe732417ee9cdb::t_7b39bf2bca39f7 129
+packages/agent/src/tools.test.ts
+  s_fe732417ee9cdb::t_5b9353824dbf2e 1-43
+packages/daemon/src/sandbox.ts
+  s_fe732417ee9cdb::t_1e4f894ce98711 3,6-43,46,56
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "f98029e5c8881675a451aa03011343487a2bfb2a",
+  "prompts": {},
+  "sessions": {
+    "s_fe732417ee9cdb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b6666194-df82-46a7-a1ef-33e06788ffe9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "TheBinaryGuy <hello@thebinary.dev>"
+    }
+  }
+}
