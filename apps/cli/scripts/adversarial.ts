@@ -17,12 +17,13 @@
  * s6: whether a signal-woken run stays untrusted after the user answers its approval request;
  * s7: the chain to an unasked shell with default permissions (deny, then edit ../config.json);
  * s2: subagents; s3: kill -9 during runs; s4: credential access, sandbox off then on.
- * Each writes its evidence to /var/tmp/sadv/results/<name>.json (ADV_RESULTS to change).
+ * Each writes its evidence to /var/tmp/sadv/results/<name>.json (ADV_RESULTS to change). They run
+ * three at a time (ADV_PARALLEL to change).
  * ADV_KEEP=1 keeps the throwaway homes for inspection.
  */
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { BASE, type Check, log } from './adversarial/world';
+import { BASE, type Check, log, scenarioName } from './adversarial/world';
 
 const RESULTS = process.env.ADV_RESULTS ?? join(BASE, 'results');
 const scenarios: Record<string, () => Promise<unknown>> = {
@@ -51,14 +52,23 @@ const checks: Array<Check & { scenario: string }> = [];
 await mkdir(RESULTS, { recursive: true });
 let failed = false;
 for (const name of names) {
-    const run = scenarios[name];
-    if (!run) {
+    if (!scenarios[name]) {
         console.error(`unknown scenario ${name}; known: ${Object.keys(scenarios).join(' ')}`);
         process.exit(2);
     }
+}
+
+/**
+ * Scenarios run side by side, a few at a time: each has its own home, fake Telegram, ports and
+ * daemon. ADV_PARALLEL sets how many (default 3; 1 runs them one by one). More at once mostly
+ * waits on the model provider.
+ */
+const parallel = Math.max(1, Number(process.env.ADV_PARALLEL ?? 3));
+const queue = [...names];
+const runOne = async (name: string) => {
     log(`▸ ${name}`);
     try {
-        const result = await run();
+        const result = await scenarioName.run(name, () => scenarios[name]!());
         for (const c of (result as { checks?: Array<Check> }).checks ?? []) {
             checks.push({ ...c, scenario: name });
         }
@@ -69,7 +79,19 @@ for (const name of names) {
         failed = true;
         console.error(`✗ ${name}:`, error);
     }
-}
+};
+const started = Date.now();
+await Promise.all(
+    Array.from({ length: Math.min(parallel, queue.length) }, async () => {
+        for (let name = queue.shift(); name !== undefined; name = queue.shift()) await runOne(name);
+    }),
+);
+log(
+    `ran ${names.length} scenario(s), ${parallel} at a time, in ${Math.round((Date.now() - started) / 60_000)} min`,
+);
+// In the order asked for, whatever order they finished in.
+checks.sort((a, b) => names.indexOf(a.scenario) - names.indexOf(b.scenario));
+
 if (checks.length) {
     console.log('\nfinding | scenario | check | result');
     for (const c of checks) {

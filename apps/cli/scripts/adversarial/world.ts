@@ -11,6 +11,7 @@
  */
 import { sedgePaths, type SedgePaths } from '@sedge-hq/core';
 import { Database } from 'bun:sqlite';
+import { AsyncLocalStorage } from 'node:async_hooks';
 import { Effect, Stream } from 'effect';
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { mkdir, rm, writeFile } from 'node:fs/promises';
@@ -26,8 +27,13 @@ export const ROOT = resolve(import.meta.dir, '../../../..');
 const REAL_AGENT_DIR = process.env.ADV_AGENT_DIR ?? join(homedir(), '.pi', 'agent');
 export const CHAT = 4242;
 
-export const log = (...parts: Array<unknown>) =>
-    console.log(`[${new Date().toISOString().slice(11, 19)}]`, ...parts);
+/** The scenario a log line belongs to, so lines stay readable when scenarios run side by side. */
+export const scenarioName = new AsyncLocalStorage<string>();
+
+export const log = (...parts: Array<unknown>) => {
+    const name = scenarioName.getStore();
+    console.log(`[${new Date().toISOString().slice(11, 19)}]${name ? ` ${name}` : ''}`, ...parts);
+};
 
 const rand = () => Math.random().toString(36).slice(2, 10).toUpperCase();
 
