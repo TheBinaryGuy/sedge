@@ -119,7 +119,10 @@ describe.skipIf(process.platform === 'win32')('command', () => {
     it('reports each burst of lines a long-running command prints', async () => {
         const { host, happened } = fakeHost();
         const running = command.start(
-            { command: 'echo "temp 21"; sleep 0.2; echo "temp 35"; echo "humidity 80"; sleep 5' },
+            {
+                command:
+                    'echo "temp 21"; sleep 1; echo "temp 35"; sleep 0.05; echo "humidity 80"; sleep 5',
+            },
             host,
         );
         await until(() => happened.length === 2);

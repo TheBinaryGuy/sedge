@@ -51,23 +51,43 @@ async function* changes(
     }
 }
 
+/** Lines printed with less than this between them are one burst, and one event. */
+const QUIET = 250;
+/** A burst is reported at this many lines even if the command keeps printing. */
+const BURST = 200;
+
 /** Keeps the command running and reports what it prints, a burst of lines at a time. */
 const lines = (command: string, cwd: string | undefined, kit: Kit): AsyncIterable<Happening> => {
     const printed = queue<Happening>(kit.signal);
     const child = spawn(command, cwd, kit.signal);
     kit.status(`running ${command}`);
     let partial = '';
+    let burst: Array<string> = [];
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    const report = () => {
+        clearTimeout(timer);
+        timer = undefined;
+        if (burst.length > 0) printed.push({ text: clip(burst.join('\n'), KEEP) });
+        burst = [];
+    };
     const decoder = new TextDecoder();
     void (async () => {
         for await (const chunk of child.stdout) {
             const text = partial + decoder.decode(chunk, { stream: true });
             const complete = text.split('\n');
             partial = complete.pop() ?? '';
-            const burst = complete.filter((line) => line.trim() !== '');
-            if (burst.length > 0) printed.push({ text: clip(burst.join('\n'), KEEP) });
+            burst.push(...complete.filter((line) => line.trim() !== ''));
+            // How the output is split into writes is up to the command and the OS: wait for a
+            // pause, so lines printed together arrive together.
+            if (burst.length >= BURST) report();
+            else if (burst.length > 0) {
+                clearTimeout(timer);
+                timer = setTimeout(report, QUIET);
+            }
         }
         const code = await child.exited;
-        if (partial.trim()) printed.push({ text: clip(partial, KEEP) });
+        if (partial.trim()) burst.push(partial);
+        report();
         if (kit.signal.aborted) return;
         const err = (await new Response(child.stderr).text()).trim();
         printed.fail(new Error(`${command} exited (${code})${err ? `: ${err.slice(-300)}` : ''}`));
