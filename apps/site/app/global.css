@@ -80,3 +80,9 @@ img[src*='-dark.'] {
 .dark img[src*='-light.'] {
     display: none;
 }
+
+/* fumadocs makes the home header's search a pill; give it the docs sidebar's corners. Unlayered,
+   so it wins over the rounded-full utility. */
+[data-search-full] {
+    border-radius: var(--radius-lg);
+}
