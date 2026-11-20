@@ -1,5 +1,12 @@
 # @sedge-hq/local
 
+## 0.1.2
+
+### Patch Changes
+
+- [`fe0ac6f`](https://github.com/sedge-hq/sedge/commit/fe0ac6f360c70f4673c7016f674cbe46033d643a) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - The `command` signal reports lines a command prints together as one event, whatever way the
+  system splits its output: it waits for a quarter-second pause, or 200 lines, before reporting.
+
 ## 0.1.1
 
 ### Patch Changes
