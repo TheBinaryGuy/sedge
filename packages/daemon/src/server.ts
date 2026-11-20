@@ -1,6 +1,6 @@
 import { BunSocketServer } from '@effect/platform-bun';
 import { Agent } from '@sedge-hq/agent';
-import { type SedgePaths, VERSION } from '@sedge-hq/core';
+import { loadConfig, saveConfig, type SedgePaths, splitModel, VERSION } from '@sedge-hq/core';
 import { Inbox, Outbox, Timers } from '@sedge-hq/db';
 import type { DaemonInfo } from '@sedge-hq/protocol';
 import {
@@ -23,6 +23,8 @@ import { RpcSerialization, RpcServer } from 'effect/rpc';
 import { Runtime, WorkerWake } from './runtime';
 import { Agents } from './agents';
 import { Connections } from './connections';
+import { LiveConfig } from './live-config';
+import { Settings } from './settings';
 import { metrics, Telemetry } from './telemetry';
 import { Limits } from './limits';
 import { State } from './state';
@@ -51,6 +53,8 @@ const HandlersLive = SedgeRpcs.toLayer(
         const inbox = yield* Inbox;
         const timers = yield* Timers;
         const agent = yield* Agent;
+        const live = yield* LiveConfig;
+        const { paths } = yield* Settings;
         const updater = yield* Updater;
         const worker = yield* WorkerWake;
         const connections = yield* Connections;
@@ -274,6 +278,83 @@ const HandlersLive = SedgeRpcs.toLayer(
                     .pipe(Effect.map((logs) => logs.map((record) => new LogEntry(record)))),
             State: () =>
                 state.all.pipe(Effect.map((all) => all.map((value) => new NamedValueInfo(value)))),
+            Models: () =>
+                Effect.gen(function* () {
+                    const config = yield* live.current;
+                    const available = yield* agent.models.pipe(
+                        Effect.mapError((error) => new AgentError({ message: error.message })),
+                    );
+                    const pick = <T extends { readonly model?: string | undefined }>(
+                        entries: Readonly<Record<string, T>> | undefined,
+                    ) =>
+                        Object.fromEntries(
+                            Object.entries(entries ?? {}).flatMap(([name, entry]) =>
+                                entry.model ? [[name, entry.model]] : [],
+                            ),
+                        );
+                    return {
+                        available: [...available],
+                        daemon: config.model ?? null,
+                        agents: pick(config.agents),
+                        connections: pick(config.connections),
+                    };
+                }),
+            SetModel: ({ agent: name, connection, model }) =>
+                Effect.gen(function* () {
+                    if (!model) return;
+                    // A typo would only show up as a warning at the next run, so refuse it here.
+                    const available = yield* agent.models.pipe(
+                        Effect.catch(() =>
+                            Effect.succeed([] as ReadonlyArray<{ id: string; name: string }>),
+                        ),
+                    );
+                    const { id } = splitModel(model);
+                    if (available.length > 0 && !available.some((m) => m.id === id)) {
+                        const near = available
+                            .filter((m) => m.id.includes(id.split('/').at(-1) ?? id))
+                            .map((m) => m.id);
+                        return yield* new AgentError({
+                            message: `"${id}" isn't a model you're logged in to.${near.length ? ` Did you mean ${near.slice(0, 3).join(', ')}?` : ' `models` lists them.'}`,
+                        });
+                    }
+                }).pipe(
+                    Effect.andThen(
+                        Effect.tryPromise({
+                            try: async () => {
+                                const config = await loadConfig(paths);
+                                const set = <T extends object>(entry: T) => {
+                                    const { model: _, ...rest } = entry as T & { model?: string };
+                                    return model ? { ...rest, model } : rest;
+                                };
+                                if (connection) {
+                                    const entry = config.connections?.[connection];
+                                    if (!entry)
+                                        throw new Error(`Nothing is connected as "${connection}".`);
+                                    await saveConfig(paths, {
+                                        ...config,
+                                        connections: {
+                                            ...config.connections,
+                                            [connection]: set(entry),
+                                        },
+                                    });
+                                } else if (name && name !== 'main') {
+                                    const entry = config.agents?.[name];
+                                    if (!entry) throw new Error(`There is no agent "${name}".`);
+                                    await saveConfig(paths, {
+                                        ...config,
+                                        agents: { ...config.agents, [name]: set(entry) },
+                                    });
+                                } else {
+                                    await saveConfig(paths, set(config));
+                                }
+                            },
+                            catch: (error) =>
+                                new AgentError({
+                                    message: error instanceof Error ? error.message : String(error),
+                                }),
+                        }),
+                    ),
+                ),
             Stats: () =>
                 Effect.all([telemetry.snapshot, limits.today, limits.current]).pipe(
                     Effect.map(([snapshot, today, set]) => {

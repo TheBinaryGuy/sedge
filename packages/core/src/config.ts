@@ -35,6 +35,12 @@ const Connection = Schema.Struct({
      * instead of waking the agent.
      */
     remember: Schema.optional(Schema.String),
+    /**
+     * The model for runs this channel or signal wakes on its own, as `provider/model`: a strong one
+     * for your messages, a cheap one for a chatty signal. Runs shared with other events use the
+     * agent's.
+     */
+    model: Schema.optional(Schema.String),
     /** For a signal: hold events this long (`30s`, `5m`) after the first, then hand them over together. */
     batch: Schema.optional(Schema.String),
 });
@@ -43,10 +49,17 @@ export type ConnectionEntry = typeof Connection.Type;
 const AgentEntry = Schema.Struct({
     /** What the agent is for, in the user's words; it reads this at the start of every run. */
     purpose: Schema.String,
+    /** Its model, as `provider/model`; sedge's `model` (or pi's default) when unset. */
+    model: Schema.optional(Schema.String),
 });
 export type AgentEntry = typeof AgentEntry.Type;
 
 export const SedgeConfig = Schema.Struct({
+    /**
+     * The model for the daemon's runs, as `provider/model` (`main`'s, and any agent's without its
+     * own). pi's default model when unset. Read again when it changes: no restart.
+     */
+    model: Schema.optional(Schema.String),
     /** Working directory for runs that don't come from a terminal. */
     workspace: Schema.optional(Schema.String),
     /**

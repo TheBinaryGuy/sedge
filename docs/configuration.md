@@ -5,9 +5,10 @@ description: config.json, the files in ~/.sedge, and environment variables.
 
 Most things are set up by asking sedge in the TUI. The rest is `~/.sedge/config.json`.
 
-`agents` and `limits` are read again whenever they're used, so a change applies at once. The rest
-(`workspace`, `connections`, `permissions`, `sandbox`, `triageModel`, `piExtensions`, `dreaming`) is
-read when the daemon starts: after editing those, restart it with `sedge stop && sedge start`.
+`agents`, `limits` and the [models](#models) are read again whenever they're used, so a change
+applies at once. The rest (`workspace`, `connections`, `permissions`, `sandbox`, `triageModel`,
+`piExtensions`, `dreaming`) is read when the daemon starts: after editing those, restart it with
+`sedge stop && sedge start`.
 
 ## config.json
 
@@ -28,6 +29,7 @@ read when the daemon starts: after editing those, restart it with `sedge stop &&
 
 | Setting                                      | What it does                                                                                                                               | Default              |
 | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ | -------------------- |
+| `model`                                      | The model the daemon's runs use, as `provider/model`, with `:level` for thinking. See [Models](#models).                                   | pi's default         |
 | `workspace`                                  | Where unwatched runs work (files they create land here).                                                                                   | `~/.sedge/workspace` |
 | `sandbox`                                    | Commands in the OS sandbox: `enabled`, `network`, `writable`, `hidden`. See [Sandbox](./sandbox.md).                                       | off                  |
 | `limits`                                     | What the agents may use: runs, tokens, money, subagents. See [Limits and costs](./limits.md).                                              | unlimited            |
@@ -78,6 +80,27 @@ What happens when one is reached, and how to spend less to begin with:
 | `sandbox.hidden`   | More files and folders nothing in it may read.                | none    |
 
 It's set when the daemon starts; restart after changing it. See [Sandbox](./sandbox.md).
+
+## Models
+
+The daemon's runs use pi's default model (the one `/model` picks in the TUI, at its thinking level)
+unless you choose another. Three places can, and the most specific wins:
+
+| Where                      | For                                                                    |
+| -------------------------- | ---------------------------------------------------------------------- |
+| `connections.<name>.model` | Runs a channel or signal wakes on its own (when it's the only source). |
+| `agents.<name>.model`      | That agent's runs. See [Agents](./agents.md).                          |
+| `model`                    | Every other run: main, and agents without their own.                   |
+
+Each is `provider/model` as `/model` lists it, and may end in a thinking level (`off`, `minimal`,
+`low`, `medium`, `high`, `xhigh`, `max`), as `--model` takes it: `"anthropic/claude-opus-5-5:medium"`.
+Without one, the run thinks at your default's level. A model you aren't logged in to is skipped,
+with a warning in the log, and the run uses the default.
+
+You don't need to edit the file: ask the TUI's agent ("run Telegram on Opus at medium"), which uses
+`set_model` and asks you first, or send `/model` on a channel ([Channels and signals](./channels-and-signals.md#models)).
+They apply from the next run, without a restart. `/model` in the TUI changes only the TUI's session
+(and pi's default, which the daemon follows where nothing else is set).
 
 ## Triage model
 

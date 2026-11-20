@@ -1,5 +1,6 @@
 import { Agent, type Triage } from '@sedge-hq/agent';
-import { Inbox, Timers, type InboxItem } from '@sedge-hq/db';
+import { loadConfig, saveConfig, splitModel } from '@sedge-hq/core';
+import { Inbox, Outbox, Timers, type InboxItem } from '@sedge-hq/db';
 import { type AgentEvent, type AgentRunError, Completion } from '@sedge-hq/protocol';
 import {
     Context,
@@ -20,7 +21,11 @@ import { DREAM_PROMPT } from './memory';
 import { Settings } from './settings';
 import { supervise } from './supervise';
 import { dayOf, fromYou, Limits } from './limits';
+import { LiveConfig, modelFor } from './live-config';
 import { agentOf, subagentOf } from './threads';
+
+/** `/model`, alone or with a name: a channel's command for sedge, not a message for the agent. */
+const MODEL_COMMAND = /^\/model(?:@\w+)?(?:\s+|$)/i;
 
 /** The conversation dreaming happens in, apart from the user's. */
 export const DREAM_THREAD = 'dream';
@@ -104,6 +109,8 @@ export class Runtime extends Context.Service<
             const connections = yield* Connections;
             const telemetry = yield* Telemetry;
             const limits = yield* Limits;
+            const live = yield* LiveConfig;
+            const outbox = yield* Outbox;
             const services = yield* Effect.context<never>();
             const bus = yield* PubSub.unbounded<BusMessage>();
             const running = yield* Ref.make<ReadonlySet<string>>(new Set());
@@ -252,6 +259,11 @@ export class Runtime extends Context.Service<
                                               cwd: last.cwd,
                                               subagent: sub !== undefined,
                                               untrusted,
+                                              model: modelFor(
+                                                  yield* live.current,
+                                                  agentOf(first.thread),
+                                                  batch.map((item) => item.source),
+                                              ),
                                               onSpent: (spent) => {
                                                   used = spent;
                                                   Effect.runForkWith(services)(limits.spend(spent));
@@ -338,6 +350,103 @@ export class Runtime extends Context.Service<
 
             // Start a run for each thread with pending events, all at once but never two for one
             // thread; then sleep until a run ends, an event arrives, or the next poll.
+            /**
+             * `/model` on a channel: the model its messages run on. Alone, it shows the current one
+             * and buttons for the models you're logged in to; with a name (`/model opus`), it picks
+             * the one that matches, or offers the few that do. The buttons come back as
+             * `/model <provider/model>`.
+             */
+            const modelCommand = (item: InboxItem) =>
+                Effect.gen(function* () {
+                    // `/model opus`, `/model opus medium` or `/model opus:medium`.
+                    const words = item.prompt.replace(MODEL_COMMAND, '').trim().split(/\s+/);
+                    const last = splitModel(`model:${words.at(-1) ?? ''}`).thinking;
+                    const asked = (last ? words.slice(0, -1) : words).join(' ');
+                    const { id: wanted, thinking: suffix } = splitModel(asked);
+                    const thinking = last ?? suffix;
+                    const config = yield* live.current;
+                    const current =
+                        config.connections?.[item.source]?.model ??
+                        config.agents?.[agentOf(item.thread)]?.model ??
+                        config.model;
+                    const models = yield* agent.models.pipe(
+                        Effect.catch(() =>
+                            Effect.succeed([] as ReadonlyArray<{ id: string; name: string }>),
+                        ),
+                    );
+                    const say = (
+                        text: string,
+                        choices?: ReadonlyArray<{ id: string; name: string }>,
+                    ) =>
+                        Effect.gen(function* () {
+                            yield* outbox.enqueue({
+                                thread: item.thread,
+                                text,
+                                ...(choices?.length
+                                    ? {
+                                          extra: {
+                                              choices: choices.map((m) => ({
+                                                  label: m.name,
+                                                  value: `model:${m.id}`,
+                                              })),
+                                          },
+                                      }
+                                    : {}),
+                            });
+                            yield* inbox.finish([item.id], { result: text });
+                        });
+                    const named = wanted.toLowerCase();
+                    const matches = named
+                        ? models.filter(
+                              (m) =>
+                                  m.id.toLowerCase() === named ||
+                                  m.id.toLowerCase().includes(named) ||
+                                  m.name.toLowerCase().includes(named),
+                          )
+                        : [];
+                    const exact = models.find((m) => m.id.toLowerCase() === named);
+                    const pick = exact ?? (matches.length === 1 ? matches[0] : undefined);
+                    // Only a level: keep the model and change how hard it thinks.
+                    const keep =
+                        !named && thinking && current
+                            ? models.find((m) => m.id === splitModel(current).id)
+                            : undefined;
+                    const chosen = pick ?? keep;
+                    if (chosen) {
+                        const setting = thinking ? `${chosen.id}:${thinking}` : chosen.id;
+                        const saved = yield* Effect.promise(() => loadConfig(paths));
+                        const entry = saved.connections?.[item.source];
+                        if (!entry)
+                            return yield* say(`${item.source} isn't in the config any more.`);
+                        yield* Effect.promise(() =>
+                            saveConfig(paths, {
+                                ...saved,
+                                connections: {
+                                    ...saved.connections,
+                                    [item.source]: { ...entry, model: setting },
+                                },
+                            }),
+                        );
+                        return yield* say(
+                            `Messages on ${item.source} now run on ${chosen.name} (${setting}), from the next one.`,
+                        );
+                    }
+                    if (named && matches.length === 0) {
+                        return yield* say(
+                            `No model you're logged in to matches "${wanted}". Send /model to see them.`,
+                        );
+                    }
+                    const offered = (named ? matches : models).slice(0, 12);
+                    return yield* say(
+                        `Messages on ${item.source} run on ${current ?? "pi's default model"}. ${
+                            offered.length
+                                ? 'Pick one, or send /model <name>:'
+                                : 'No models are logged in.'
+                        }${models.length > offered.length && !named ? ` (${models.length} in all; /model <name> narrows them.)` : ''}`,
+                        offered,
+                    );
+                });
+
             const drain = Effect.gen(function* () {
                 // Limits, as of this pass: events from you always go; automated ones wait while
                 // today's budget is used up, or their agent has had its runs for the hour.
@@ -384,9 +493,22 @@ export class Runtime extends Context.Service<
                     return true;
                 };
                 while (true) {
-                    const batch = yield* inbox.claimBatch([...(yield* Ref.get(running))], eligible);
+                    const claimed = yield* inbox.claimBatch(
+                        [...(yield* Ref.get(running))],
+                        eligible,
+                    );
+                    if (claimed.length === 0) break;
+                    // `/model` from a channel is sedge's to answer, not the agent's.
+                    const commands = claimed.filter(
+                        (item) =>
+                            channels.has(item.source) &&
+                            !item.untrusted &&
+                            MODEL_COMMAND.test(item.prompt),
+                    );
+                    for (const item of commands) yield* modelCommand(item);
+                    const batch = claimed.filter((item) => !commands.includes(item));
                     const thread = batch[0]?.thread;
-                    if (thread === undefined) break;
+                    if (thread === undefined) continue;
                     count(thread);
                     yield* Ref.update(running, (set) => new Set(set).add(thread));
                     yield* process(batch).pipe(

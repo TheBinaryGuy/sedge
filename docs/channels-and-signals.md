@@ -47,6 +47,15 @@ To pair another account, or after a link expired, ask for a new invite (`invite`
 
 Answers go to the channel and chat you last wrote from.
 
+### Models
+
+Send `/model` on a channel to see which model its messages run on, with a button for each model
+you're logged in to. `/model opus` picks one by name, `/model opus medium` (or `opus:medium`) also
+sets how hard it thinks, and `/model high` changes only that. It applies from your next message, and
+nothing goes to the agent. A signal can have its own model too: ask the TUI's agent ("triage CI on
+Haiku, answer it on Opus") or set `model` on the connection. See
+[Configuration](./configuration.md#models).
+
 ## Signals
 
 A signal reports what happened as data, never as instructions: text inside a CI log that says

@@ -289,7 +289,7 @@ ${ABOUT}
 ${
     delivered
         ? '- Nobody watches this run. To tell the user something, call send_message: nothing else you write reaches them. Keep messages short. Offer `choices` when they only need to pick, and attach `files` rather than pasting long content. When nothing needs saying, send nothing; start quiet and earn their attention.'
-        : '- The user started this from their terminal and will see your final answer.'
+        : '- The user started this from their terminal and will see your final answer there. Use send_message only when they ask to be messaged on their channel (Telegram, say), not to repeat your answer.'
 }
 - To split up work, start subagents (subagent): helpers that work in parallel, each in a conversation of its own, and report back as new events.
 - To act later, call set_timer (a follow-up with \`in\` or \`at\`, a recurring schedule with \`cron\`). Never say you will check back without setting one.
@@ -306,9 +306,7 @@ ${memory.head || '(empty)'}${memory.cut ? `\n\n(${MEMORY_INDEX} goes on; only it
     const host: AgentHost = {
         systemPrompt,
         send: async (current, message: Outgoing) => {
-            if (!isUnattended(current)) {
-                return 'Not sent: this task came from the terminal, so the user reads your answer there.';
-            }
+            // From the terminal too: the user reads the answer there, but may ask to be messaged.
             if (!(await run(connections.canReach(current.thread)))) {
                 return 'Not sent: no channel is connected. The user can connect one in sedge ("set up telegram").';
             }

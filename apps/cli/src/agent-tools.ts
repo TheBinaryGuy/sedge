@@ -188,6 +188,81 @@ export const registerAgentTools = (pi: ExtensionAPI, withDaemon: WithDaemon) => 
     });
 
     pi.registerTool({
+        name: 'models',
+        label: 'Models',
+        description:
+            "The models the daemon's runs can use (your logins), and which one the daemon, each agent and each channel or signal is set to. This TUI's own /model doesn't change any of them.",
+        parameters: Type.Object({}),
+        execute: async () => {
+            const models = await withDaemon(({ client }) => client.Models());
+            const set = (record: Readonly<Record<string, string>>) =>
+                Object.entries(record).map(([name, model]) => `  ${name}: ${model}`);
+            return text(
+                [
+                    `The daemon: ${models.daemon ?? "pi's default model"}`,
+                    ...(Object.keys(models.agents).length
+                        ? ['Agents:', ...set(models.agents)]
+                        : []),
+                    ...(Object.keys(models.connections).length
+                        ? [
+                              'Channels and signals (runs they wake on their own):',
+                              ...set(models.connections),
+                          ]
+                        : []),
+                    '',
+                    'Available:',
+                    ...models.available.map((m) => `  ${m.id} (${m.name})`),
+                ].join('\n'),
+            );
+        },
+    });
+
+    pi.registerTool({
+        name: 'set_model',
+        label: 'Set model',
+        description:
+            "Set the model the daemon's runs use, as provider/model from `models`: for the daemon as a whole (main, and agents without their own), for one agent, or for one channel or signal (the runs it wakes on its own). Leave out model to go back to the default. Applies from the next run. The user confirms first.",
+        parameters: Type.Object({
+            model: Type.Optional(
+                Type.String({
+                    description:
+                        'provider/model, as `models` lists it, with :level for how hard it thinks (off, minimal, low, medium, high, xhigh, max): anthropic/claude-opus-5-5:medium. Without one, the default thinking level.',
+                }),
+            ),
+            agent: Type.Optional(Type.String({ description: 'One agent, instead of the daemon.' })),
+            connection: Type.Optional(
+                Type.String({ description: 'One channel or signal, by its name.' }),
+            ),
+        }),
+        execute: async (_id, params, _signal, _update, ctx) => {
+            const scope = params.connection
+                ? `the runs ${params.connection} wakes`
+                : params.agent
+                  ? `the agent ${params.agent}`
+                  : "the daemon's runs";
+            const ok = await ctx.ui.confirm(
+                'Set the model?',
+                `${scope}: ${params.model ?? 'back to the default'}`,
+            );
+            if (!ok) return text('The user declined; nothing changed.');
+            const done = await withDaemon(({ client }) =>
+                client
+                    .SetModel({
+                        model: params.model ?? null,
+                        agent: params.agent ?? null,
+                        connection: params.connection ?? null,
+                    })
+                    .pipe(Effect.result),
+            );
+            return text(
+                done._tag === 'Failure'
+                    ? `Not set: ${message(done.failure)}`
+                    : `Set: ${scope} use ${params.model ?? 'the default'} from the next run.`,
+            );
+        },
+    });
+
+    pi.registerTool({
         name: 'state',
         label: 'Named values',
         description:

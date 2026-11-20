@@ -182,7 +182,9 @@ export class Connections extends Context.Service<
             const run = <A>(effect: Effect.Effect<A>) => Effect.runPromiseWith(services)(effect);
 
             const secrets = yield* Effect.promise(() => openSecretStore(paths));
-            const report = (message: string) => console.error(`[connections] ${message}`);
+            /** A note for the daemon's log: `info` for news, a warning (the default) for what's worth a look. */
+            const report = (message: string, level: 'info' | 'warn' = 'warn') =>
+                (level === 'info' ? console.log : console.warn)(`[connections] ${message}`);
             let kinds = yield* Effect.promise(() => discoverKinds(paths, report));
             const live = new Map<string, Live>();
             const invites = new Map<string, { name: string; expires: number }>();
@@ -215,6 +217,15 @@ export class Connections extends Context.Service<
                         externalId: event.key,
                         prompt: `The user picked "${choice.value}".`,
                         untrusted: choice.untrusted,
+                    });
+                }
+                // sedge's own model buttons (see `/model`): the pick becomes `/model <id>`.
+                const model = /^model:(.+)$/.exec(event.value);
+                if (model) {
+                    return enqueue({
+                        source: name,
+                        externalId: event.key,
+                        prompt: `/model ${model[1]}`,
                     });
                 }
                 const match = /^(approve|deny):(\w+)$/.exec(event.value);
@@ -328,7 +339,7 @@ export class Connections extends Context.Service<
                                 return false;
                             }
                             invites.delete(code);
-                            report(`${name}: paired an account`);
+                            report(`${name}: paired an account`, 'info');
                             return true;
                         },
                     });
@@ -616,7 +627,7 @@ export class Connections extends Context.Service<
                 send: (thread, message) =>
                     Effect.tryPromise({
                         try: async () => {
-                            if (thread.startsWith('cli:')) return;
+                            // A terminal task's message goes where main's would.
                             const target = await route(thread);
                             if (!target)
                                 throw new Error('No channel is connected to reach the user.');
@@ -627,12 +638,8 @@ export class Connections extends Context.Service<
                         },
                         catch: (error) => new Error(describe(error)),
                     }),
-                canReach: (thread) =>
-                    Effect.sync(
-                        () =>
-                            !thread.startsWith('cli:') &&
-                            [...live.values()].some((state) => state.running?.deliver),
-                    ),
+                canReach: () =>
+                    Effect.sync(() => [...live.values()].some((state) => state.running?.deliver)),
                 triaged: (sources) =>
                     Effect.sync(
                         () =>

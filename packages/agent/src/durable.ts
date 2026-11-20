@@ -1,5 +1,6 @@
 import { BACKGROUND_CONTEXT as ctx } from '@earendil-works/chord/context';
 import type { Models, ModelThinkingLevel } from '@earendil-works/pi-ai';
+import { splitModel } from '@sedge-hq/core';
 import {
     AssistantEntry,
     type Conversation,
@@ -21,6 +22,7 @@ import { type McpServerState, openMcp } from './mcp';
 import { recallExtension } from './recall';
 import { actionsExtension, searchTools, sedgeExtension, skillsExtension } from './tools';
 import type { PiExtensions } from './pi-extensions';
+import type { ReportLevel } from './report';
 import { type Sandbox, sandboxedEnv } from './sandbox';
 import { type Triage, type TriageEvent, triage, triageModel } from './triage';
 
@@ -39,7 +41,8 @@ export interface DurableOptions {
     /** The model to use for a run in `cwd`: pi's default, read fresh each run. */
     readonly model: (cwd: string) => Promise<ModelChoice | undefined>;
     readonly host: AgentHost;
-    readonly report: (message: string) => void;
+    /** A note for the daemon's log, at its level: `info` for news, `warn` for what's worth a look. */
+    readonly report: (message: string, level?: ReportLevel) => void;
     /** Your MCP servers: the mcp.json to read, and the version sedge introduces itself with. */
     readonly mcp?: { readonly file: string; readonly version: string };
     /** Your skills, as the prompt lists them, for a run in `cwd`. */
@@ -67,6 +70,8 @@ export interface RunRequest extends RunContext {
     readonly items: ReadonlyArray<Item>;
     /** Told what the run used once it ends, whether it answered or failed. */
     readonly onSpent?: ((spent: Spent) => void) | undefined;
+    /** The model for this run, as `provider/model`; pi's default when unset or unavailable. */
+    readonly model?: string | undefined;
     /** A subagent's run: its conversation starts without sedge's actions (messages, timers…). */
     readonly subagent?: boolean | undefined;
 }
@@ -127,7 +132,7 @@ export const openDurable = async (options: DurableOptions) => {
     registry.install(createToolSearchExtension());
     if (options.piExtensions) {
         registry.install(options.piExtensions.extension);
-        options.report(`pi extensions: ${options.piExtensions.names.join(', ')}`);
+        options.report(`pi extensions: ${options.piExtensions.names.join(', ')}`, 'info');
     }
     if (options.skills) {
         const skills = options.skills;
@@ -153,6 +158,7 @@ export const openDurable = async (options: DurableOptions) => {
             onReport: (report) =>
                 options.report(
                     `${report.kind}: ${report.error instanceof Error ? report.error.message : JSON.stringify(report.error)}`,
+                    'error',
                 ),
         },
         ctx,
@@ -182,7 +188,12 @@ export const openDurable = async (options: DurableOptions) => {
                   registry.install(servers.extension);
                   mcpStates = servers.states;
                   for (const state of servers.states)
-                      options.report(`mcp ${state.name}: ${state.status}`);
+                      options.report(
+                          `mcp ${state.name}: ${state.status}`,
+                          state.status.startsWith('ready') || state.status === 'off'
+                              ? 'info'
+                              : 'warn',
+                      );
                   return servers;
               },
               (error: unknown) => {
@@ -215,8 +226,31 @@ export const openDurable = async (options: DurableOptions) => {
     };
 
     // Model and working directory follow pi's settings and the run; only changes are written.
-    const prepare = async (conversation: Conversation, cwd: string) => {
-        const choice = await options.model(cwd);
+    /** A model by `provider/model[:thinking]`, when it's one you can use. */
+    const named = (wanted: string | undefined) => {
+        if (!wanted) return undefined;
+        const { id, thinking } = splitModel(wanted);
+        const at = id.indexOf('/');
+        const model =
+            at > 0 ? options.models.getModel(id.slice(0, at), id.slice(at + 1)) : undefined;
+        if (!model) options.report(`model "${wanted}" isn't available; using the default`);
+        return model
+            ? { provider: model.provider, modelId: model.id, ...(thinking ? { thinking } : {}) }
+            : undefined;
+    };
+
+    const prepare = async (conversation: Conversation, cwd: string, wanted?: string) => {
+        const fallback = await options.model(cwd);
+        const chosen = named(wanted);
+        // A level set with the model wins; otherwise the default's.
+        const level = chosen?.thinking ?? fallback?.thinkingLevel;
+        const choice = chosen
+            ? {
+                  provider: chosen.provider,
+                  modelId: chosen.modelId,
+                  ...(level ? { thinkingLevel: level } : {}),
+              }
+            : fallback;
         if (!choice) throw new Error('No model is set up. Run `sedge` and log in with /login.');
         const agent = await conversation.agent(ctx);
         const change = {
@@ -253,7 +287,7 @@ export const openDurable = async (options: DurableOptions) => {
         // The first run after a start waits a little for MCP servers, so their tools are there.
         await Promise.race([mcp, new Promise((done) => setTimeout(done, 10_000).unref())]);
         const conversation = await conversationFor(input.thread, input.subagent ?? false);
-        await prepare(conversation, input.cwd);
+        await prepare(conversation, input.cwd, input.model);
         runs.set(input.thread, {
             thread: input.thread,
             sources: input.sources,
@@ -362,8 +396,16 @@ export const openDurable = async (options: DurableOptions) => {
         return triage(options.models, model, events);
     };
 
+    /** The models you're logged in to, as `provider/model` with their names. */
+    const listModels = async () =>
+        (await options.models.getAvailable()).map((model) => ({
+            id: `${model.provider}/${model.id}`,
+            name: model.name ?? model.id,
+        }));
+
     return {
         run,
+        models: listModels,
         triage: triageEvents,
         abort: async () => {
             await Promise.all([...active.values()].map((conversation) => conversation.abort(ctx)));

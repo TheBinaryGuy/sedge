@@ -59,6 +59,8 @@ Ask in your own words; these are what it uses.
 | `outbox`        | What the agents sent you, and whether it arrived.                            |
 | `timers`        | The follow-ups and schedules the agents set.                                 |
 | `state`         | The named values (`mode = away`), who set them and when.                     |
+| `models`        | The models the daemon, each agent and each channel or signal use.            |
+| `set_model`     | Set one of those, with a thinking level if you like (you confirm).           |
 
 ## Tools the daemon's agent has
 

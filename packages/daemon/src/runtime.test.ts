@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { Connections } from './connections';
 import { Limits } from './limits';
+import { LiveConfig } from './live-config';
 import { Runtime, WorkerWake } from './runtime';
 import { Settings } from './settings';
 import { openTelemetry, Telemetry } from './telemetry';
@@ -52,6 +53,11 @@ const setup = async (
                             ),
                         catch: (cause) => new AgentRunError({ message: String(cause) }),
                     }),
+                models: Effect.succeed([
+                    { id: 'anthropic/claude-opus-5-5', name: 'Claude Opus 5.5' },
+                    { id: 'anthropic/claude-haiku-5-5', name: 'Claude Haiku 5.5' },
+                    { id: 'openai/gpt-6-luna', name: 'GPT-6 Luna' },
+                ]),
                 abort: Effect.void,
             }),
         ),
@@ -68,7 +74,11 @@ const setup = async (
         ),
     );
     const runtime = ManagedRuntime.make(
-        Runtime.layer.pipe(Layer.provideMerge(Limits.layer), Layer.provideMerge(deps)),
+        Runtime.layer.pipe(
+            Layer.provideMerge(Limits.layer),
+            Layer.provideMerge(LiveConfig.layer),
+            Layer.provideMerge(deps),
+        ),
     );
     const enqueue = (thread: string, prompt: string, source = 'telegram', untrusted = false) =>
         runtime.runPromise(
@@ -113,7 +123,7 @@ const setup = async (
                 return (yield* (yield* Outbox).list({ limit: 100 })).map((m) => m.text);
             }),
         );
-    return { runtime, enqueue, settled, configure, pending, told };
+    return { runtime, enqueue, settled, configure, pending, told, configPath: paths.config };
 };
 
 describe('the inbox worker', () => {
@@ -358,5 +368,69 @@ describe('the inbox worker', () => {
         expect(ran).toHaveLength(1);
         expect(ran[0]).toContain('labelled person] motion: someone at the door');
         expect(items.find((i) => i.prompt.includes('door'))?.label).toBe('person');
+    }, 20_000);
+
+    it('runs each run on the model its config chooses: the channel’s, else the agent’s, else the daemon’s', async () => {
+        const seen: Array<[string, string | undefined]> = [];
+        const { runtime, enqueue, settled, configure } = await setup(async (input) => {
+            seen.push([input.items.map((i) => i.text).join(' '), input.model]);
+            return 'ok';
+        });
+        await configure({
+            model: 'openai/gpt-6-luna',
+            agents: { ci: { purpose: 'CI', model: 'anthropic/claude-haiku-5-5' } },
+            connections: {
+                telegram: { kind: 'telegram', settings: {}, model: 'anthropic/claude-opus-5-5' },
+            },
+        });
+        await enqueue('main', 'from my phone', 'telegram');
+        await settled(1);
+        await enqueue('main', 'a timer', 'timer');
+        await settled(2);
+        await enqueue('agent:ci', 'build failed', 'ci');
+        await settled(3);
+        await runtime.dispose();
+        expect(seen.map(([text, model]) => [text.split('] ')[1], model])).toEqual([
+            ['from my phone', 'anthropic/claude-opus-5-5'],
+            ['a timer', 'openai/gpt-6-luna'],
+            ['build failed', 'anthropic/claude-haiku-5-5'],
+        ]);
+    }, 20_000);
+
+    it('answers /model on a channel itself: buttons to pick from, and a name sets it', async () => {
+        const ran: Array<string> = [];
+        const { runtime, enqueue, settled, configure, told, configPath } = await setup(
+            async (input) => {
+                ran.push(input.items.map((i) => i.text).join(' '));
+                return 'ok';
+            },
+        );
+        await configure({ connections: { telegram: { kind: 'telegram', settings: {} } } });
+        await enqueue('main', '/model', 'telegram');
+        await settled(1);
+        await enqueue('main', '/model opus', 'telegram');
+        await settled(2);
+        await enqueue('main', '/model haiku medium', 'telegram');
+        await settled(3);
+        const haiku = JSON.parse(await Bun.file(configPath).text()).connections.telegram.model;
+        // Only a level: the model stays.
+        await enqueue('main', '/model high', 'telegram');
+        await settled(4);
+        const messages = await told();
+        const saved = JSON.parse(await Bun.file(configPath).text()) as {
+            connections: { telegram: { model?: string } };
+        };
+        await runtime.dispose();
+        expect(ran).toEqual([]);
+        // Newest first.
+        expect(messages[3]).toContain("run on pi's default model");
+        expect(messages[2]).toBe(
+            'Messages on telegram now run on Claude Opus 5.5 (anthropic/claude-opus-5-5), from the next one.',
+        );
+        expect(messages[0]).toBe(
+            'Messages on telegram now run on Claude Haiku 5.5 (anthropic/claude-haiku-5-5:high), from the next one.',
+        );
+        expect(haiku).toBe('anthropic/claude-haiku-5-5:medium');
+        expect(saved.connections.telegram.model).toBe('anthropic/claude-haiku-5-5:high');
     }, 20_000);
 });

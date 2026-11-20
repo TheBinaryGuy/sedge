@@ -5,6 +5,7 @@ import { AgentRunError, type AgentEvent } from '@sedge-hq/protocol';
 import { Context, Effect, Layer, Semaphore } from 'effect';
 import { join } from 'node:path';
 import type { Durable, Item, ModelChoice, Spent } from './durable';
+import { reportAt } from './report';
 import type { AgentHost, RunContext } from './host';
 import { loadPiExtensions, type PiExtensions } from './pi-extensions';
 import type { Sandbox } from './sandbox';
@@ -76,6 +77,8 @@ export interface RunInput extends RunContext {
     readonly subagent?: boolean | undefined;
     /** Told what the run used once it ends, whether it answered or failed. */
     readonly onSpent?: ((spent: Spent) => void) | undefined;
+    /** The model for this run, as `provider/model`; pi's default when unset or unavailable. */
+    readonly model?: string | undefined;
 }
 
 /**
@@ -97,7 +100,7 @@ const piModels = async (config: AgentConfig) => {
               cwd: config.workspace,
               names: config.piExtensions,
               modelRuntime: models,
-              report: (message) => console.error(`[agent] ${message}`),
+              report: reportAt('agent'),
           })
         : undefined;
     const choose = async (cwd: string): Promise<ModelChoice | undefined> => {
@@ -153,6 +156,11 @@ export class Agent extends Context.Service<
             events: ReadonlyArray<TriageEvent>,
             model?: string,
         ) => Effect.Effect<Triage, AgentRunError>;
+        /** The models you're logged in to, as `provider/model` with their names. */
+        readonly models: Effect.Effect<
+            ReadonlyArray<{ readonly id: string; readonly name: string }>,
+            AgentRunError
+        >;
         readonly abort: Effect.Effect<void>;
     }
 >()('sedge/agent/Agent') {
@@ -189,7 +197,7 @@ export class Agent extends Context.Service<
                             ...(config.sandbox ? { sandbox: config.sandbox } : {}),
                             ...(piExtensions ? { piExtensions } : {}),
                             ...(config.offLimits ? { offLimits: config.offLimits } : {}),
-                            report: (message) => console.error(`[agent] ${message}`),
+                            report: reportAt('agent'),
                         });
                     })().catch((error: unknown) => {
                         opening = undefined;
@@ -243,7 +251,12 @@ export class Agent extends Context.Service<
                         catch: (cause) => new AgentRunError({ message: describe(cause) }),
                     });
 
-                return Agent.of({ run, triage, abort });
+                const models = Effect.tryPromise({
+                    try: async () => (await open()).models(),
+                    catch: (cause) => new AgentRunError({ message: describe(cause) }),
+                });
+
+                return Agent.of({ run, triage, models, abort });
             }),
         );
 }

@@ -28,3 +28,4 @@ export {
     type SignalEvent,
 } from './events';
 export { meets, parseCondition } from './conditions';
+export { THINKING_LEVELS, splitModel, type ThinkingLevel } from './model';

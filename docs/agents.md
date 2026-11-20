@@ -100,7 +100,8 @@ Agents live in `~/.sedge/config.json` (see [Configuration](./configuration.md)):
 {
     "agents": {
         "ci": {
-            "purpose": "Watch the CI signal. Tell me only when main breaks, with the failing job."
+            "purpose": "Watch the CI signal. Tell me only when main breaks, with the failing job.",
+            "model": "anthropic/claude-haiku-5-5"
         }
     },
     "connections": {
@@ -113,3 +114,6 @@ Agents live in `~/.sedge/config.json` (see [Configuration](./configuration.md)):
     }
 }
 ```
+
+`model` is optional: without it the agent uses the daemon's model. See
+[Models](./configuration.md#models).

@@ -274,6 +274,28 @@ export class SedgeRpcs extends RpcGroup.make(
         success: Schema.Array(LogEntry),
     }),
     Rpc.make('Stats', { success: StatsInfo }),
+    /** The models you're logged in to, and which the daemon, each agent and each connection use. */
+    Rpc.make('Models', {
+        success: Schema.Struct({
+            available: Schema.Array(Schema.Struct({ id: Schema.String, name: Schema.String })),
+            daemon: Schema.NullOr(Schema.String),
+            agents: Schema.Record(Schema.String, Schema.String),
+            connections: Schema.Record(Schema.String, Schema.String),
+        }),
+        error: AgentError,
+    }),
+    /**
+     * Sets the model (`provider/model`, or null for the default) for the daemon, one agent or one
+     * connection. It applies from the next run.
+     */
+    Rpc.make('SetModel', {
+        payload: {
+            agent: Schema.NullOr(Schema.String),
+            connection: Schema.NullOr(Schema.String),
+            model: Schema.NullOr(Schema.String),
+        },
+        error: AgentError,
+    }),
     /** Named values (`mode = away`) that signals' conditions read as `state.<name>`. */
     Rpc.make('State', { success: Schema.Array(NamedValueInfo) }),
     Rpc.make('Connections', { success: Schema.Array(ConnectionInfo) }),

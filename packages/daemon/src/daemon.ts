@@ -12,6 +12,7 @@ import { Connections } from './connections';
 import { DispatcherLive } from './dispatcher';
 import { makeHost } from './host';
 import { Limits } from './limits';
+import { LiveConfig } from './live-config';
 import { privateGuard } from './private';
 import { sedgeSandbox } from './sandbox';
 import { State } from './state';
@@ -108,6 +109,7 @@ export const runDaemon = (
         );
         const delivery = Agents.layer.pipe(
             Layer.provideMerge(Limits.layer),
+            Layer.provideMerge(LiveConfig.layer),
             Layer.provideMerge(DispatcherLive),
             Layer.provideMerge(Connections.layer),
             Layer.provideMerge(State.layer),

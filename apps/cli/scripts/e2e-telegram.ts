@@ -236,6 +236,31 @@ try {
     );
     pass(`after approval: ${output.text}`);
 
+    step('/model on the channel: buttons to pick from, and a pick sets the channel’s model');
+    mark = sent.length;
+    pushMessage('/model');
+    const menu = await waitFor('the model buttons', () =>
+        sentTo(mark, (m) =>
+            Boolean(m.reply_markup?.inline_keyboard?.[0]?.[0]?.callback_data.startsWith('model:')),
+        ),
+    );
+    const tapped = menu.reply_markup!.inline_keyboard[0]![0]!.callback_data.slice('model:'.length);
+    mark = sent.length;
+    pushButton(`model:${tapped}`);
+    await waitFor('the confirmation', () => sentTo(mark, (m) => m.text.includes('now run on')), 20);
+    const chosen = JSON.parse(await readFile(paths.config, 'utf8')).connections.telegram.model;
+    // Telegram keeps 64 bytes of a button's value, so a long id arrives cut short.
+    if (!chosen?.startsWith(tapped)) fail(`the channel's model is ${chosen}, not ${tapped}`);
+    // Back to the default, through the TUI's set_model.
+    await withDaemon(({ client }) =>
+        client.SetModel({ connection: 'telegram', agent: null, model: null }),
+    );
+    if (JSON.parse(await readFile(paths.config, 'utf8')).connections.telegram.model)
+        fail('set_model left the channel on a model');
+    pass(
+        `offered ${menu.reply_markup!.inline_keyboard.flat().length} model(s); picked ${tapped}, then reset`,
+    );
+
     step('an agent of its own answers a task, and main can tell it something');
     const agent = await withDaemon(({ client }) =>
         client.SaveAgent({
@@ -580,6 +605,12 @@ try {
     if (doorEvents.some((item) => item.prompt.includes('while home')))
         fail('the door event got through while mode was home');
     pass('mode remembered from its signal; the door only got through while away');
+    // The door's event is outside content: a run that has it can't set named values, so let it
+    // finish before asking from the terminal.
+    await poll('the door event handled', async () => {
+        const items = await withDaemon(({ client }) => client.Inbox({ agent: 'main', limit: 50 }));
+        return items.every((item) => item.finishedAt !== null) ? true : undefined;
+    });
     await withDaemon(({ client }) =>
         client
             .Prompt({

@@ -53,7 +53,7 @@ export const loadPiExtensions = async (options: {
     readonly cwd: string;
     readonly names: ReadonlyArray<string>;
     readonly modelRuntime: ModelRuntime;
-    readonly report: (message: string) => void;
+    readonly report: (message: string, level?: 'info' | 'warn' | 'error') => void;
 }) => {
     const { pi, agentDir, cwd, names, modelRuntime, report } = options;
     const settingsManager = pi.SettingsManager.create(cwd, agentDir);
@@ -134,7 +134,9 @@ export const loadPiExtensions = async (options: {
         }
     }
     runtime.pendingNativeProviderRegistrations = [];
-    runner.onError((error) => report(`pi extension ${error.extensionPath}: ${error.error}`));
+    runner.onError((error) =>
+        report(`pi extension ${error.extensionPath}: ${error.error}`, 'error'),
+    );
 
     const tools = runner.getAllRegisteredTools().flatMap((registered) => {
         const tool = pi.wrapRegisteredTool(registered, runner);
