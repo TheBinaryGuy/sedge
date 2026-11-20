@@ -1,0 +1,59 @@
+packages/agent/src/durable.ts
+  s_fe732417ee9cdb::t_d03822412c3c47 21,50-55,94-95,146,156-162,188,193,195
+packages/agent/src/durable.test.ts
+  s_fe732417ee9cdb::t_1dd77928410070 26,40-43,82,88,93,308-361
+.changeset/parallel-subagents.md
+  s_fe732417ee9cdb::t_4d8cd2960f946b 1,3-7
+  s_fe732417ee9cdb::t_a921d2db77a4f5 2
+apps/cli/scripts/e2e-telegram.ts
+  s_fe732417ee9cdb::t_d5fd35c5b2629d 8
+  s_fe732417ee9cdb::t_ff8e31f82d4198 112-120,279-286
+  s_fe732417ee9cdb::t_73b9bf07f6bc4d 269-278
+docs/how-it-works.md
+  s_fe732417ee9cdb::t_4d8cd2960f946b 26
+docs/commands.md
+  s_fe732417ee9cdb::t_4d8cd2960f946b 67
+packages/agent/src/host.ts
+  s_fe732417ee9cdb::t_fc0b9416d3fcd2 41-46
+docs/use-cases.md
+  s_fe732417ee9cdb::t_d5fd35c5b2629d 133-139
+  s_fe732417ee9cdb::t_fe5a2f8c60e1d0 140
+packages/agent/src/index.ts
+  s_fe732417ee9cdb::t_f97b58cb113f73 54-55
+  s_fe732417ee9cdb::t_efcae4ccd2a207 103-104
+packages/daemon/src/threads.ts
+  s_fe732417ee9cdb::t_db8cffe04dd4f2 10-22,24-25,27-31
+packages/daemon/src/host.ts
+  s_fe732417ee9cdb::t_c26d688b594733 10
+  s_fe732417ee9cdb::t_d74e54e36dd0e2 3,11,110-111,172-189,191-192,218,251-268
+docs/agents.md
+  s_fe732417ee9cdb::t_4d8cd2960f946b 19,44-61
+  s_fe732417ee9cdb::t_e077644da08a98 62
+packages/agent/src/tools.ts
+  s_fe732417ee9cdb::t_94159d4948002a 24,31-32,51-56,58-59,99-111
+  s_fe732417ee9cdb::t_338088b9daacf1 57
+  s_fe732417ee9cdb::t_d7acff3d631196 112
+packages/daemon/src/runtime.ts
+  s_fe732417ee9cdb::t_17ef6be92ba5d5 22,140-141,178-179,198-210,253-254,256
+  s_fe732417ee9cdb::t_4d8cd2960f946b 84-85
+packages/daemon/src/runtime.test.ts
+  s_fe732417ee9cdb::t_defc4bdfd410f9 42-44
+  s_fe732417ee9cdb::t_6fceb998114c02 75-76
+  s_fe732417ee9cdb::t_a3f86dd2211929 1-41,45-74,77-98
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "97bd8a12e99a15be1ff118b53a24d8b8af2e389d",
+  "prompts": {},
+  "sessions": {
+    "s_fe732417ee9cdb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b6666194-df82-46a7-a1ef-33e06788ffe9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "TheBinaryGuy <hello@thebinary.dev>"
+    }
+  }
+}
