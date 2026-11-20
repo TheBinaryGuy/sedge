@@ -5,11 +5,11 @@ description: Your pi extensions, MCP servers and skills, and which of them the d
 
 Three ways to give the agent more to work with, and where each one works:
 
-|               | The TUI | The daemon's runs                    |
-| ------------- | ------- | ------------------------------------ |
-| pi extensions | Yes     | Not yet: see [below](#pi-extensions) |
-| MCP servers   | Yes     | Yes, from your global `mcp.json`     |
-| Skills        | Yes     | Yes                                  |
+|               | The TUI | The daemon's runs                              |
+| ------------- | ------- | ---------------------------------------------- |
+| pi extensions | Yes     | The ones you list: see [below](#pi-extensions) |
+| MCP servers   | Yes     | Yes, from your global `mcp.json`               |
+| Skills        | Yes     | Yes                                            |
 
 ## In the TUI
 
@@ -72,27 +72,48 @@ Skills marked `disable-model-invocation` are left out.
 ## pi extensions
 
 pi extensions (from `~/.pi/agent/extensions`, the packages you installed with `sedge pi install`,
-or a project's `.pi/extensions`) load in the TUI, as in pi: their tools, commands, shortcuts and UI.
+or a project's `.pi/extensions`) all load in the TUI, as in pi: their tools, commands, shortcuts
+and UI.
 
-The daemon's runs don't load them yet. They're written for pi's interactive session, and the
-daemon's runs are a different kind of thing:
+The daemon's runs load only the ones you list, in `~/.sedge/config.json`:
 
-- **Nobody is there.** An extension that asks you something, shows a dialog or adds a command has
-  no one to show it to.
-- **Runs survive restarts, extensions' memory doesn't.** A conversation that picks up after a crash
-  would meet an extension that remembers nothing of it.
-- **Many runs at once.** One copy of an extension would be shared by every agent working at the
-  same time.
-- **Your rights, unattended.** An extension's code runs with your permissions and sees every prompt
-  and tool output, around the clock, on events from outside.
+```json
+"piExtensions": ["protected-paths", "npm:pi-weather"]
+```
 
-So, for runs without you:
+An extension's name is its file's (`protected-paths` for `protected-paths.ts` or
+`protected-paths/index.ts`), or the package it came in, as `sedge pi list` shows it. Restart the
+daemon after changing the list. A listed name that isn't installed is reported in the daemon's log
+and left out.
 
-- **A tool** works in both places as an [MCP server](#mcp-servers), or as a [skill](#skills) when
-  it's a procedure with a script.
-- **Something that should wake sedge** is a [signal](./channels-and-signals.md#your-own).
-- **A model from an extension's provider** isn't available to the daemon: if it's your default,
-  the daemon uses another model you're logged in to.
+### What works in the daemon
 
-Loading extensions you choose, one by one, in the daemon is being looked at: their tools, their
-checks on tool calls, and their model providers, never anything you haven't listed.
+- **Its tools.** They join the agent's tools, behind the same [approvals](./security.md): a tool
+  sedge doesn't know asks in runs you're not watching, like an MCP tool. A tool named like one of
+  sedge's own (`bash`, `read`, `send_message`, …) is left out.
+- **Its checks on tool calls** (`tool_call`). They see every call the agent makes, its own and
+  sedge's, and can block one or change its arguments: a protected-paths or permission-gate
+  extension guards the daemon too.
+- **Its model providers.** A model from an extension's provider is available to the daemon, also as
+  your default.
+- **Starting and stopping** (`session_start`, `session_shutdown`), once each, with the daemon.
+
+### What doesn't
+
+Nobody is there to answer, so anything that needs a person is gone. A dialog answers no
+(`confirm` is false, a choice is empty), so a check that asks before something risky blocks it.
+Commands, shortcuts, flags and renderers don't load, and an extension that sends a message, starts
+a session or switches the model gets an error. Its other events (on prompts, responses, compaction)
+aren't sent yet.
+
+### Things to know
+
+- **One copy for every agent.** The daemon loads each listed extension once, and every agent's
+  runs share it, also when they run at the same time.
+- **Its memory doesn't survive a restart; the conversation does.** After a crash in the middle of
+  one of its tools, the agent gets an "interrupted" result rather than running it again, since it
+  can't know whether that's safe.
+- **Your rights, unattended.** Its code runs inside the daemon with your permissions, outside the
+  [sandbox](./sandbox.md), and its checks see every tool call and result. List only extensions you
+  trust as much as sedge itself.
+- **A repository's own extensions** (`.pi/extensions`) never load in the daemon.

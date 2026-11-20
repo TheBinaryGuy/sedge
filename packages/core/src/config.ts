@@ -95,6 +95,11 @@ export const SedgeConfig = Schema.Struct({
             hidden: Schema.optional(Schema.Array(Schema.String)),
         }),
     ),
+    /**
+     * pi extensions to load in the daemon's runs, by name (`foo` for foo.ts or foo/index.ts) or by
+     * the package they came in (`npm:pi-foo`). None load unless listed; the TUI loads them all.
+     */
+    piExtensions: Schema.optional(Schema.Array(Schema.String)),
     /** Nightly dreaming, when the agent reviews its conversations and tidies its memory. On by default. */
     dreaming: Schema.optional(Schema.Boolean),
     /**

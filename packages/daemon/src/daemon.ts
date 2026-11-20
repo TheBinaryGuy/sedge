@@ -119,6 +119,7 @@ export const runDaemon = (
                     Agent.layer({
                         ...defaultAgentConfig(paths.home, workspace, host, options.loadPi),
                         sandbox: sedgeSandbox(paths, config, workspace),
+                        piExtensions: config.piExtensions,
                     }),
                 ),
             ),

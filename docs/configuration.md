@@ -6,8 +6,8 @@ description: config.json, the files in ~/.sedge, and environment variables.
 Most things are set up by asking sedge in the TUI. The rest is `~/.sedge/config.json`.
 
 `agents` and `limits` are read again whenever they're used, so a change applies at once. The rest
-(`workspace`, `connections`, `permissions`, `sandbox`, `triageModel`, `dreaming`) is read when the
-daemon starts: after editing those, restart it with `sedge stop && sedge start`.
+(`workspace`, `connections`, `permissions`, `sandbox`, `triageModel`, `piExtensions`, `dreaming`) is
+read when the daemon starts: after editing those, restart it with `sedge stop && sedge start`.
 
 ## config.json
 
@@ -38,6 +38,7 @@ daemon starts: after editing those, restart it with `sedge stop && sedge start`.
 | `permissions.mcp`                            | MCP tools and other tools in unwatched runs.                                                                                               | `ask`                |
 | `permissions.signals.bash`, `.write`, `.mcp` | The same, for runs woken by outside content; the stricter of the two applies. See [Security](./security.md#runs-woken-by-outside-content). | `ask`                |
 | `agents`                                     | Agents besides `main`, by name, each with its `purpose`. See [Agents](./agents.md).                                                        | none                 |
+| `piExtensions`                               | pi extensions to load in the daemon's runs, by name or package. See [Extensions](./mcp-and-skills.md#pi-extensions).                       | none                 |
 | `connections`                                | Channels and signals by name. Written by `connect`; edit with care.                                                                        | none                 |
 
 Each connection has a `kind`, its `settings` (never secrets), `secrets` (the names of the

@@ -3,16 +3,18 @@ import { fauxAssistantMessage, fauxProvider, fauxToolCall } from '@earendil-work
 import { createMcpToolName } from '@earendil-works/pi-mcp';
 import { Effect, ManagedRuntime } from 'effect';
 import { existsSync } from 'node:fs';
-import { mkdtemp, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { AgentHost, Outgoing } from './host';
+import type { PiExtensions } from './pi-extensions';
 import { Agent } from './index';
 
 interface Extras {
     readonly skills?: (cwd: string) => string | undefined;
     readonly mcp?: { readonly file: string; readonly version: string };
+    readonly piExtensions?: PiExtensions | undefined;
 }
 
 const setup = async (extras: (dir: string) => Promise<Extras> = async () => ({})) => {
@@ -435,5 +437,92 @@ describe('the durable agent', () => {
         expect(verdict.wake).toBe(true);
         // "dragon" isn't one of its labels, so that event stays unlabelled.
         expect(verdict.labels).toEqual(['person', undefined, 'nothing']);
+    }, 30_000);
+
+    it('runs a listed pi extension’s tools and its tool-call checks, and leaves the rest out', async () => {
+        const pi = await import('@earendil-works/pi-coding-agent');
+        const { loadPiExtensions } = await import('./pi-extensions');
+        const { faux, open, run, dir } = await setup(async (dir) => {
+            const agentDir = join(dir, 'pi-agent');
+            await mkdir(join(agentDir, 'extensions'), { recursive: true });
+            await writeFile(
+                join(agentDir, 'extensions', 'greet.ts'),
+                [
+                    "import { Type } from 'typebox';",
+                    'export default function (pi) {',
+                    '    pi.registerTool({',
+                    "        name: 'greet',",
+                    "        label: 'Greet',",
+                    "        description: 'Greet someone by name.',",
+                    '        parameters: Type.Object({ name: Type.String() }),',
+                    '        async execute(_id, params) {',
+                    "            return { content: [{ type: 'text', text: 'Hello, ' + params.name + '!' }], details: {} };",
+                    '        },',
+                    '    });',
+                    // As in pi's docs: a risky call needs a yes, and with nobody there it gets a no.
+                    "    pi.on('tool_call', async (event, ctx) => {",
+                    "        if (event.toolName === 'write' && String(event.input.path).includes('secret')) {",
+                    "            const ok = await ctx.ui.confirm('Careful', 'Write a secret?');",
+                    "            if (!ok) return { block: true, reason: 'Blocked: nobody confirmed.' };",
+                    '        }',
+                    '    });',
+                    '}',
+                ].join('\n'),
+            );
+            await writeFile(
+                join(agentDir, 'extensions', 'other.ts'),
+                [
+                    'export default function (pi) {',
+                    "    pi.registerTool({ name: 'other_tool', label: 'Other', description: 'Not listed.',",
+                    "        parameters: { type: 'object', properties: {} },",
+                    "        async execute() { return { content: [{ type: 'text', text: 'no' }], details: {} }; } });",
+                    '}',
+                ].join('\n'),
+            );
+            const modelRuntime = await pi.ModelRuntime.create({
+                authPath: join(agentDir, 'auth.json'),
+                modelsPath: join(agentDir, 'models.json'),
+            });
+            const piExtensions = await loadPiExtensions({
+                pi,
+                agentDir,
+                cwd: dir,
+                names: ['greet'],
+                modelRuntime,
+                report: () => {},
+            });
+            return { piExtensions };
+        });
+        const offered: Array<string> = [];
+        const results: Array<string> = [];
+        faux.setResponses([
+            (context) => {
+                offered.push(JSON.stringify(context));
+                return fauxAssistantMessage([fauxToolCall('greet', { name: 'Ada' })], {
+                    stopReason: 'toolUse',
+                });
+            },
+            (context) => {
+                results.push(JSON.stringify(context.messages.at(-1)));
+                return fauxAssistantMessage(
+                    [
+                        fauxToolCall('write', { path: join(dir, 'secret.txt'), content: 'x' }),
+                        fauxToolCall('write', { path: join(dir, 'ok.txt'), content: 'y' }),
+                    ],
+                    { stopReason: 'toolUse' },
+                );
+            },
+            fauxAssistantMessage('done'),
+        ]);
+        const runtime = open();
+        expect(
+            await run(runtime, [{ id: 'event-14', text: 'greet Ada, then write two files' }]),
+        ).toBe('done');
+        await runtime.dispose();
+        expect(offered[0]).toContain('"greet"');
+        expect(offered[0]).not.toContain('other_tool');
+        expect(results[0]).toContain('Hello, Ada!');
+        expect(existsSync(join(dir, 'secret.txt'))).toBe(false);
+        expect(await readFile(join(dir, 'ok.txt'), 'utf8')).toBe('y');
     }, 30_000);
 });

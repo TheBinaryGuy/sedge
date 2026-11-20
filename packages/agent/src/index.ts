@@ -6,6 +6,7 @@ import { Context, Effect, Layer, Semaphore } from 'effect';
 import { join } from 'node:path';
 import type { Durable, Item, ModelChoice, Spent } from './durable';
 import type { AgentHost, RunContext } from './host';
+import { loadPiExtensions, type PiExtensions } from './pi-extensions';
 import type { Sandbox } from './sandbox';
 import type { Triage, TriageEvent } from './triage';
 
@@ -45,7 +46,10 @@ export interface AgentConfig {
         readonly choose: (cwd: string) => Promise<ModelChoice | undefined>;
         readonly skills?: (cwd: string) => string | undefined;
         readonly mcp?: { readonly file: string; readonly version: string };
+        readonly piExtensions?: PiExtensions | undefined;
     }>;
+    /** pi extensions to load in the daemon's runs, by name or package; none unless listed. */
+    readonly piExtensions?: ReadonlyArray<string> | undefined;
 }
 
 export const defaultAgentConfig = (
@@ -81,6 +85,17 @@ const piModels = async (config: AgentConfig) => {
         authPath: join(agentDir, 'auth.json'),
         modelsPath: join(agentDir, 'models.json'),
     });
+    // Before the model is chosen: a default model can come from an extension's provider.
+    const piExtensions = config.piExtensions?.length
+        ? await loadPiExtensions({
+              pi,
+              agentDir,
+              cwd: config.workspace,
+              names: config.piExtensions,
+              modelRuntime: models,
+              report: (message) => console.error(`[agent] ${message}`),
+          })
+        : undefined;
     const choose = async (cwd: string): Promise<ModelChoice | undefined> => {
         const settings = pi.SettingsManager.create(cwd, agentDir);
         const provider = settings.getDefaultProvider();
@@ -110,6 +125,7 @@ const piModels = async (config: AgentConfig) => {
         choose,
         skills,
         mcp: { file: join(agentDir, 'mcp.json'), version: VERSION },
+        piExtensions,
     };
 };
 
@@ -155,7 +171,7 @@ export class Agent extends Context.Service<
                 const open = () =>
                     (opening ??= (async () => {
                         const { openDurable } = await import('./durable');
-                        const { models, choose, skills, mcp } = await (
+                        const { models, choose, skills, mcp, piExtensions } = await (
                             config.models ?? (() => piModels(config))
                         )();
                         return openDurable({
@@ -167,6 +183,7 @@ export class Agent extends Context.Service<
                             ...(mcp ? { mcp } : {}),
                             host: config.host,
                             ...(config.sandbox ? { sandbox: config.sandbox } : {}),
+                            ...(piExtensions ? { piExtensions } : {}),
                             report: (message) => console.error(`[agent] ${message}`),
                         });
                     })().catch((error: unknown) => {

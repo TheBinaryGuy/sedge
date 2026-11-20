@@ -20,6 +20,7 @@ import type { AgentHost, RunContext } from './host';
 import { type McpServerState, openMcp } from './mcp';
 import { recallExtension } from './recall';
 import { actionsExtension, searchTools, sedgeExtension, skillsExtension } from './tools';
+import type { PiExtensions } from './pi-extensions';
 import { type Sandbox, sandboxedEnv } from './sandbox';
 import { type Triage, type TriageEvent, triage, triageModel } from './triage';
 
@@ -45,6 +46,8 @@ export interface DurableOptions {
     readonly skills?: (cwd: string) => string | undefined;
     /** When set, commands run in the OS sandbox and file tools keep to its rules. */
     readonly sandbox?: Sandbox | undefined;
+    /** The pi extensions listed for the daemon, loaded. */
+    readonly piExtensions?: PiExtensions | undefined;
 }
 
 export interface Item {
@@ -115,6 +118,10 @@ export const openDurable = async (options: DurableOptions) => {
     const actions = actionsExtension(options.host, runFor);
     registry.install(actions);
     registry.install(createToolSearchExtension());
+    if (options.piExtensions) {
+        registry.install(options.piExtensions.extension);
+        options.report(`pi extensions: ${options.piExtensions.names.join(', ')}`);
+    }
     if (options.skills) {
         const skills = options.skills;
         registry.install(skillsExtension((id) => skills(runFor(id).cwd)));
@@ -142,6 +149,13 @@ export const openDurable = async (options: DurableOptions) => {
         ctx,
     );
     harness.resume();
+    await options.piExtensions
+        ?.start()
+        .catch((error: unknown) =>
+            options.report(
+                `pi extensions: ${error instanceof Error ? error.message : String(error)}`,
+            ),
+        );
     threads.set(MAIN, (await harness.root(ctx)).id as number);
     registry.install(
         recallExtension({
@@ -351,6 +365,7 @@ export const openDurable = async (options: DurableOptions) => {
             return mcpStates;
         },
         close: async () => {
+            await options.piExtensions?.close().catch(() => undefined);
             await (await mcp)?.close();
             await harness.close(ctx);
         },

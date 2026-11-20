@@ -99,6 +99,10 @@ a community one, with its npm page) and before registering a signal it wrote, sh
 what you approve is copied, and that copy is what runs. `sedge install` on the command line
 installs what you name.
 
+pi extensions you list in `piExtensions` run inside the daemon too, unattended and outside the
+sandbox, and their checks see every tool call; see
+[pi extensions](./mcp-and-skills.md#pi-extensions). None load unless you list them.
+
 The `command` signal runs the command you give it in your shell, with your rights, for as long as
 it's connected; you see the command before you confirm. The `webhook` signal listens only on this
 machine unless you set its `host`, and turns away any request without the token you chose.
