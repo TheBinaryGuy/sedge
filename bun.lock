@@ -20,7 +20,7 @@
     },
     "apps/cli": {
       "name": "@sedge-hq/sedge",
-      "version": "0.7.1",
+      "version": "0.8.0",
       "bin": {
         "sedge": "./bin/sedge.js",
       },
@@ -176,7 +176,7 @@
     },
     "packages/local": {
       "name": "@sedge-hq/local",
-      "version": "0.1.2",
+      "version": "0.2.0",
       "dependencies": {
         "@sedge-hq/kit": "workspace:*",
       },
@@ -189,7 +189,7 @@
     },
     "packages/mqtt": {
       "name": "@sedge-hq/mqtt",
-      "version": "0.1.0",
+      "version": "0.2.0",
       "dependencies": {
         "@sedge-hq/kit": "workspace:*",
         "mqtt": "5.16.1",
