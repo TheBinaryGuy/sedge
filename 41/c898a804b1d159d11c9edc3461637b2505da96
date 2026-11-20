@@ -1,0 +1,90 @@
+packages/core/src/conditions.ts
+  s_fe732417ee9cdb::t_3a68069d2355e6 71-74,104-111,116,128
+  s_fe732417ee9cdb::t_1a1f9d3a3864a9 1-70,75-103,112-115,117-127,129-146
+packages/local/src/webhook.ts
+  s_fe732417ee9cdb::t_44ea471a57e0a8 27-30,32,71-76
+packages/daemon/src/runtime.test.ts
+  s_fe732417ee9cdb::t_3310cf52106e1e 1-2,16-23,31-48,121-176
+packages/agent/src/triage.ts
+  s_fe732417ee9cdb::t_0672923d93ebb6 75-76
+  s_fe732417ee9cdb::t_1d7c84525801ba 1-74,77-82
+.changeset/conditions-throttle-triage.md
+  s_fe732417ee9cdb::t_073b832b2ba72d 1-10
+apps/cli/scripts/e2e-telegram.ts
+  s_fe732417ee9cdb::t_ee6d1ad05ec17d 423
+  s_fe732417ee9cdb::t_0efc6afd6e47fd 340-410,430
+  s_fe732417ee9cdb::t_04ebaa09fe1d4f 8-9,411-422,424-429
+packages/agent/src/index.ts
+  s_fe732417ee9cdb::t_bc5e6b0eb2d7c0 9,13,115-122,204-210
+packages/mqtt/src/mqtt.ts
+  s_fe732417ee9cdb::t_eeaeaf49ba864c 10-14,22,24,26,30-34
+packages/daemon/src/connections.ts
+  s_fe732417ee9cdb::t_e0187c5b1668f8 92,351
+  s_fe732417ee9cdb::t_d48946c950eb08 43,329,387,390-392,473
+  s_fe732417ee9cdb::t_6f6c22bb31ccdb 5,147,199-204,206-214,220,222-225,327-328,385-386
+  s_fe732417ee9cdb::t_2b0110a9ef864b 235-238
+  s_fe732417ee9cdb::t_0672923d93ebb6 101-102,527-531
+  s_fe732417ee9cdb::t_c6cde7d376b05b 532
+apps/cli/src/connection-tools.ts
+  s_fe732417ee9cdb::t_26eb9cae6d0eab 38-39,57-68,83-88,90,93-94,269-270
+  s_fe732417ee9cdb::t_d48946c950eb08 41,75-80,89,96,195,271,307,316,325,327-328
+packages/agent/src/durable.test.ts
+  s_fe732417ee9cdb::t_46bfae03cd3682 362-385
+packages/protocol/src/index.ts
+  s_fe732417ee9cdb::t_6f6c22bb31ccdb 94-95,272-273,280,290-291
+  s_fe732417ee9cdb::t_04ebaa09fe1d4f 123-124
+  s_fe732417ee9cdb::t_d48946c950eb08 96-97,274,281,292
+apps/cli/src/agent-tools.ts
+  s_fe732417ee9cdb::t_04ebaa09fe1d4f 162
+packages/agent/src/durable.ts
+  s_fe732417ee9cdb::t_bc5e6b0eb2d7c0 22,276-289,292
+.changeset/structured-details.md
+  s_fe732417ee9cdb::t_073b832b2ba72d 1-7
+docs/channels-and-signals.md
+  s_fe732417ee9cdb::t_fca7e5de4e4ba4 55,57-58,63-70,74-79,81-87,135-139
+apps/cli/src/dashboard.ts
+  s_fe732417ee9cdb::t_04ebaa09fe1d4f 88,90,92-97,115,117,121-123
+packages/core/src/config.ts
+  s_fe732417ee9cdb::t_bc5e6b0eb2d7c0 27-28,53-57
+  s_fe732417ee9cdb::t_4f52d490cd8701 23-26
+docs/use-cases.md
+  s_fe732417ee9cdb::t_fca7e5de4e4ba4 17-20
+packages/core/src/index.ts
+  s_fe732417ee9cdb::t_4f52d490cd8701 22-30
+packages/daemon/src/runtime.ts
+  s_fe732417ee9cdb::t_0672923d93ebb6 151-172,189-228,247-258
+docs/configuration.md
+  s_fe732417ee9cdb::t_073b832b2ba72d 28
+  s_fe732417ee9cdb::t_fca7e5de4e4ba4 39-43
+docs/how-it-works.md
+  s_fe732417ee9cdb::t_fca7e5de4e4ba4 29-30
+apps/cli/src/guide.ts
+  s_fe732417ee9cdb::t_073b832b2ba72d 29
+packages/local/src/local.test.ts
+  s_fe732417ee9cdb::t_44ea471a57e0a8 81-82,85-88
+packages/daemon/src/server.ts
+  s_fe732417ee9cdb::t_04ebaa09fe1d4f 210
+packages/mqtt/src/mqtt.test.ts
+  s_fe732417ee9cdb::t_eeaeaf49ba864c 6,82-86,107,124-126
+  s_fe732417ee9cdb::t_44ea471a57e0a8 87-90
+packages/core/src/events.test.ts
+  s_fe732417ee9cdb::t_1529ce84d25dd7 2,5-6,10-38,41,46-51
+packages/core/src/events.ts
+  s_fe732417ee9cdb::t_4f52d490cd8701 1-2,32-35,53-64,69-89
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "41c898a804b1d159d11c9edc3461637b2505da96",
+  "prompts": {},
+  "sessions": {
+    "s_fe732417ee9cdb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b6666194-df82-46a7-a1ef-33e06788ffe9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "TheBinaryGuy <hello@thebinary.dev>"
+    }
+  }
+}
