@@ -26,8 +26,12 @@ doing something else: CI goes red after you've left, someone asks for your revie
 you were waiting on comes out. sedge is the coding agent that's still there.
 
 - **It notices things for you.** Tell it to watch CI on `main`, your GitHub reviews and
-  mentions, a page or a feed. When something happens it wakes and can dig in before it writes,
-  so the message you get can say what broke, not just that something did.
+  mentions, a page or a feed, a webhook, a folder, a log or an MQTT sensor. When something
+  happens it wakes and can dig in before it writes, so the message you get can say what broke,
+  not just that something did.
+- **It stays quiet otherwise.** Conditions ("above 30 °C"), throttles ("at most once an hour")
+  and an optional cheap triage model keep routine events from waking it, so you hear about what
+  matters and pay for runs that need doing.
 - **You can hand it work and walk away.** Ask from your phone to fix the failing test, or say
   "check on the deploy at 6". It works in your repositories with your tools, and asks before
   running a command or an MCP tool you haven't allowed.
@@ -36,7 +40,8 @@ you were waiting on comes out. sedge is the coding agent that's still there.
 - **It doesn't drop work.** A run cut short by a crash, an update or a restart picks up where it
   stopped, and an event that arrives twice is answered once.
 - **It splits the work.** Give it agents with jobs of their own (one for CI, one for a Slack
-  workspace), each with its own conversation and memory, passing work between them.
+  workspace), each with its own conversation and memory, passing work between them. For a job
+  with many parts, an agent starts subagents that work in parallel and report back.
 - **It's yours.** It runs on your machine, with your model logins, MCP servers and skills. There
   is no sedge server, and it sends no telemetry.
 

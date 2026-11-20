@@ -29,7 +29,9 @@ Reach it from your phone: in `sedge`, say "set up telegram". It asks for the bot
 hidden field, keeps it in your keychain, and gives you a link that pairs your account.
 
 **Channels** are how you and sedge talk (Telegram, Slack). **Signals** wake it when something happens
-elsewhere, and you say what it should do then: "tell me when my CI fails". Both come as packages
+elsewhere (CI, GitHub, a page or feed, a webhook, a folder, a command's output, an MQTT topic), and
+you say what it should do then: "tell me when my CI fails". Conditions, throttles and an optional
+cheap triage model keep a noisy signal from waking it for nothing. Both come as packages
 (`sedge install telegram`), and sedge can write a signal for anything else
 ([`@sedge-hq/kit`](packages/kit)).
 

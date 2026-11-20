@@ -7,11 +7,15 @@ import { repositoryUrl, tagline } from '@/lib/shared';
 const POINTS = [
     {
         title: 'It keeps going.',
-        text: 'A daemon wakes for each event (a message, a timer, your CI failing), does the work, and sleeps again. A run a restart cuts short picks up where it stopped.',
+        text: 'A daemon wakes for each event (a message, a timer, a webhook, a sensor, your CI failing), does the work, and sleeps again. A run a restart cuts short picks up where it stopped.',
     },
     {
         title: 'It reaches you.',
         text: 'Write to it on Telegram or Slack. It answers there, and asks before anything risky with Approve and Deny buttons.',
+    },
+    {
+        title: 'It stays quiet.',
+        text: 'Conditions, throttles and a cheap triage model drop the events that need nothing, so you hear about what matters.',
     },
     {
         title: 'It remembers.',
