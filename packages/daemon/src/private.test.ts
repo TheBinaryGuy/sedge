@@ -1,13 +1,13 @@
 import { sedgePaths } from '@sedge-hq/core';
 import { mkdir, mkdtemp, realpath, symlink, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
+import { homedir, tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { privateGuard } from './private';
 
 /** A guard for a sedge home at `~/.sedge`, so `~` paths reach it. */
 const guardWithHome = (paths: ReturnType<typeof sedgePaths>) =>
-    privateGuard(sedgePaths(join(process.env.HOME ?? '/', '.sedge')), paths.workspace);
+    privateGuard(sedgePaths(join(homedir(), '.sedge')), paths.workspace);
 
 const home = async () => {
     const dir = await realpath(await mkdtemp(join(tmpdir(), 'sedge-private-')));
@@ -27,11 +27,17 @@ describe('sedge’s own files', () => {
         // The escalation the adversarial test found: editing ../config.json from the workspace.
         expect(guard.touchesPrivate(ws, { path: '../config.json' })).toBe(true);
         expect(guard.touchesPrivate(ws, { path: paths.secrets })).toBe(true);
-        expect(guard.touchesPrivate(ws, { path: '../sedge.sock' })).toBe(true);
+        // Windows has a named pipe instead of a socket file.
+        if (process.platform !== 'win32') {
+            expect(guard.touchesPrivate(ws, { path: '../sedge.sock' })).toBe(true);
+        }
         expect(guard.touchesPrivate(ws, { path: '../logs/sedge.jsonl' })).toBe(true);
-        // A link in the workspace that leads to them.
-        await symlink(paths.config, join(ws, 'innocent.json'));
-        expect(guard.touchesPrivate(ws, { path: 'innocent.json' })).toBe(true);
+        // A link in the workspace that leads to them (making one on Windows needs rights a test
+        // runner may not have).
+        if (process.platform !== 'win32') {
+            await symlink(paths.config, join(ws, 'innocent.json'));
+            expect(guard.touchesPrivate(ws, { path: 'innocent.json' })).toBe(true);
+        }
         // A `~` path, as the tools read it: the home folder, not a folder named "~".
         const tilde = guardWithHome(paths);
         expect(tilde.touchesPrivate(ws, { path: '~/.sedge/config.json' })).toBe(true);
