@@ -8,8 +8,9 @@ each message wakes sedge with its topic and payload.
 - A session kept on the broker: messages sent while sedge was stopped arrive when it's back.
 - Retained values, sent again on every subscribe, aren't reported.
 
-In `sedge`, say "tell me when the basil's soil sensor on home/basil/soil reads dry, at most every
-hour". sedge's `match`, `ignore` and `batch` settings keep a chatty sensor from waking it for every
-reading.
+Each message's details are its `topic` and `payload`, with JSON as values, so a condition can read
+a field. In `sedge`, say "tell me when the basil's soil sensor on home/basil/soil reads dry, at most
+once an hour": that's `when: payload.moisture < 30` and `throttle: 1h`, so a chatty sensor doesn't
+wake it for every reading.
 
 [Channels and signals](https://github.com/sedge-hq/sedge/blob/main/docs/channels-and-signals.md) · MIT

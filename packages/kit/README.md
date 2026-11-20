@@ -39,7 +39,9 @@ export default defineSignal({
 Plain TypeScript: `async` functions, and secrets as strings. The kit checks settings, retries
 what fails with backoff, stops cleanly and drops repeats, on [Effect](https://effect.website)
 underneath; `@sedge-hq/kit/effect` is the same kit with Effect showing. `secret(...)` settings are
-typed into a hidden field and kept in the OS keychain. The full guide is
+typed into a hidden field and kept in the OS keychain, also when optional
+(`field.optional(secret(...))`). Put a happening's data in `details` as fields: users can then
+filter your signal with a condition on them (`temperature > 30`). The full guide is
 [The kit](https://github.com/sedge-hq/sedge/blob/main/docs/kit.md), and
 [`@sedge-hq/telegram`](https://www.npmjs.com/package/@sedge-hq/telegram) is a complete channel.
 

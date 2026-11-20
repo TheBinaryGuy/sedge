@@ -41,7 +41,8 @@ cheap triage model keep a noisy signal from waking it for nothing. Both come as 
 </picture>
 
 Behind the TUI, a daemon keeps working after you close the terminal: an inbox of events, timers
-it sets itself, memory, approvals you answer from your phone, and updates. Its conversations are
+it sets itself, memory, approvals you answer from your phone, subagents that split up work, and
+updates. Optional limits cap what it spends, and an optional OS sandbox confines its commands. Its conversations are
 durable ([pi-durable](https://github.com/earendil-works/pi/tree/main/packages/durable)): a run a
 restart cuts short picks up where it stopped. The agent is [pi](https://github.com/earendil-works/pi),
 bundled; your logins are in `~/.pi/agent`.

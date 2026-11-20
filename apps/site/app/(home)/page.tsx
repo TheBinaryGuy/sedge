@@ -18,6 +18,10 @@ const POINTS = [
         text: 'Conditions, throttles and a cheap triage model drop the events that need nothing, so you hear about what matters.',
     },
     {
+        title: 'It stays within bounds.',
+        text: 'Optional limits on runs and spend, and an OS sandbox that keeps its commands away from your credentials.',
+    },
+    {
         title: 'It remembers.',
         text: 'A small memory it keeps itself, checked against what happened every night.',
     },

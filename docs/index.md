@@ -42,6 +42,9 @@ you were waiting on comes out. sedge is the coding agent that's still there.
 - **It splits the work.** Give it agents with jobs of their own (one for CI, one for a Slack
   workspace), each with its own conversation and memory, passing work between them. For a job
   with many parts, an agent starts subagents that work in parallel and report back.
+- **It stays within bounds.** Optional limits cap runs per hour, tokens and money per day, and
+  subagents at once. An optional OS sandbox keeps its commands to the folders you allow and away
+  from your credentials. See [Limits and costs](./limits.md) and [Sandbox](./sandbox.md).
 - **It's yours.** It runs on your machine, with your model logins, MCP servers and skills. There
   is no sedge server, and it sends no telemetry.
 

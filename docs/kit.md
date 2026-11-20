@@ -51,13 +51,19 @@ export default defineSignal({
 
 `check` runs now and then every `every`, and returns what it found. Each **happening** is:
 
-| Field     | What                                                                          |
-| --------- | ----------------------------------------------------------------------------- |
-| `text`    | What the agent reads. Short and plain: "CI failed on main: lint (run 812)".   |
-| `key`     | Optional. An id for this happening; one with a key sedge has seen is dropped. |
-| `details` | Optional. Anything else, as JSON, shown to the agent below the text.          |
+| Field     | What                                                                                      |
+| --------- | ----------------------------------------------------------------------------------------- |
+| `text`    | What the agent reads. Short and plain: "CI failed on main: lint (run 812)".               |
+| `key`     | Optional. An id for this happening; one with a key sedge has seen is dropped.             |
+| `details` | Optional. The data, as JSON: shown to the agent below the text, and what conditions read. |
 
 Give every happening a `key`, and `check` can simply return everything that matches.
+
+Put the data in `details` as fields, with numbers as numbers: `{ room: 'kitchen', temperature:
+31.5 }`, not a sentence. The user can then quiet your signal with a condition on them
+(`temperature > 30 and room = kitchen`), and `match`, `ignore`, `throttle`, `batch` and `triage`
+work on any signal without you writing them. See
+[Filtering, throttling and triage](./channels-and-signals.md#filtering-throttling-and-triage).
 
 For a source that pushes instead (a socket, a stream), write `watch` as an async generator and
 `yield` each happening; stop when `kit.signal` aborts:
@@ -123,7 +129,7 @@ is the reference channel, written this way.
 | Name                                                | What                                                                       |
 | --------------------------------------------------- | -------------------------------------------------------------------------- |
 | `field.text`, `.number`, `.flag`, `.list`, `.oneOf` | Settings, each with a description the user sees.                           |
-| `field.optional(field)`                             | A setting that may be left out.                                            |
+| `field.optional(field)`                             | A setting that may be left out; `field.optional(secret(…))` stays secret.  |
 | `secret(description)`                               | Typed into a hidden field, kept in the keychain, given to you as a string. |
 | `kit.fetchJson(url, init?)`                         | `fetch` that parses JSON and throws on anything but a 2xx.                 |
 | `kit.memo.get(key)`, `.set(key, value)`             | Small values kept across restarts: a cursor, the paired accounts.          |
