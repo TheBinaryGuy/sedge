@@ -24,6 +24,14 @@ bun run test
 bun run e2e:telegram   # after changing channels, signals or the daemon
 ```
 
+`bun run adversarial` attacks the security and durability guarantees: prompt injection from
+webhooks, laundering through approvals, buttons, `tell` and subagents, escalation through sedge's
+config, credential access with the sandbox off and on, and the sandbox escape through the
+daemon's socket. It runs daemons from source in throwaway homes full of decoy credentials, inside a
+Seatbelt guard that keeps your real ones out of reach (macOS), and makes real model calls through
+your logins; it fails when any check doesn't hold. Run it after changing permissions, the sandbox
+or the inbox.
+
 `e2e:telegram` starts a fake Telegram Bot API and a daemon in a throwaway home, then walks
 install, connect, pairing, a reply, an approval and disconnect, with real model calls through
 your logins. `SEDGE_BIN=dist/npm/sedge-<os>-<cpu>/bin/sedge` runs it against a compiled binary

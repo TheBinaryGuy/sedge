@@ -17,6 +17,8 @@ export {
     type Sandbox,
     type SandboxPolicy,
     type SandboxSettings,
+    canonical,
+    resolveFrom,
     sandboxedCommand,
     sandboxedEnv,
     sandboxPolicy,
@@ -40,6 +42,8 @@ export interface AgentConfig {
     readonly host: AgentHost;
     /** When set, commands run in the OS sandbox and file tools keep to its rules. */
     readonly sandbox?: Sandbox | undefined;
+    /** Files no tool may read, sandbox or not: sedge's own. `ls`, `find` and `grep` skip them. */
+    readonly offLimits?: ((path: string) => boolean) | undefined;
     /** Models and the model choice, for tests; pi's logins and default model otherwise. */
     readonly models?: () => Promise<{
         readonly models: Models;
@@ -184,6 +188,7 @@ export class Agent extends Context.Service<
                             host: config.host,
                             ...(config.sandbox ? { sandbox: config.sandbox } : {}),
                             ...(piExtensions ? { piExtensions } : {}),
+                            ...(config.offLimits ? { offLimits: config.offLimits } : {}),
                             report: (message) => console.error(`[agent] ${message}`),
                         });
                     })().catch((error: unknown) => {

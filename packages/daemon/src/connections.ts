@@ -59,6 +59,18 @@ const rememberedValue = (happening: Happening): unknown => {
     return details ?? happening.text;
 };
 
+/**
+ * The agent's buttons carry `p:` (or `u:` when a run woken by outside content made them) before
+ * their value, so a pick says where it came from, and no button the agent makes can pass for
+ * sedge's own approve and deny ones.
+ */
+export const choiceValue = (value: string, untrusted: boolean) =>
+    `${untrusted ? 'u' : 'p'}:${value}`;
+export const parseChoice = (value: string) => {
+    const match = /^([pu]):([\s\S]*)$/.exec(value);
+    return match ? { value: match[2]!, untrusted: match[1] === 'u' } : undefined;
+};
+
 /** Why `remember` can't be used, or `undefined` when it can. */
 const checkRemember = (name?: string | null) =>
     name && !STATE_NAME.test(name)
@@ -194,6 +206,17 @@ export class Connections extends Context.Service<
 
             /** Approve/deny buttons come back as picks; any other pick is news for the agent. */
             const picked = async (name: string, event: Picked) => {
+                // The agent's own buttons: what was picked, and whether the message they came on was
+                // written by a run woken by outside content (then the pick carries that along).
+                const choice = parseChoice(event.value);
+                if (choice) {
+                    return enqueue({
+                        source: name,
+                        externalId: event.key,
+                        prompt: `The user picked "${choice.value}".`,
+                        untrusted: choice.untrusted,
+                    });
+                }
                 const match = /^(approve|deny):(\w+)$/.exec(event.value);
                 if (!match) {
                     return enqueue({
@@ -212,6 +235,9 @@ export class Connections extends Context.Service<
                     prompt: approved
                         ? `The user approved request #${decided.id} (${decided.summary}). Make exactly that call again now.`
                         : `The user denied request #${decided.id} (${decided.summary}). Do not make that call; find another way or tell them what you need.`,
+                    // Answering doesn't clean what the asking run read: the run it wakes keeps the
+                    // stricter rules.
+                    untrusted: decided.untrusted,
                 });
             };
 

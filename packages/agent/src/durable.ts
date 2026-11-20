@@ -48,6 +48,8 @@ export interface DurableOptions {
     readonly sandbox?: Sandbox | undefined;
     /** The pi extensions listed for the daemon, loaded. */
     readonly piExtensions?: PiExtensions | undefined;
+    /** Files no tool may read, sandbox or not: sedge's own. `ls`, `find` and `grep` skip them. */
+    readonly offLimits?: ((path: string) => boolean) | undefined;
 }
 
 export interface Item {
@@ -113,7 +115,12 @@ export const openDurable = async (options: DurableOptions) => {
 
     const registry = createRegistry();
     registry.install(createCodingTools());
-    registry.install(searchTools(options.sandbox?.isHidden));
+    registry.install(
+        searchTools(
+            (path) =>
+                (options.offLimits?.(path) ?? false) || (options.sandbox?.isHidden(path) ?? false),
+        ),
+    );
     registry.install(sedgeExtension(options.host, runFor));
     const actions = actionsExtension(options.host, runFor);
     registry.install(actions);
@@ -135,10 +142,12 @@ export const openDurable = async (options: DurableOptions) => {
             models: options.models,
             registry,
             env: ({ cwd }) => {
+                if (!options.sandbox) {
+                    return new NodeExecutionEnv({ cwd: cwd ?? options.workspace });
+                }
+                // The sandbox takes credentials out of a command's environment as it starts it.
                 const local = new NodeExecutionEnv({ cwd: cwd ?? options.workspace });
-                return options.sandbox
-                    ? sandboxedEnv(local, options.sandbox.forRun(local.cwd))
-                    : local;
+                return sandboxedEnv(local, options.sandbox.forRun(local.cwd));
             },
             settings: { followUpMode: 'all', steeringMode: 'all', afterFailedRun: 'withdraw' },
             onReport: (report) =>

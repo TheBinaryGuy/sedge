@@ -2,7 +2,7 @@ import type { Context } from '@earendil-works/chord/context';
 import { err, ExecutionError, type ExecutionEnv, FileError } from '@earendil-works/pi-durable/env';
 import { existsSync, realpathSync, statSync } from 'node:fs';
 import { homedir, tmpdir } from 'node:os';
-import { dirname, isAbsolute, join, resolve, sep } from 'node:path';
+import { dirname, join, resolve, sep } from 'node:path';
 
 /** The sandbox as set in config.json. */
 export interface SandboxSettings {
@@ -46,6 +46,12 @@ const CACHES = ['~/.cache', '~/.npm', '~/.bun/install/cache', '~/Library/Caches'
 
 const expand = (path: string) =>
     path === '~' || path.startsWith('~/') ? join(homedir(), path.slice(1)) : path;
+
+/**
+ * A path a tool was given, as the tool reads it: `~` is the home folder, anything else relative to
+ * `cwd`. (`resolve(cwd, '~/x')` would make a folder named `~` instead.)
+ */
+export const resolveFrom = (cwd: string, path: string) => resolve(cwd, expand(path));
 
 /** An absolute path with symbolic links resolved, as far as the path exists. */
 export const canonical = (path: string): string => {
@@ -99,6 +105,17 @@ export const sandboxPolicy = (
 
 export type Sandbox = ReturnType<typeof sandboxPolicy>;
 
+/** Environment variables that hold credentials, by their names. */
+const SECRET_NAME = /TOKEN|SECRET|PASSW(OR)?D|API_?KEY|ACCESS_?KEY|PRIVATE_?KEY|CREDENTIAL|AUTH/i;
+
+/** The environment commands get in the sandbox: yours, without the variables named like credentials. */
+export const scrubbedEnv = (env: NodeJS.ProcessEnv = process.env): NodeJS.ProcessEnv =>
+    Object.fromEntries(Object.entries(env).filter(([name]) => !SECRET_NAME.test(name)));
+
+/** The variables a sandboxed command starts without: those named like credentials. */
+export const secretNames = (env: NodeJS.ProcessEnv = process.env) =>
+    Object.keys(env).filter((name) => SECRET_NAME.test(name));
+
 const quote = (path: string) => `"${path.replaceAll('\\', '\\\\').replaceAll('"', '\\"')}"`;
 
 /** macOS: a Seatbelt profile that allows everything but what the policy keeps out. */
@@ -111,6 +128,9 @@ export const seatbeltProfile = (policy: SandboxPolicy) =>
         ...(policy.hidden.length > 0
             ? [
                   `(deny file-read* ${policy.hidden.map((p) => `(subpath ${quote(p)})`).join(' ')})`,
+                  // A Unix socket is reached by connecting, not reading: sedge's own socket would let
+                  // a command ask the daemon to do what the sandbox doesn't let it do.
+                  `(deny network-outbound ${policy.hidden.map((p) => `(remote unix-socket (subpath ${quote(p)}))`).join(' ')})`,
                   `(deny file-write* ${policy.hidden.map((p) => `(subpath ${quote(p)})`).join(' ')})`,
               ]
             : []),
@@ -160,7 +180,17 @@ export const sandboxedCommand = (
         if (!existsSync('/usr/bin/sandbox-exec')) {
             return { error: 'the sandbox is on, but this Mac has no sandbox-exec' };
         }
-        return { argv: ['/usr/bin/sandbox-exec', '-p', seatbeltProfile(policy), ...argv] };
+        // The command's environment is sedge's own: `env -u` takes the credentials out of it.
+        const unset = secretNames().flatMap((name) => ['-u', name]);
+        return {
+            argv: [
+                '/usr/bin/sandbox-exec',
+                '-p',
+                seatbeltProfile(policy),
+                ...(unset.length > 0 ? ['/usr/bin/env', ...unset] : []),
+                ...argv,
+            ],
+        };
     }
     if (process.platform === 'linux') {
         const bwrap = which('bwrap');
@@ -169,7 +199,8 @@ export const sandboxedCommand = (
                 error: 'the sandbox is on, but bubblewrap is not installed (apt install bubblewrap, dnf install bubblewrap)',
             };
         }
-        return { argv: [bwrap, ...bubblewrapArgs(policy, cwd), '--', ...argv] };
+        const unset = secretNames().flatMap((name) => ['--unsetenv', name]);
+        return { argv: [bwrap, ...bubblewrapArgs(policy, cwd), ...unset, '--', ...argv] };
     }
     return { error: `the sandbox is on, but it is not available on ${process.platform}` };
 };
@@ -193,7 +224,7 @@ const WRITES = new Set(['writeFile', 'appendFile', 'truncateFile', 'remove', 'cr
  * hidden path or write outside the writable ones. Anything refused comes back as a normal error.
  */
 export const sandboxedEnv = (inner: ExecutionEnv, policy: SandboxPolicy): ExecutionEnv => {
-    const at = (path: string) => canonical(isAbsolute(path) ? path : resolve(inner.cwd, path));
+    const at = (path: string) => canonical(resolveFrom(inner.cwd, path));
     const denied = (path: string, write: boolean) => {
         const target = at(path);
         if (inside(target, policy.hidden)) return `${path} is hidden by the sandbox`;

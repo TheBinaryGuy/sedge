@@ -138,7 +138,8 @@ reading. Named values keep them, and any signal's `when` condition reads them as
   an MQTT message's `payload`, a webhook's `body`, otherwise its details or text. Its `match`,
   `ignore` and `when` still decide which events count.
 - **The daemon's agent** sets them too (`set_state`): say "I'm away till Sunday" and it can set
-  `mode = away`, and set it back when you're home. It reads them with `get_state`.
+  `mode = away`, and set it back when you're home. A run woken by outside content can't: what
+  someone else wrote doesn't get to decide what wakes the agent. It reads them with `get_state`.
 - **Conditions** read them like fields: `state.mode = away`, `state.soil < 30`. A value that isn't
   set fails the clause, as a missing field does.
 
@@ -148,8 +149,8 @@ who set each one and when. Names are letters, digits, `-` and `_`.
 ### Permissions for what signals bring
 
 A signal's events are outside content: someone else wrote them. A run they wake (and what it
-passes on: a message to another agent, a subagent, a timer) asks before writing files, running
-commands or calling MCP tools, unless you loosen `permissions.signals`. See
+passes on: a message to another agent, a subagent, a timer) asks before running commands, calling
+MCP tools or writing files outside its own folder, unless you loosen `permissions.signals`. See
 [Runs woken by outside content](./security.md#runs-woken-by-outside-content).
 
 ## Kinds

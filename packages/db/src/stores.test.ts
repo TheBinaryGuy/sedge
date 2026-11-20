@@ -17,6 +17,35 @@ const event = (thread: string, prompt: string, externalId?: string) => ({
     cwd: '/',
 });
 
+describe('Approvals', () => {
+    it.effect(
+        'remember that a run woken by outside content asked, for the run the answer wakes',
+        () =>
+            fresh(
+                Effect.gen(function* () {
+                    const approvals = yield* Approvals;
+                    const { approval } = yield* approvals.request({
+                        thread: 'main',
+                        toolName: 'write',
+                        inputHash: 'h1',
+                        summary: 'write: x',
+                        untrusted: true,
+                    });
+                    expect((yield* approvals.decide(approval.id, false))?.untrusted).toBe(true);
+                    const mine = yield* approvals.request({
+                        thread: 'main',
+                        toolName: 'bash',
+                        inputHash: 'h2',
+                        summary: 'bash: ls',
+                    });
+                    expect((yield* approvals.decide(mine.approval.id, true))?.untrusted).toBe(
+                        false,
+                    );
+                }),
+            ),
+    );
+});
+
 describe('Inbox', () => {
     it.effect('drops an event the source delivers twice', () =>
         fresh(

@@ -8,6 +8,8 @@ export interface ApprovalRequest {
     readonly toolName: string;
     readonly inputHash: string;
     readonly summary: string;
+    /** Asked by a run woken by outside content. */
+    readonly untrusted?: boolean | undefined;
 }
 
 /** Deferred tool calls: asked once, answered through the inbox, usable once when approved. */

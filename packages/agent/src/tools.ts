@@ -9,8 +9,9 @@ import {
 } from '@earendil-works/pi-durable';
 import { arr, int, obj, opt, str } from '@earendil-works/pi-schema';
 import { readdir, readFile, stat } from 'node:fs/promises';
-import { isAbsolute, join, relative, resolve } from 'node:path';
+import { join, relative } from 'node:path';
 import type { AgentHost, RunContext } from './host';
+import { resolveFrom } from './sandbox';
 
 const text = (value: string, isError = false): ToolExecutionResult => ({
     output: [{ type: 'text', text: value }],
@@ -192,7 +193,7 @@ const SKIP = new Set(['node_modules', '.git']);
 const cwdOf = (api: ToolExecutionApi) =>
     (api.env as { cwd?: string } | undefined)?.cwd ?? process.cwd();
 const under = (api: ToolExecutionApi, path?: string) =>
-    path ? (isAbsolute(path) ? path : resolve(cwdOf(api), path)) : cwdOf(api);
+    path ? resolveFrom(cwdOf(api), path) : cwdOf(api);
 
 const walk = async function* (
     dir: string,

@@ -49,5 +49,14 @@ export const migrations: Array<MigrationMeta> = [
         "folderMillis": 1795152560000,
         "hash": "fe467fbdbab2d6094211c050a8b3763af75e689f746e4c6e7b4bec6980f4a2ee",
         "name": "20261120052920_untrusted-and-labels"
+    },
+    {
+        "sql": [
+            "ALTER TABLE `approvals` ADD `untrusted` integer DEFAULT false NOT NULL;"
+        ],
+        "bps": true,
+        "folderMillis": 1795157012000,
+        "hash": "85410e9e4895181078b73c6e31263a2e19267e6aa314afe20f16c2debf120c35",
+        "name": "20261120064332_approvals-untrusted"
     }
 ];

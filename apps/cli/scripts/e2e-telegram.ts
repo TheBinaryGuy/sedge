@@ -401,7 +401,7 @@ try {
             settings: { port: deployPort },
             secrets: { token: 'deploy-secret' },
             instruction:
-                'Only failed deploys matter. For a failed one, end your turn without sending anything.',
+                'Only failed deploys matter: wake for those. Successful ones need nothing.',
             triage: true,
         }),
     );
@@ -490,7 +490,8 @@ try {
     pass('visitor: labelled person, and the agent woke');
     await withDaemon(({ client }) => client.Disconnect({ name: 'porch' }));
 
-    step('a run woken by a signal asks before writing a file');
+    step('a run woken by a signal writes in its own folder, and asks before writing elsewhere');
+    const outside = join(tmpdir(), `sedge-e2e-outside-${Date.now()}`);
     const notesPort = freePort();
     await withDaemon(({ client }) =>
         client.Connect({
@@ -498,8 +499,7 @@ try {
             kind: 'webhook',
             settings: { port: notesPort },
             secrets: { token: 'notes-secret' },
-            instruction:
-                'Use your write tool to save the body to a file named note.txt in your working directory, then end your turn.',
+            instruction: `Use your write tool twice: save the body to note.txt in your working directory, and to ${join(outside, 'note.txt')}. Then end your turn.`,
         }),
     );
     const notes = poster(notesPort, 'notes-secret');
@@ -507,15 +507,21 @@ try {
     await poll('the notes webhook to listen', async () =>
         (await notes({ note: 'remember the milk' })) === 202 ? true : undefined,
     );
-    const asked = await waitFor('an approval request for the write', () =>
+    const asked = await waitFor('an approval request for the write outside', () =>
         sentTo(mark, (m) =>
             Boolean(
-                m.text.includes('write') &&
+                m.text.includes(outside) &&
                 m.reply_markup?.inline_keyboard?.[0]?.[0]?.callback_data.startsWith('approve:'),
             ),
         ),
     );
-    pass(`asked first: ${asked.text.replaceAll('\n', ' ').slice(0, 80)}`);
+    pass(`asked first: ${asked.text.replaceAll('\n', ' ').slice(0, 90)}`);
+    await poll('the note in its own folder', async () =>
+        (await Bun.file(join(paths.workspace, 'note.txt')).exists()) ? true : undefined,
+    );
+    if (sentTo(mark, (m) => m.text.includes('Sedge wants to run') && !m.text.includes(outside)))
+        fail('it asked before writing in its own folder');
+    pass('wrote note.txt in its own folder without asking');
     await withDaemon(({ client }) => client.Disconnect({ name: 'notes' }));
 
     step('named values: a signal remembers one, another reads it, the agent sets it');

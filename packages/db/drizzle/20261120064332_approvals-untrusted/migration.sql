@@ -1,0 +1,1 @@
+ALTER TABLE `approvals` ADD `untrusted` integer DEFAULT false NOT NULL;

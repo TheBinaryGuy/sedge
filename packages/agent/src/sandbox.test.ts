@@ -5,7 +5,7 @@ import { mkdir, mkdtemp, readFile, realpath, rm, symlink, writeFile } from 'node
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, describe, expect, it } from 'vitest';
-import { bubblewrapArgs, sandboxedEnv, sandboxPolicy } from './sandbox';
+import { bubblewrapArgs, sandboxedEnv, sandboxPolicy, scrubbedEnv } from './sandbox';
 
 const made: Array<string> = [];
 afterAll(async () => {
@@ -95,6 +95,45 @@ describe.skipIf(process.platform !== 'darwin')('the sandbox, for commands on mac
         expect(peek.output).not.toContain('hunter2');
     });
 
+    it('doesn’t let a command connect to a hidden socket, like the daemon’s', async () => {
+        const { run, secret, env } = await layout();
+        const socket = join(secret, 'd.sock');
+        const server = Bun.listen({
+            unix: socket,
+            socket: {
+                data: (sock) => {
+                    sock.write('pong');
+                    sock.end();
+                },
+            },
+        });
+        await writeFile(
+            join(run, 'knock.ts'),
+            `try {
+    await Bun.connect({ unix: ${JSON.stringify(socket)}, socket: { data(_s, d) { console.log('ANSWERED ' + d); process.exit(0); }, open(s) { s.write('ping'); } } });
+    setTimeout(() => process.exit(2), 2000);
+} catch { console.log('refused'); process.exit(1); }`,
+        );
+        const knock = await sh(env, `${JSON.stringify(process.execPath)} knock.ts`);
+        server.stop(true);
+        expect(knock.output).not.toContain('ANSWERED');
+        expect(knock.output).toContain('refused');
+    });
+
+    it('starts a command without the credentials in sedge’s environment', async () => {
+        process.env.SEDGE_TEST_SECRET_TOKEN = 'DECOY-ENV';
+        try {
+            const { env } = await layout();
+            const shown = await sh(
+                env,
+                'echo "[${SEDGE_TEST_SECRET_TOKEN:-gone}] [${PATH:+path}]"',
+            );
+            expect(shown.output.trim()).toBe('[gone] [path]');
+        } finally {
+            delete process.env.SEDGE_TEST_SECRET_TOKEN;
+        }
+    });
+
     it('keeps a command off the network when network is off', async () => {
         const server = Bun.serve({
             port: 0,
@@ -129,6 +168,21 @@ describe.skipIf(process.platform !== 'linux' || !hasBwrap)(
         });
     },
 );
+
+describe('the sandbox’s environment', () => {
+    it('drops variables named like credentials, and keeps the rest', () => {
+        const env = scrubbedEnv({
+            PATH: '/usr/bin',
+            HOME: '/home/me',
+            AWS_SECRET_ACCESS_KEY: 'DECOY',
+            GITHUB_TOKEN: 'DECOY',
+            OPENAI_API_KEY: 'DECOY',
+            NPM_AUTH: 'DECOY',
+            DB_PASSWORD: 'DECOY',
+        });
+        expect(env).toEqual({ PATH: '/usr/bin', HOME: '/home/me' });
+    });
+});
 
 describe('bubblewrap arguments', () => {
     it('hides folders and files, and cuts the network only when asked', async () => {

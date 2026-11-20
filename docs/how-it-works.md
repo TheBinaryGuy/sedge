@@ -25,8 +25,8 @@ Everything that should wake the agent becomes an event in the inbox, a table in
 
 Each event has an id from its source, so one that arrives twice is stored once. The worker
 drains the inbox: a run for every conversation with work, all at once, never two for the same one. Events that
-arrive while a conversation's run is going are answered together in its next run, so three
-quick messages get one reply, not three. A signal with a `batch` window holds its events for that
+arrive while a conversation's run is going go to its next run together, where the agent reads them
+one after the other and can answer them at once. A signal with a `batch` window holds its events for that
 long, so a burst of them gets one run too, and one with `triage` on has a cheap model decide first
 whether its events need a run at all. [Limits](./limits.md), when you set them, hold
 automated events back once an agent has had its runs for the hour or the day's budget is spent.

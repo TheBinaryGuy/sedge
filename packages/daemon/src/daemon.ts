@@ -12,6 +12,7 @@ import { Connections } from './connections';
 import { DispatcherLive } from './dispatcher';
 import { makeHost } from './host';
 import { Limits } from './limits';
+import { privateGuard } from './private';
 import { sedgeSandbox } from './sandbox';
 import { State } from './state';
 import { ensureMemory } from './memory';
@@ -120,6 +121,7 @@ export const runDaemon = (
                         ...defaultAgentConfig(paths.home, workspace, host, options.loadPi),
                         sandbox: sedgeSandbox(paths, config, workspace),
                         piExtensions: config.piExtensions,
+                        offLimits: privateGuard(paths, workspace).isPrivate,
                     }),
                 ),
             ),

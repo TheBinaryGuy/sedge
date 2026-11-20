@@ -127,6 +127,8 @@ export const approvals = sqliteTable(
             .default('pending'),
         createdAt,
         decidedAt: integer('decided_at', { mode: 'number' }),
+        /** Asked by a run woken by outside content: the run its answer wakes is one too. */
+        untrusted: integer('untrusted', { mode: 'boolean' }).notNull().default(false),
     },
     (table) => [index('approvals_lookup_idx').on(table.thread, table.inputHash, table.status)],
 );
