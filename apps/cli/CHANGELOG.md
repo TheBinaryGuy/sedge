@@ -1,5 +1,16 @@
 # sedge
 
+## 0.8.0
+
+### Minor Changes
+
+- [`41c898a`](https://github.com/sedge-hq/sedge/commit/41c898a804b1d159d11c9edc3461637b2505da96) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - Signals get three more ways to decide what reaches the agent. `when` lets through only events
+  whose details meet a condition, like `temperature > 30 and room = kitchen`. `throttle` stays quiet
+  for a while after an event gets through. `triage` has a cheap model read each event with your
+  instruction first, and the agent wakes only when it should; skipped events show in the inbox with
+  the reason. `triageModel` in the config picks the model; the cheapest of your provider's is used
+  otherwise.
+
 ## 0.7.1
 
 ### Patch Changes

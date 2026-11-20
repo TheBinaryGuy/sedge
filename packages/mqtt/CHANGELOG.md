@@ -1,5 +1,12 @@
 # @sedge-hq/mqtt
 
+## 0.2.0
+
+### Minor Changes
+
+- [`41c898a`](https://github.com/sedge-hq/sedge/commit/41c898a804b1d159d11c9edc3461637b2505da96) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - `mqtt` and `webhook` events carry their data as details (`topic` and `payload`, `path` and `body`,
+  with JSON as values), so a signal's `when` condition can read a field like `payload.moisture`.
+
 ## 0.1.0
 
 ### Minor Changes
