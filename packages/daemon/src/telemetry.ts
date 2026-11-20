@@ -66,11 +66,14 @@ const MAX_FILE = 10 * 1024 * 1024;
 const KEEP_RUNS = 500;
 const KEEP_LOGS = 3000;
 
-/** Appends lines to a file, one write at a time, moving it aside past 10 MB. */
+/**
+ * Appends lines to a file, one write at a time, moving it aside past 10 MB. `flush` waits for the
+ * writes so far.
+ */
 const journal = (file: string) => {
     let chain = Promise.resolve();
     let written = 0;
-    return (line: string) => {
+    const write = (line: string) => {
         chain = chain
             .then(async () => {
                 if (written === 0 || written > 256 * 1024) {
@@ -86,6 +89,7 @@ const journal = (file: string) => {
             })
             .catch(() => undefined);
     };
+    return Object.assign(write, { flush: () => chain });
 };
 
 const tail = async <A>(file: string, keep: number): Promise<Array<A>> => {
@@ -206,8 +210,15 @@ export const openTelemetry = async (paths: SedgePaths) => {
         snapshot: Metric.snapshot,
     });
 
+    // What's still being written lands before the daemon stops.
+    const flush = Layer.effectDiscard(
+        Effect.addFinalizer(() =>
+            Effect.promise(() => Promise.all([writeRun.flush(), writeLog.flush()])),
+        ),
+    );
     return Layer.mergeAll(
         Layer.succeed(Telemetry, service),
         Logger.layer([Logger.defaultLogger, logger]),
+        flush,
     );
 };

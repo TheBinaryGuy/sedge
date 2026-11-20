@@ -86,21 +86,26 @@ describe('webhook', () => {
 });
 
 describe('files', () => {
-    it('learns the folder first, then tells you what was created, changed and removed', async () => {
+    it('learns the folder first, then tells you what changed, also while it was stopped', async () => {
         const dir = await mkdtemp(join(tmpdir(), 'sedge-files-'));
         await writeFile(join(dir, 'keep.csv'), 'a');
         await writeFile(join(dir, 'old.csv'), 'a');
         await writeFile(join(dir, 'notes.txt'), 'a');
         const { host, happened, statuses } = fakeHost();
-        const running = files.start({ path: dir, pattern: '*.csv', seconds: 0.05 }, host);
+        const settings = { path: dir, pattern: '*.csv', seconds: 0.05 };
+        const first = files.start(settings, host);
         await until(() => statuses.length > 0);
+        await first.stop();
+        expect(happened).toEqual([]);
 
+        // Changed while sedge was stopped: the next look finds all of it at once.
         await writeFile(join(dir, 'keep.csv'), 'ab');
         await writeFile(join(dir, 'new.csv'), 'a');
         await writeFile(join(dir, 'notes.txt'), 'changed, but not a csv');
         await rm(join(dir, 'old.csv'));
+        const second = files.start(settings, host);
         await until(() => happened.length > 0);
-        await running.stop();
+        await second.stop();
 
         expect(happened).toHaveLength(1);
         expect(happened[0]?.text).toBe(

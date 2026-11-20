@@ -34,7 +34,6 @@ describe('telemetry, kept on this machine', () => {
         // Effect's metrics, in memory: runs by thread and outcome.
         expect(counted).toMatchObject({ 'agent:ci:ok': 1, 'agent:ci:failed': 1 });
         await first.dispose();
-        await Bun.sleep(50);
         expect(
             (await readFile(join(paths.logs, 'runs.jsonl'), 'utf8')).trim().split('\n'),
         ).toHaveLength(2);
