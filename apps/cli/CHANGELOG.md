@@ -1,5 +1,22 @@
 # sedge
 
+## 0.15.0
+
+### Minor Changes
+
+- [`d071a83`](https://github.com/sedge-hq/sedge/commit/d071a83d0ca52c4013fa7ccfe3b8e86b6964e9ef) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - Choose the model the daemon's runs use: for the daemon as a whole (`model`), per agent
+  (`agents.<name>.model`) and per channel or signal (`connections.<name>.model`), each with an
+  optional thinking level (`anthropic/claude-opus-5-5:medium`). Send `/model` on a channel to pick
+  one with buttons, or `/model opus medium`; in the TUI, ask and the agent uses the new `models` and
+  `set_model` tools. Changes apply from the next run, without a restart.
+
+### Patch Changes
+
+- [`d071a83`](https://github.com/sedge-hq/sedge/commit/d071a83d0ca52c4013fa7ccfe3b8e86b6964e9ef) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - The daemon's log no longer shows routine news as errors: a paired account, MCP servers that
+  connected and the pi extensions it loaded are info, and only failures are errors. A task you hand
+  the daemon from the terminal (`tell_agent`, `/sedge tell`, `/sedge bg`) can message you on your
+  channel when you ask it to, instead of refusing because you started it in the terminal.
+
 ## 0.14.0
 
 ### Minor Changes
