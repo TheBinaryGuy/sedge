@@ -1,6 +1,6 @@
 {
     "name": "@sedge-hq/sedge",
-    "version": "0.10.0",
+    "version": "0.10.1",
     "description": "An always-on, event-driven agent that lives on your machine, built on pi.",
     "license": "MIT",
     "repository": {
