@@ -20,6 +20,12 @@ const Connection = Schema.Struct({
     match: Schema.optional(Schema.String),
     /** For a signal: no events whose text matches this regular expression (any case). */
     ignore: Schema.optional(Schema.String),
+    /** For a signal: only events that meet this condition, like `temperature > 30 and room = kitchen`. */
+    when: Schema.optional(Schema.String),
+    /** For a signal: after an event gets through, drop the next ones for this long (`1h`). */
+    throttle: Schema.optional(Schema.String),
+    /** For a signal: a cheap model reads each event first, and only wakes the agent when it should. */
+    triage: Schema.optional(Schema.Boolean),
     /** For a signal: hold events this long (`30s`, `5m`) after the first, then hand them over together. */
     batch: Schema.optional(Schema.String),
 });
@@ -44,6 +50,11 @@ export const SedgeConfig = Schema.Struct({
      * channels and signals given to it, and talks to the others through the inbox.
      */
     agents: Schema.optional(Schema.Record(Schema.String, AgentEntry)),
+    /**
+     * The model that triages signals with `triage` on, as `provider/model`. The cheapest model of
+     * the provider you use when unset.
+     */
+    triageModel: Schema.optional(Schema.String),
     /** Nightly dreaming, when the agent reviews its conversations and tidies its memory. On by default. */
     dreaming: Schema.optional(Schema.Boolean),
     /**

@@ -148,12 +148,28 @@ export class Runtime extends Context.Service<
                         });
                     }
 
-                    // "typing…" on the user's channel while the run lasts.
-                    const typing = yield* Effect.forkChild(
-                        connections
-                            .working(first.thread)
-                            .pipe(Effect.repeat(Schedule.spaced('4 seconds'))),
-                    );
+                    // Events only from signals with triage on: one cheap model call decides
+                    // whether they need the agent. When it can't tell, or fails, the agent wakes.
+                    const skipped = (yield* connections.triaged(batch.map((item) => item.source)))
+                        ? yield* agent
+                              .triage(
+                                  batch.map((item) => item.prompt),
+                                  config.triageModel,
+                              )
+                              .pipe(
+                                  Effect.map((verdict) =>
+                                      verdict.wake
+                                          ? undefined
+                                          : `Skipped by triage${verdict.model ? ` (${verdict.model})` : ''}: ${verdict.reason}`,
+                                  ),
+                                  Effect.catch((error: AgentRunError) =>
+                                      Effect.logWarning(
+                                          `Triage failed, so the agent wakes: ${error.message}`,
+                                      ).pipe(Effect.as(undefined)),
+                                  ),
+                              )
+                        : undefined;
+
                     // Each tool call's timing, for the run's record.
                     const startedAt = Date.now();
                     const open = new Map<string, number>();
@@ -170,30 +186,46 @@ export class Runtime extends Context.Service<
                             });
                         }
                     };
-                    const outcome = yield* agent
-                        .run(
-                            {
-                                thread: first.thread,
-                                sources: [...new Set(batch.map((item) => item.source))],
-                                cwd: last.cwd,
-                                subagent: sub !== undefined,
-                                items: batch.map((item) => ({
-                                    id: item.id,
-                                    text: formatItem(item),
-                                })),
-                            },
-                            (event) => {
-                                timeTools(event);
-                                return publish({ _tag: 'Event', itemIds, event });
-                            },
-                        )
-                        .pipe(
-                            Effect.ensuring(Fiber.interrupt(typing)),
-                            Effect.map((text) => ({ ok: true as const, text })),
-                            Effect.catch((error: AgentRunError) =>
-                                Effect.succeed({ ok: false as const, text: error.message }),
-                            ),
-                        );
+                    const outcome =
+                        skipped !== undefined
+                            ? { ok: true as const, text: skipped }
+                            : yield* Effect.gen(function* () {
+                                  // "typing…" on the user's channel while the run lasts.
+                                  const typing = yield* Effect.forkChild(
+                                      connections
+                                          .working(first.thread)
+                                          .pipe(Effect.repeat(Schedule.spaced('4 seconds'))),
+                                  );
+                                  return yield* agent
+                                      .run(
+                                          {
+                                              thread: first.thread,
+                                              sources: [
+                                                  ...new Set(batch.map((item) => item.source)),
+                                              ],
+                                              cwd: last.cwd,
+                                              subagent: sub !== undefined,
+                                              items: batch.map((item) => ({
+                                                  id: item.id,
+                                                  text: formatItem(item),
+                                              })),
+                                          },
+                                          (event) => {
+                                              timeTools(event);
+                                              return publish({ _tag: 'Event', itemIds, event });
+                                          },
+                                      )
+                                      .pipe(
+                                          Effect.ensuring(Fiber.interrupt(typing)),
+                                          Effect.map((text) => ({ ok: true as const, text })),
+                                          Effect.catch((error: AgentRunError) =>
+                                              Effect.succeed({
+                                                  ok: false as const,
+                                                  text: error.message,
+                                              }),
+                                          ),
+                                      );
+                              });
 
                     // A subagent's answer goes to the agent that started it, before the run counts as
                     // done: a crash in between runs it again, and the inbox drops the second report.
@@ -212,17 +244,18 @@ export class Runtime extends Context.Service<
                         itemIds,
                         outcome.ok ? { result: outcome.text } : { error: outcome.text },
                     );
-                    yield* telemetry.recordRun({
-                        id: first.id,
-                        thread: first.thread,
-                        sources: [...new Set(batch.map((item) => item.source))],
-                        events: batch.length,
-                        startedAt,
-                        finishedAt: Date.now(),
-                        ok: outcome.ok,
-                        ...(outcome.ok ? {} : { error: outcome.text }),
-                        tools,
-                    });
+                    if (skipped === undefined)
+                        yield* telemetry.recordRun({
+                            id: first.id,
+                            thread: first.thread,
+                            sources: [...new Set(batch.map((item) => item.source))],
+                            events: batch.length,
+                            startedAt,
+                            finishedAt: Date.now(),
+                            ok: outcome.ok,
+                            ...(outcome.ok ? {} : { error: outcome.text }),
+                            tools,
+                        });
                     if (outcome.ok) {
                         for (const itemId of itemIds) {
                             yield* publish({

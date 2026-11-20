@@ -24,10 +24,12 @@ export const authorized = (request: Request, url: URL, body: string, token: stri
     return same(signature, expected);
 };
 
-const readable = (body: string, type: string | null) => {
-    if (!type?.includes('json')) return body;
+/** The body as data: JSON as its value, so conditions can read its fields; text otherwise. */
+const bodyOf = (body: string, type: string | null): unknown => {
+    if (body.length > KEEP) return clip(body, KEEP);
+    if (!type?.includes('json') && !/^\s*[[{]/.test(body)) return body;
     try {
-        return JSON.stringify(JSON.parse(body), null, 2);
+        return JSON.parse(body) as unknown;
     } catch {
         return body;
     }
@@ -66,7 +68,12 @@ export default defineSignal({
                 const id = DELIVERY_IDS.map((name) => request.headers.get(name)).find(Boolean);
                 const event = request.headers.get('x-github-event');
                 received.push({
-                    text: `POST ${url.pathname}${event ? ` (${event})` : ''}\n${clip(readable(body, request.headers.get('content-type')), KEEP)}`,
+                    text: `POST ${url.pathname}${event ? ` (${event})` : ''}`,
+                    details: {
+                        path: url.pathname,
+                        ...(event ? { event } : {}),
+                        body: bodyOf(body, request.headers.get('content-type')),
+                    },
                     ...(id ? { key: id } : {}),
                 });
                 return new Response('Accepted.\n', { status: 202 });

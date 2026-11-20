@@ -1,4 +1,5 @@
-import { Agent, type RunInput } from '@sedge-hq/agent';
+import { Agent, type RunInput, type Triage } from '@sedge-hq/agent';
+import { AgentRunError } from '@sedge-hq/protocol';
 import { sedgePaths } from '@sedge-hq/core';
 import { Inbox, type InboxItem, StoresLive } from '@sedge-hq/db';
 import { Effect, Layer, ManagedRuntime } from 'effect';
@@ -12,8 +13,14 @@ import { Settings } from './settings';
 import { openTelemetry } from './telemetry';
 import { subagentThread } from './threads';
 
-/** The runtime over real stores, with `answer` standing in for the model. */
-const setup = async (answer: (input: RunInput) => Promise<string>) => {
+/** The runtime over real stores, with `answer` and `triage` standing in for the model. */
+const setup = async (
+    answer: (input: RunInput) => Promise<string>,
+    triage?: {
+        sources: ReadonlySet<string>;
+        decide: (events: ReadonlyArray<string>) => Promise<Triage>;
+    },
+) => {
     const paths = sedgePaths(await mkdtemp(join(tmpdir(), 'sedge-runtime-')));
     const deps = Layer.mergeAll(
         StoresLive(':memory:'),
@@ -21,9 +28,25 @@ const setup = async (answer: (input: RunInput) => Promise<string>) => {
         Settings.layer(paths, { dreaming: false }),
         await openTelemetry(paths),
         Layer.succeed(Agent)(
-            Agent.of({ run: (input) => Effect.promise(() => answer(input)), abort: Effect.void }),
+            Agent.of({
+                run: (input) => Effect.promise(() => answer(input)),
+                triage: (events) =>
+                    Effect.tryPromise({
+                        try: () => triage!.decide(events),
+                        catch: (cause) => new AgentRunError({ message: String(cause) }),
+                    }),
+                abort: Effect.void,
+            }),
         ),
-        Layer.succeed(Connections)(Connections.of({ working: () => Effect.void } as never)),
+        Layer.succeed(Connections)(
+            Connections.of({
+                working: () => Effect.void,
+                triaged: (sources: ReadonlyArray<string>) =>
+                    Effect.succeed(
+                        triage !== undefined && sources.every((s) => triage.sources.has(s)),
+                    ),
+            } as never),
+        ),
     );
     const runtime = ManagedRuntime.make(Runtime.layer.pipe(Layer.provideMerge(deps)));
     const enqueue = (thread: string, prompt: string, source = 'telegram') =>
@@ -94,5 +117,61 @@ describe('the inbox worker', () => {
         const report = items.find((item) => item.thread === 'agent:ci');
         expect(report?.source).toBe('subagent:ab12cd34');
         expect(report?.prompt).toBe('Subagent ab12cd34 answered:\n\nFound 3 flaky tests.');
+    }, 20_000);
+
+    it('lets triage skip a signal’s events without waking the agent, and says why', async () => {
+        const ran: Array<string> = [];
+        const asked: Array<ReadonlyArray<string>> = [];
+        const { runtime, enqueue, settled } = await setup(
+            async (input) => {
+                ran.push(input.items.map((item) => item.text).join(' | '));
+                return 'Watered the basil.';
+            },
+            {
+                sources: new Set(['soil']),
+                decide: async (events) => {
+                    asked.push(events);
+                    return events.some((e) => e.includes('12%'))
+                        ? { wake: true, reason: 'dry', model: 'cheap/one' }
+                        : { wake: false, reason: 'moisture is fine', model: 'cheap/one' };
+                },
+            },
+        );
+        await enqueue('main', 'soil at 48%', 'soil');
+        let items = await settled(1);
+        expect(ran).toEqual([]);
+        expect(items[0]?.result).toBe('Skipped by triage (cheap/one): moisture is fine');
+
+        await enqueue('main', 'soil at 12%', 'soil');
+        items = await settled(2);
+        await runtime.dispose();
+        expect(ran).toHaveLength(1);
+        expect(ran[0]).toContain('soil at 12%');
+        expect(items.find((i) => i.prompt === 'soil at 12%')?.result).toBe('Watered the basil.');
+        expect(asked).toEqual([['soil at 48%'], ['soil at 12%']]);
+    }, 20_000);
+
+    it('wakes the agent when triage fails, and never triages a message from you', async () => {
+        const ran: Array<string> = [];
+        const { runtime, enqueue, settled } = await setup(
+            async (input) => {
+                ran.push(input.items.map((item) => item.text).join(' | '));
+                return 'ok';
+            },
+            {
+                sources: new Set(['soil']),
+                decide: async () => {
+                    throw new Error('no model');
+                },
+            },
+        );
+        await enqueue('main', 'soil at 48%', 'soil');
+        await settled(1);
+        await enqueue('agent:other', 'hello', 'telegram');
+        await settled(2);
+        await runtime.dispose();
+        expect(ran).toHaveLength(2);
+        expect(ran[0]).toContain('soil at 48%');
+        expect(ran[1]).toContain('hello');
     }, 20_000);
 });

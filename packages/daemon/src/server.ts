@@ -207,6 +207,7 @@ const HandlersLive = SedgeRpcs.toLayer(
                                     createdAt: item.createdAt,
                                     finishedAt: item.finishedAt ?? null,
                                     error: item.error ?? null,
+                                    result: item.result ?? null,
                                 }),
                         ),
                     ),

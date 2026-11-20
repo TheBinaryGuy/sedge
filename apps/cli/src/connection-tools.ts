@@ -35,7 +35,10 @@ const describeConnection = (connection: ConnectionInfo) =>
         ...(connection.instruction ? [`    when it fires: ${connection.instruction}`] : []),
         ...(connection.match ? [`    only events matching: ${connection.match}`] : []),
         ...(connection.ignore ? [`    ignoring events matching: ${connection.ignore}`] : []),
+        ...(connection.when ? [`    only when: ${connection.when}`] : []),
+        ...(connection.throttle ? [`    at most one event per: ${connection.throttle}`] : []),
         ...(connection.batch ? [`    batched: ${connection.batch}`] : []),
+        ...(connection.triage ? ['    triaged by a cheap model first'] : []),
     ].join('\n');
 
 const EVENT_OPTIONS = {
@@ -51,18 +54,46 @@ const EVENT_OPTIONS = {
                 'For a signal: drop events whose text matches this regular expression (any case).',
         }),
     ),
+    when: Type.Optional(
+        Type.String({
+            description:
+                'For a signal: only events that meet this condition on their details, like "temperature > 30 and room = kitchen" or "payload.moisture < 30". Fields are paths into the event\'s details (see what it reports); operators =, !=, >, >=, <, <=, contains; and/or. `text` is the event\'s text.',
+        }),
+    ),
+    throttle: Type.Optional(
+        Type.String({
+            description:
+                'For a signal that repeats (an alarm, a sensor over a limit): after an event gets through, drop the next ones for this long (10m, 1h).',
+        }),
+    ),
     batch: Type.Optional(
         Type.String({
             description:
                 'For a signal that fires often: hold events this long after the first (30s, 5m, 1h) and hand them to the agent together, in one run.',
         }),
     ),
+    triage: Type.Optional(
+        Type.Boolean({
+            description:
+                'For a signal whose events mostly need nothing: a cheap model reads each event (or batch) with the instruction first, and the agent wakes only when it should. Costs a little per event, far less than a run.',
+        }),
+    ),
 };
 
-const describeOptions = (options: { match?: string; ignore?: string; batch?: string }) => [
+const describeOptions = (options: {
+    match?: string;
+    ignore?: string;
+    when?: string;
+    throttle?: string;
+    batch?: string;
+    triage?: boolean;
+}) => [
     ...(options.match ? [`· only events matching: ${options.match}`] : []),
     ...(options.ignore ? [`· ignoring events matching: ${options.ignore}`] : []),
+    ...(options.when ? [`· only when: ${options.when}`] : []),
+    ...(options.throttle ? [`· at most one event per: ${options.throttle}`] : []),
     ...(options.batch ? [`· batched: ${options.batch}`] : []),
+    ...(options.triage ? ['· triaged by a cheap model first'] : []),
 ];
 
 /** The nearest package.json above `dir` that declares sedge channels or signals, if any. */
@@ -161,7 +192,7 @@ export const registerConnectionTools = (pi: ExtensionAPI, withDaemon: WithDaemon
         name: 'connect',
         label: 'Connect',
         description:
-            "Connect a channel or signal of an installed kind. Pass its settings except secrets: the user is asked for each secret in a hidden field. For a signal, `instruction` says what to do when it fires, in the user's words; `match` and `ignore` filter its events before they wake the agent, and `batch` gathers a noisy one's events into one run. The user confirms first. A channel returns an invite link that pairs the user's account.",
+            "Connect a channel or signal of an installed kind. Pass its settings except secrets: the user is asked for each secret in a hidden field. For a signal, `instruction` says what to do when it fires, in the user's words; `match`, `ignore` and `when` filter its events before they wake the agent, `throttle` quiets a repeating one, `batch` gathers a noisy one's events into one run, and `triage` has a cheap model decide which events need the agent. The user confirms first. A channel returns an invite link that pairs the user's account.",
         promptSnippet: 'Connect a channel (Telegram …) or a signal (CI, a feed …)',
         promptGuidelines: [
             'Never ask the user to paste a token or password into the chat: connect asks for secrets in a hidden field.',
@@ -235,6 +266,9 @@ export const registerConnectionTools = (pi: ExtensionAPI, withDaemon: WithDaemon
                         ...(params.match ? { match: params.match } : {}),
                         ...(params.ignore ? { ignore: params.ignore } : {}),
                         ...(params.batch ? { batch: params.batch } : {}),
+                        ...(params.when ? { when: params.when } : {}),
+                        ...(params.throttle ? { throttle: params.throttle } : {}),
+                        ...(params.triage ? { triage: true } : {}),
                     })
                     .pipe(Effect.result),
             );
@@ -270,7 +304,7 @@ export const registerConnectionTools = (pi: ExtensionAPI, withDaemon: WithDaemon
         name: 'update_signal',
         label: 'Update signal',
         description:
-            'Change what a connected signal does when it fires: its `instruction`, the `match` and `ignore` filters, or the `batch` window. Leave out what stays; pass an empty string to clear one. The user confirms first.',
+            'Change what a connected signal does when it fires: its `instruction`, the `match`, `ignore` and `when` filters, the `throttle` and `batch` windows, or `triage`. Leave out what stays; pass an empty string (or `triage: false`) to clear one. The user confirms first.',
         parameters: Type.Object({
             name: Type.String(),
             instruction: Type.Optional(Type.String()),
@@ -279,7 +313,7 @@ export const registerConnectionTools = (pi: ExtensionAPI, withDaemon: WithDaemon
         execute: async (_id, params, _signal, _update, ctx) => {
             const { name, ...changes } = params;
             const shown = Object.entries(changes).map(([key, value]) =>
-                value ? `· ${key}: ${value}` : `· ${key}: (cleared)`,
+                value ? `· ${key}: ${String(value)}` : `· ${key}: (cleared)`,
             );
             if (shown.length === 0) return text('Nothing to change.');
             const ok = await ctx.ui.confirm(`Change the signal "${name}"?`, shown.join('\n'));
@@ -288,9 +322,10 @@ export const registerConnectionTools = (pi: ExtensionAPI, withDaemon: WithDaemon
                 client
                     .UpdateSignal({
                         name,
-                        ...Object.fromEntries(
+                        ...(Object.fromEntries(
                             Object.entries(changes).map(([key, value]) => [key, value || null]),
-                        ),
+                        ) as Record<string, string | null>),
+                        ...(changes.triage === undefined ? {} : { triage: changes.triage }),
                     })
                     .pipe(Effect.result),
             );

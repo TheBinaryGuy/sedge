@@ -26,7 +26,8 @@ Each event has an id from its source, so one that arrives twice is stored once. 
 drains the inbox: a run for every conversation with work, all at once, never two for the same one. Events that
 arrive while a conversation's run is going are answered together in its next run, so three
 quick messages get one reply, not three. A signal with a `batch` window holds its events for that
-long, so a burst of them gets one run too.
+long, so a burst of them gets one run too, and one with `triage` on has a cheap model decide first
+whether its events need a run at all.
 
 ## The run
 

@@ -25,6 +25,7 @@ reads it at start; after editing it, restart: `sedge stop && sedge start`.
 | Setting             | What it does                                                                        | Default              |
 | ------------------- | ----------------------------------------------------------------------------------- | -------------------- |
 | `workspace`         | Where unwatched runs work (files they create land here).                            | `~/.sedge/workspace` |
+| `triageModel`       | The model that triages signals with `triage` on, as `provider/model`.               | cheapest of yours    |
 | `dreaming`          | The nightly memory review. `false` turns it off. See [Memory](./memory.md).         | on                   |
 | `permissions.bash`  | Shell commands in unwatched runs: `allow`, `ask` or `deny`.                         | `ask`                |
 | `permissions.write` | File writes and edits in unwatched runs.                                            | `allow`              |
@@ -35,9 +36,11 @@ reads it at start; after editing it, restart: `sedge stop && sedge start`.
 Each connection has a `kind`, its `settings` (never secrets), `secrets` (the names of the
 settings kept in the keychain), an optional `instruction` for a signal, an optional `agent` that
 handles it (default `main`), and `enabled: false` to pause it. A signal can also have `match` and
-`ignore` (regular expressions an event's text must or must not match) and `batch` (how long to
-hold its events and hand them over together, like `5m`); see
-[Filtering and batching](./channels-and-signals.md#filtering-and-batching).
+`ignore` (regular expressions an event's text must or must not match), `when` (a condition on its
+details, like `temperature > 30`), `throttle` (how long to stay quiet after an event, like `1h`),
+`batch` (how long to hold its events and hand them over together, like `5m`) and `triage: true`
+(a cheap model decides which events need the agent); see
+[Filtering, throttling and triage](./channels-and-signals.md#filtering-throttling-and-triage).
 
 ## Files
 

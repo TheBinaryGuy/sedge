@@ -78,10 +78,14 @@ describe('webhook', () => {
 
         expect([wrong.status, right.status, signed.status]).toEqual([401, 202, 202]);
         expect(happened[0]).toEqual({
-            text: 'POST /deploy\n{\n  "service": "api",\n  "status": "deployed"\n}',
+            text: 'POST /deploy',
+            details: { path: '/deploy', body: { service: 'api', status: 'deployed' } },
             key: 'r1',
         });
-        expect(happened[1]?.text).toBe('POST /github (push)\npayload');
+        expect(happened[1]).toEqual({
+            text: 'POST /github (push)',
+            details: { path: '/github', event: 'push', body: 'payload' },
+        });
     });
 });
 

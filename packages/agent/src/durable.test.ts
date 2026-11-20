@@ -359,4 +359,28 @@ describe('the durable agent', () => {
         expect(sub).toContain('bash');
         expect(sub).toContain('read');
     }, 30_000);
+
+    it('triages events with one cheap call, and wakes the agent when the answer is unclear', async () => {
+        const { faux, open } = await setup();
+        const seen: Array<string> = [];
+        faux.setResponses([
+            (context) => {
+                seen.push(JSON.stringify(context));
+                return fauxAssistantMessage('SKIP: the soil is still moist');
+            },
+            fauxAssistantMessage('I think the user would want to know.'),
+        ]);
+        const runtime = open();
+        const [skip, unclear] = await runtime.runPromise(
+            Effect.gen(function* () {
+                const agent = yield* Agent;
+                return [yield* agent.triage(['soil at 48%']), yield* agent.triage(['soil at 12%'])];
+            }),
+        );
+        await runtime.dispose();
+        expect(skip).toMatchObject({ wake: false, reason: 'the soil is still moist' });
+        expect(unclear?.wake).toBe(true);
+        expect(seen[0]).toContain('soil at 48%');
+        expect(seen[0]).toContain('WAKE or SKIP');
+    }, 30_000);
 });

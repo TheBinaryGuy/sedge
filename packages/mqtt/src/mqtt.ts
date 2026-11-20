@@ -7,8 +7,11 @@ const KEEP = 20_000;
 const clip = (text: string) =>
     text.length > KEEP ? `${text.slice(0, KEEP)}\n… (${text.length - KEEP} more characters)` : text;
 
-/** A payload as the agent reads it: JSON laid out, text as it is, binary only by its size. */
-export const readable = (payload: Uint8Array): string => {
+/**
+ * A payload as data: JSON as its value (so `payload.moisture < 30` and `payload > 30` work), text
+ * as it is, binary only by its size. Anything very long is cut, as text.
+ */
+export const decode = (payload: Uint8Array): unknown => {
     let text: string;
     try {
         text = new TextDecoder('utf-8', { fatal: true }).decode(payload);
@@ -16,21 +19,19 @@ export const readable = (payload: Uint8Array): string => {
         return `(${payload.length} bytes of binary)`;
     }
     if (text.includes('\u0000')) return `(${payload.length} bytes of binary)`;
+    if (text.length > KEEP) return clip(text);
     try {
-        const value: unknown = JSON.parse(text);
-        if (typeof value === 'object' && value !== null)
-            return clip(JSON.stringify(value, null, 2));
+        return JSON.parse(text) as unknown;
     } catch {
-        // Not JSON: plain text.
+        return text;
     }
-    return clip(text);
 };
 
-/** One event per message: the topic, then what was sent. */
-export const happening = (topic: string, payload: Uint8Array): Happening => {
-    const body = readable(payload);
-    return { text: body.includes('\n') ? `${topic}\n${body}` : `${topic}: ${body}` };
-};
+/** One event per message, with its topic and payload as details the agent and conditions read. */
+export const happening = (topic: string, payload: Uint8Array): Happening => ({
+    text: `Message on ${topic}`,
+    details: { topic, payload: decode(payload) },
+});
 
 /** A sensor, a home hub, a device: anything that publishes to an MQTT broker. */
 export default defineSignal({

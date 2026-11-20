@@ -85,11 +85,16 @@ const loadRows = async (
     level?: LogLevel,
 ): Promise<Array<Row>> => {
     const status = (text: string) =>
-        text === 'failed'
+        text.startsWith('failed')
             ? paint.error(text)
-            : text === 'pending' || text === 'running'
+            : text.startsWith('pending') || text.startsWith('running')
               ? paint.warning(text)
-              : paint.success(text);
+              : text.startsWith('skipped')
+                ? paint.muted(text)
+                : paint.success(text);
+    /** A triage skip shows as `skipped`; anything else by its status. */
+    const itemStatus = (item: { status: string; result?: string | null | undefined }) =>
+        item.result?.startsWith('Skipped by triage') ? 'skipped' : item.status;
     const filter = agent ?? null;
     const mine = agents.filter((a) => !agent || a.name === agent);
 
@@ -107,12 +112,15 @@ const loadRows = async (
     if (tab === 'inbox') {
         const items = await withDaemon(({ client }) => client.Inbox({ agent: filter, limit: 200 }));
         return items.map((item) => ({
-            line: `${paint.dim(when(item.createdAt))}  ${paint.bold(owner(item.thread).padEnd(10))} ${status(item.status.padEnd(7))} ${paint.muted(item.source.padEnd(10))} ${oneLine(item.prompt)}`,
+            line: `${paint.dim(when(item.createdAt))}  ${paint.bold(owner(item.thread).padEnd(10))} ${status(itemStatus(item).padEnd(7))} ${paint.muted(item.source.padEnd(10))} ${oneLine(item.prompt)}`,
             detail: [
-                `${paint.dim('from')} ${item.source} ${paint.dim('to')} ${owner(item.thread)} ${paint.dim('·')} ${status(item.status)}${item.finishedAt ? paint.dim(` · done ${when(item.finishedAt)}`) : ''}`,
+                `${paint.dim('from')} ${item.source} ${paint.dim('to')} ${owner(item.thread)} ${paint.dim('·')} ${status(itemStatus(item))}${item.finishedAt ? paint.dim(` · done ${when(item.finishedAt)}`) : ''}`,
                 '',
                 item.prompt,
                 ...(item.error ? ['', paint.error(item.error)] : []),
+                ...(item.result?.startsWith('Skipped by triage')
+                    ? ['', paint.muted(item.result)]
+                    : []),
             ],
         }));
     }

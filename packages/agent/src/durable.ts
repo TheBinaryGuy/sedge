@@ -19,6 +19,7 @@ import type { AgentHost, RunContext } from './host';
 import { type McpServerState, openMcp } from './mcp';
 import { recallExtension } from './recall';
 import { actionsExtension, searchTools, sedgeExtension, skillsExtension } from './tools';
+import { type Triage, triage, triageModel } from './triage';
 
 export interface ModelChoice {
     readonly provider: string;
@@ -272,8 +273,23 @@ export const openDurable = async (options: DurableOptions) => {
         }
     };
 
+    /** One cheap call: do these events need the agent? Without a model, they do. */
+    const triageEvents = async (
+        events: ReadonlyArray<string>,
+        override?: string,
+    ): Promise<Triage> => {
+        const model = await triageModel(
+            options.models,
+            await options.model(options.workspace),
+            override,
+        );
+        if (!model) return { wake: true, reason: 'no model to triage with' };
+        return triage(options.models, model, events);
+    };
+
     return {
         run,
+        triage: triageEvents,
         abort: async () => {
             await Promise.all([...active.values()].map((conversation) => conversation.abort(ctx)));
         },

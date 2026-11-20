@@ -52,21 +52,39 @@ A signal reports what happened as data, never as instructions: text inside a CI 
 gave when connecting it ("tell me if it's my commit", "retry once, then tell me"). Signals report
 into the `main` conversation, so a follow-up question on Telegram has the context.
 
-### Filtering and batching
+### Filtering, throttling and triage
 
-A signal can fire more than you care about. Three settings on any signal decide what reaches the
-agent, so a noisy one doesn't start a model run for each event:
+A signal can fire more than you care about. These settings on any signal decide what reaches the
+agent, so a noisy one doesn't start a model run for each event. They apply in this order:
 
 - **`match`**: only events whose text matches this regular expression (any case), like
   `fail|error`.
 - **`ignore`**: drop events that match this one, like `dependabot`.
+- **`when`**: only events whose details meet a condition, written the way you'd say it:
+  `temperature > 30 and room = kitchen`, `payload.moisture < 30`, `status != ok or retries >= 3`.
+  A field is a path into what the signal reports (the `mqtt` signal reports `topic` and `payload`,
+  `webhook` reports `path` and `body`); `text` is the event's text. Operators are `=`, `!=`, `>`,
+  `>=`, `<`, `<=` and `contains`; `and` binds tighter than `or`. A number sent as text still
+  compares as a number, and an event without the field doesn't get through.
+- **`throttle`**: after an event gets through, drop the next ones for this long (`10m`, `1h`): one
+  message about the alarm, not one a minute. The time is kept, so a restart doesn't cut it short.
 - **`batch`**: hold events this long after the first (`30s`, `5m`, `1h`) and hand them over
   together, in one run. Held events are kept in the inbox, so a restart doesn't lose them, and
   anything else that wakes the same agent first takes them along.
+- **`triage`**: before the events wake the agent, a cheap model reads them with your instruction
+  and decides whether they need it. When it says no, the agent sleeps on and the inbox shows why
+  ("Skipped by triage: the soil is still moist"). It costs one small call per event (or batch), far
+  less than a run. It uses the cheapest model of the provider you're logged in with, or the one
+  you name in [`triageModel`](./configuration.md). When it isn't sure, or can't run, the agent
+  wakes, so nothing is missed. Events that come with a message from you are never triaged.
 
-Say it when connecting ("only tell me about failures on main, at most every 10 minutes"), or
-change it later ("stop telling me about dependabot"): the TUI's agent sets these with `connect`
-and `update_signal`, and you confirm.
+The rules (`match`, `ignore`, `when`) cost nothing and are exact; triage understands what you meant
+("only if it's my commit") at a small price. Use the rules when you can say it as one, and triage
+when you can't.
+
+Say it when connecting ("tell me if the kitchen goes above 30, at most once an hour"), or change it
+later ("stop telling me about dependabot"): the TUI's agent sets these with `connect` and
+`update_signal`, and you confirm.
 
 ## Kinds
 
@@ -114,10 +132,11 @@ wildcards (`home/+/soil`, `sensors/#`), and each message is an event: its topic,
 sent, with JSON laid out. The broker can be `mqtt://`, `mqtts://` (TLS) or `wss://` (WebSocket);
 a password goes to the keychain like any secret.
 
-It keeps a session on the broker, so messages sent while sedge was stopped arrive when it's back.
-A topic's retained value, which brokers send again on every subscribe, isn't reported. Sensors
-publish often, so a `match` and a `batch` window are usually worth setting: "tell me when the
-basil's soil is dry, at most every hour".
+Each message's details are its `topic` and `payload`, with JSON as values, so a condition can
+read a field: `payload.moisture < 30`. It keeps a session on the broker, so messages sent while
+sedge was stopped arrive when it's back. A topic's retained value, which brokers send again on
+every subscribe, isn't reported. Sensors publish often, so a `when` and a `throttle` are usually
+worth setting: "tell me when the basil's soil is dry, at most once an hour".
 
 ## Slack
 

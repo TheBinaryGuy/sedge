@@ -5,8 +5,8 @@
  * path a user takes: install the Telegram package, connect the channel (the token must land in the
  * keychain, not the config), check a stranger gets no answer, pair through the invite link, message
  * the agent and get an answer in the chat (with "typing…" meanwhile), approve a shell command from
- * the chat's buttons, have main start a subagent and get its answer back, filter and batch a
- * webhook signal's events, and disconnect (the token leaves the keychain). The agent steps call the model
+ * the chat's buttons, have main start a subagent and get its answer back, filter, batch,
+ * condition, throttle and triage webhook signals' events, and disconnect (the token leaves the keychain). The agent steps call the model
  * through your logins. Exits non-zero on the first failure.
  *
  * SEDGE_BIN=dist/npm/sedge-<os>-<cpu>/bin/sedge runs the same walk against a compiled binary.
@@ -336,6 +336,97 @@ try {
     if (held < 3000) fail(`the batch was handed over after ${held} ms, before its 3s window`);
     pass(`2 of 3 posts got through, handled together after ${held} ms`);
     await withDaemon(({ client }) => client.Disconnect({ name: 'hook' }));
+
+    step('a condition and a throttle: only readings over the limit, and only the first');
+    const alarmPort = (() => {
+        const p = Bun.serve({ port: 0, fetch: () => new Response() });
+        const n = p.port!;
+        void p.stop(true);
+        return n;
+    })();
+    await withDaemon(({ client }) =>
+        client.Connect({
+            name: 'alarm',
+            kind: 'webhook',
+            settings: { port: alarmPort },
+            secrets: { token: 'alarm-secret' },
+            instruction: 'Nothing to do: end your turn without sending anything.',
+            when: 'body.temperature > 30',
+            throttle: '1h',
+        }),
+    );
+    const reading = (temperature: number) =>
+        fetch(`http://127.0.0.1:${alarmPort}/`, {
+            method: 'POST',
+            headers: { authorization: 'Bearer alarm-secret', 'content-type': 'application/json' },
+            body: JSON.stringify({ temperature }),
+        }).then(
+            (response) => response.status,
+            () => 0,
+        );
+    await poll('the alarm webhook to listen', async () =>
+        (await reading(21)) === 202 ? true : undefined,
+    );
+    await reading(34);
+    await reading(36);
+    await Bun.sleep(1500);
+    const alarms = (
+        await withDaemon(({ client }) => client.Inbox({ agent: 'main', limit: 50 }))
+    ).filter((item) => item.source === 'alarm');
+    if (alarms.length !== 1 || !alarms[0]!.prompt.includes('"temperature": 34'))
+        fail(`expected only the 34° reading, got: ${alarms.map((a) => a.prompt).join(' | ')}`);
+    pass('21° was below the limit and 36° came inside the throttle window: one event');
+    await withDaemon(({ client }) => client.Disconnect({ name: 'alarm' }));
+
+    step('triage: a cheap model skips what the instruction says needs nothing');
+    const deployPort = (() => {
+        const p = Bun.serve({ port: 0, fetch: () => new Response() });
+        const n = p.port!;
+        void p.stop(true);
+        return n;
+    })();
+    await withDaemon(({ client }) =>
+        client.Connect({
+            name: 'deploys',
+            kind: 'webhook',
+            settings: { port: deployPort },
+            secrets: { token: 'deploy-secret' },
+            instruction:
+                'Only failed deploys matter. For a failed one, end your turn without sending anything.',
+            triage: true,
+        }),
+    );
+    const deploy = (status: string) =>
+        fetch(`http://127.0.0.1:${deployPort}/`, {
+            method: 'POST',
+            headers: { authorization: 'Bearer deploy-secret', 'content-type': 'application/json' },
+            body: JSON.stringify({ service: 'api', status }),
+        }).then(
+            (response) => response.status,
+            () => 0,
+        );
+    await poll('the deploy webhook to listen', async () =>
+        (await deploy('succeeded')) === 202 ? true : undefined,
+    );
+    const finished = (n: number) =>
+        poll(`${n} deploy event(s) handled`, async () => {
+            const items = (
+                await withDaemon(({ client }) => client.Inbox({ agent: 'main', limit: 50 }))
+            ).filter((item) => item.source === 'deploys');
+            return items.length >= n && items.every((item) => item.finishedAt !== null)
+                ? items
+                : undefined;
+        });
+    const [succeeded] = await finished(1);
+    if (!succeeded?.result?.startsWith('Skipped by triage'))
+        fail(`the successful deploy woke the agent: ${succeeded?.result}`);
+    pass(succeeded?.result ?? '');
+    await deploy('failed');
+    const [failedDeploy] = await finished(2);
+    if (failedDeploy?.result?.startsWith('Skipped by triage'))
+        fail(`triage skipped the failed deploy: ${failedDeploy.result}`);
+    pass('the failed deploy woke the agent');
+    await withDaemon(({ client }) => client.Disconnect({ name: 'deploys' }));
 
     step('uninstall waits until nothing of the package is connected');
     const early = sedge('uninstall', 'telegram');

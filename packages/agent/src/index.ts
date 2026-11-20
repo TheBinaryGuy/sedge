@@ -6,9 +6,11 @@ import { Context, Effect, Layer, Semaphore } from 'effect';
 import { join } from 'node:path';
 import type { Durable, Item, ModelChoice } from './durable';
 import type { AgentHost, RunContext } from './host';
+import type { Triage } from './triage';
 
 export type { AgentHost, Outgoing, RunContext, TimerSpec, ToolDecision } from './host';
 export type { Item, ModelChoice } from './durable';
+export type { Triage } from './triage';
 
 type Pi = typeof PiModule;
 
@@ -110,6 +112,14 @@ export class Agent extends Context.Service<
             input: RunInput,
             onEvent: (event: AgentEvent) => Effect.Effect<void>,
         ) => Effect.Effect<string, AgentRunError>;
+        /**
+         * One cheap model call on events a signal brought: do they need the agent? `model` is
+         * `provider/model`; the cheapest of your provider's models otherwise.
+         */
+        readonly triage: (
+            events: ReadonlyArray<string>,
+            model?: string,
+        ) => Effect.Effect<Triage, AgentRunError>;
         readonly abort: Effect.Effect<void>;
     }
 >()('sedge/agent/Agent') {
@@ -191,7 +201,13 @@ export class Agent extends Context.Service<
                     await durable?.abort();
                 });
 
-                return Agent.of({ run, abort });
+                const triage = (events: ReadonlyArray<string>, model?: string) =>
+                    Effect.tryPromise({
+                        try: async () => (await open()).triage(events, model),
+                        catch: (cause) => new AgentRunError({ message: describe(cause) }),
+                    });
+
+                return Agent.of({ run, triage, abort });
             }),
         );
 }

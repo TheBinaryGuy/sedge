@@ -159,7 +159,7 @@ export const registerAgentTools = (pi: ExtensionAPI, withDaemon: WithDaemon) => 
                 items
                     .map(
                         (item) =>
-                            `- ${when(item.createdAt)} · ${owner(item.thread)} · from ${item.source} · ${item.status}${item.error ? ` (${item.error.slice(0, 200)})` : ''}\n  ${item.prompt.replaceAll('\n', ' ').slice(0, 300)}`,
+                            `- ${when(item.createdAt)} · ${owner(item.thread)} · from ${item.source} · ${item.result?.startsWith('Skipped by triage') ? `skipped (${item.result.slice(0, 200)})` : item.status}${item.error ? ` (${item.error.slice(0, 200)})` : ''}\n  ${item.prompt.replaceAll('\n', ' ').slice(0, 300)}`,
                     )
                     .join('\n') || 'No events.',
             );

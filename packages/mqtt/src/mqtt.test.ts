@@ -3,7 +3,7 @@ import { Aedes } from 'aedes';
 import mqtt from 'mqtt';
 import { createServer, type AddressInfo } from 'node:net';
 import { afterEach, describe, expect, it } from 'vitest';
-import signal, { readable } from './mqtt';
+import signal, { decode } from './mqtt';
 
 const fakeHost = () => {
     const memo = new Map<string, string>();
@@ -79,9 +79,15 @@ describe('mqtt', () => {
         await until('two messages', () => happened.length === 2);
         await Bun.sleep(100);
 
-        expect(happened.map((h) => h.text)).toEqual([
-            'home/basil/soil\n{\n  "moisture": 12,\n  "unit": "%"\n}',
-            'home/fern/soil: dry',
+        expect(happened).toEqual([
+            {
+                text: 'Message on home/basil/soil',
+                details: { topic: 'home/basil/soil', payload: { moisture: 12, unit: '%' } },
+            },
+            {
+                text: 'Message on home/fern/soil',
+                details: { topic: 'home/fern/soil', payload: 'dry' },
+            },
         ]);
     });
 
@@ -98,7 +104,7 @@ describe('mqtt', () => {
         const second = signal.start(settings, host);
         closers.push(() => second.stop());
         await until('the message sent while stopped', () => happened.length === 1);
-        expect(happened[0]?.text).toBe('sensors/door: opened');
+        expect(happened[0]?.details).toEqual({ topic: 'sensors/door', payload: 'opened' });
     });
 
     it('says so when the broker turns it away', async () => {
@@ -115,7 +121,8 @@ describe('mqtt', () => {
         expect(happened).toEqual([]);
     });
 
-    it('describes binary payloads instead of printing them', () => {
-        expect(readable(new Uint8Array([0xff, 0xfe, 0x00, 0x01]))).toBe('(4 bytes of binary)');
+    it('reads a number as a number, and describes binary instead of printing it', () => {
+        expect(decode(new TextEncoder().encode('31.5'))).toBe(31.5);
+        expect(decode(new Uint8Array([0xff, 0xfe, 0x00, 0x01]))).toBe('(4 bytes of binary)');
     });
 });
