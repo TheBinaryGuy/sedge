@@ -1,5 +1,13 @@
 # sedge
 
+## 0.15.1
+
+### Patch Changes
+
+- [`4f4bcd9`](https://github.com/sedge-hq/sedge/commit/4f4bcd96027a83b53b016905c0d7bb054693247c) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - `sedge` starts on Windows again: the binary no longer mistakes itself for a source checkout and
+  looks for pi's package.json (`Cannot find module '@earendil-works/pi-coding-agent/package.json'`).
+  Starting the daemon and `sedge update` on Windows had the same mistake.
+
 ## 0.15.0
 
 ### Minor Changes
