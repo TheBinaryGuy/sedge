@@ -1,5 +1,12 @@
 # @sedge-hq/slack
 
+## 0.1.2
+
+### Patch Changes
+
+- Updated dependencies [[`ddceba7`](https://github.com/sedge-hq/sedge/commit/ddceba756e262824740f5827d20e84fceb62ecf4)]:
+  - @sedge-hq/kit@0.3.3
+
 ## 0.1.1
 
 ### Patch Changes
