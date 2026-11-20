@@ -1,0 +1,31 @@
+apps/cli/package.json
+  s_fe732417ee9cdb::t_724cbf4b033e6d 4
+packages/core/src/about.ts
+  s_fe732417ee9cdb::t_724cbf4b033e6d 7
+apps/cli/src/commands.ts
+  s_fe732417ee9cdb::t_724cbf4b033e6d 38
+README.md
+  s_fe732417ee9cdb::t_724cbf4b033e6d 5
+apps/site/lib/shared.ts
+  s_fe732417ee9cdb::t_724cbf4b033e6d 9
+docs/index.md
+  s_fe732417ee9cdb::t_724cbf4b033e6d 3,7
+docs/how-it-works.md
+  s_fe732417ee9cdb::t_724cbf4b033e6d 9-10
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "41305e4c384317c53c7639d9557fa4c207ecb34c",
+  "prompts": {},
+  "sessions": {
+    "s_fe732417ee9cdb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b6666194-df82-46a7-a1ef-33e06788ffe9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "TheBinaryGuy <hello@thebinary.dev>"
+    }
+  }
+}
