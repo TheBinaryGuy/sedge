@@ -9,13 +9,13 @@ description: Commands for the terminal and the TUI, and the tools the agents use
 | --------------------------- | ------------------------------------------------------------------------------------------ |
 | `sedge [message]`           | Open the TUI; starts the daemon in the background if needed.                               |
 | `sedge -p "<prompt>"`       | Print one reply and exit.                                                                  |
-| `sedge dash [tab] [agent]`  | The dashboard, full screen: agents, inbox, outbox, timers, memory ([Agents](./agents.md)). |
+| `sedge dash [tab] [agent]`  | The dashboard, full screen: agents, inbox, runs, outbox, timers, memory, logs.             |
 | `sedge start`               | Start the daemon. `--service` also starts it at login.                                     |
-| `sedge stop`                | Stop the daemon after its current run, and remove the login service.                       |
+| `sedge stop`                | Stop the daemon now, and remove the login service; a run cut short resumes at next start.  |
 | `sedge update`              | Update now. `--check` only says whether there's a new version.                             |
-| `sedge install <package>`   | Install channels and signals: `telegram`, an npm name, or a folder.                        |
+| `sedge install <package>`   | Install channels and signals: an official name (`telegram`, …), an npm name, or a folder.  |
 | `sedge uninstall <package>` | Remove a package you installed. Disconnect what uses it first.                             |
-| `sedge uninstall`           | Remove sedge from this machine; asks first. `--keep-data` keeps `~/.sedge`.                |
+| `sedge uninstall`           | Remove sedge; asks first (`--yes` doesn't). `--keep-data` keeps your data, not the binary. |
 | `sedge pi <command>`        | pi's own commands: `install`, `remove`, `list`, `config`, `mcp`, …                         |
 | `sedge --version`, `--help` |                                                                                            |
 
@@ -31,7 +31,7 @@ The TUI and `-p` also take the agent's options (`--model`, `--continue`, `--resu
 | `/sedge status`              | The daemon's version and what it's doing.                                                 |
 | `/sedge bg <task>`           | Hand a task to the daemon; a note appears when it's done.                                 |
 | `/sedge tell <agent> <task>` | The same, for one agent.                                                                  |
-| `/sedge stop`                | Stop the daemon after its current run.                                                    |
+| `/sedge stop`                | Stop the daemon now; a run cut short resumes at the next start.                           |
 
 All of pi's commands work too (`/login`, `/model`, `/mcp`, …).
 
@@ -72,3 +72,6 @@ Ask in your own words; these are what it uses.
 | `tool_search`                   | Find tools of MCP servers.                                     |
 | `read`, `write`, `edit`, `bash` | Files and the shell (see [Security](./security.md)).           |
 | `ls`, `find`, `grep`            | Look around without the shell.                                 |
+
+On Windows the shell tool is `powershell` instead of `bash`. A [subagent](./agents.md#subagents)
+has all of these except `send_message`, `tell`, `subagent` and the timer tools.

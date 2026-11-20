@@ -23,6 +23,7 @@ import { Runtime, WorkerWake } from './runtime';
 import { Agents } from './agents';
 import { Connections } from './connections';
 import { metrics, Telemetry } from './telemetry';
+import { Limits } from './limits';
 import { threadOf } from './threads';
 import { Updater } from './updater';
 
@@ -54,6 +55,7 @@ const HandlersLive = SedgeRpcs.toLayer(
         const agents = yield* Agents;
         const outbox = yield* Outbox;
         const telemetry = yield* Telemetry;
+        const limits = yield* Limits;
 
         return SedgeRpcs.of({
             Hello: () => Effect.succeed(control.info),
@@ -267,8 +269,8 @@ const HandlersLive = SedgeRpcs.toLayer(
                     .logs({ level: level ?? undefined, limit })
                     .pipe(Effect.map((logs) => logs.map((record) => new LogEntry(record)))),
             Stats: () =>
-                telemetry.snapshot.pipe(
-                    Effect.map((snapshot) => {
+                Effect.all([telemetry.snapshot, limits.today, limits.current]).pipe(
+                    Effect.map(([snapshot, today, set]) => {
                         const find = (metric: { readonly id: string }) =>
                             snapshot.find((s) => s.id === metric.id);
                         const counts = (metric: { readonly id: string }) => {
@@ -296,6 +298,11 @@ const HandlersLive = SedgeRpcs.toLayer(
                             tools: counts(metrics.tools),
                             events: counts(metrics.events),
                             deliveries: counts(metrics.deliveries),
+                            today: {
+                                ...today,
+                                dailyTokens: set.dailyTokens ?? null,
+                                dailyCost: set.dailyCost ?? null,
+                            },
                         });
                     }),
                 ),

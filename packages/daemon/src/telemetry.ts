@@ -200,7 +200,13 @@ export const openTelemetry = async (paths: SedgePaths) => {
         runs: ({ thread, limit }) =>
             Effect.sync(() =>
                 runs
-                    .filter((run) => thread === undefined || run.thread === thread)
+                    // A thread's own runs, and its subagents'.
+                    .filter(
+                        (run) =>
+                            thread === undefined ||
+                            run.thread === thread ||
+                            run.thread.startsWith(`${thread}#sub:`),
+                    )
                     .slice(-limit)
                     .reverse(),
             ),

@@ -24,7 +24,8 @@ libsecret on Linux, Windows Credential Manager); the config file only names them
 no keychain, an owner-only file in `~/.sedge` stands in.
 
 The tools it uses, if you want to ask for them by name: `channels`, `signals`,
-`find_packages`, `install`, `uninstall`, `connect`, `disconnect`, `invite`, `create_signal`. See [Commands](./commands.md).
+`find_packages`, `install`, `uninstall`, `connect`, `update_signal`, `disconnect`, `invite`,
+`create_signal`. See [Commands](./commands.md).
 
 ## Pairing a channel
 
@@ -50,33 +51,39 @@ Answers go to the channel and chat you last wrote from.
 A signal reports what happened as data, never as instructions: text inside a CI log that says
 "ignore your instructions" stays text. sedge reads the event together with the instruction you
 gave when connecting it ("tell me if it's my commit", "retry once, then tell me"). Signals report
-into the `main` conversation, so a follow-up question on Telegram has the context.
+into the `main` conversation, so a follow-up question on Telegram has the context, unless you gave
+the signal to another [agent](./agents.md).
 
 ### Filtering, throttling and triage
 
 A signal can fire more than you care about. These settings on any signal decide what reaches the
 agent, so a noisy one doesn't start a model run for each event. They apply in this order:
 
-- **`match`**: only events whose text matches this regular expression (any case), like
+- **`match`**: only events whose text or details match this regular expression (any case), like
   `fail|error`.
-- **`ignore`**: drop events that match this one, like `dependabot`.
+- **`ignore`**: drop events whose text or details match this one, like `dependabot`.
 - **`when`**: only events whose details meet a condition, written the way you'd say it:
   `temperature > 30 and room = kitchen`, `payload.moisture < 30`, `status != ok or retries >= 3`.
-  A field is a path into what the signal reports (the `mqtt` signal reports `topic` and `payload`,
-  `webhook` reports `path` and `body`); `text` is the event's text. Operators are `=`, `!=`, `>`,
+  A field is a path into the details the signal reports (see [Kinds](#kinds)); `text` is the
+  event's text. Operators are `=`, `!=`, `>`,
   `>=`, `<`, `<=` and `contains`; `and` binds tighter than `or`. A number sent as text still
   compares as a number, and an event without the field doesn't get through.
 - **`throttle`**: after an event gets through, drop the next ones for this long (`10m`, `1h`): one
   message about the alarm, not one a minute. The time is kept, so a restart doesn't cut it short.
+  A signal that checks on a schedule and keeps reporting the same thing (a CI failure still
+  failing) reports it again once the window is over, so it's held back rather than lost.
 - **`batch`**: hold events this long after the first (`30s`, `5m`, `1h`) and hand them over
   together, in one run. Held events are kept in the inbox, so a restart doesn't lose them, and
   anything else that wakes the same agent first takes them along.
 - **`triage`**: before the events wake the agent, a cheap model reads them with your instruction
-  and decides whether they need it. When it says no, the agent sleeps on and the inbox shows why
-  ("Skipped by triage: the soil is still moist"). It costs one small call per event (or batch), far
-  less than a run. It uses the cheapest model of the provider you're logged in with, or the one
-  you name in [`triageModel`](./configuration.md). When it isn't sure, or can't run, the agent
-  wakes, so nothing is missed. Events that come with a message from you are never triaged.
+  and decides whether they need it. When it says no, the agent sleeps on and the inbox shows the
+  events as skipped, with why ("Skipped by triage (openai/gpt-5-mini): the soil is still moist").
+  It costs one small call per event (or batch), far less than a run. It uses the cheapest priced
+  model of your default model's provider (or one named like a small model, or your default), or
+  the one you name in [`triageModel`](./configuration.md). When it isn't sure, or can't run, the
+  agent wakes, so nothing is missed. Triage only decides for a run made entirely of events from
+  signals with `triage` on; when anything else wakes the same agent (your message, a timer, another
+  signal), they're handled together, untriaged.
 
 The rules (`match`, `ignore`, `when`) cost nothing and are exact; triage understands what you meant
 ("only if it's my commit") at a small price. Use the rules when you can say it as one, and triage
@@ -101,8 +108,22 @@ later ("stop telling me about dependabot"): the TUI's agent sets these with `con
 | `command`   | signal  | [`@sedge-hq/local`](https://github.com/sedge-hq/sedge/blob/main/packages/local): what a shell command prints                   |
 | `mqtt`      | signal  | [`@sedge-hq/mqtt`](https://github.com/sedge-hq/sedge/blob/main/packages/mqtt): messages on MQTT topics                         |
 
-Install a package with `sedge install <name>` (a short name means `@sedge-hq/<name>`), a full npm
-name, or the path of a package folder. A folder is packed the way it would be published, along
+What each signal reports as details, for `when` conditions:
+
+| Kind        | Details                                                             |
+| ----------- | ------------------------------------------------------------------- |
+| `github-ci` | `url`, `by` (who pushed)                                            |
+| `github`    | `url`; `pullRequest` (true or false) for assignments                |
+| `web-page`  | `url`, `removed` (lines that went away)                             |
+| `feed`      | `url`                                                               |
+| `webhook`   | `path`, `event` (GitHub's event header, when sent), `body`          |
+| `mqtt`      | `topic`, `payload`                                                  |
+| `files`     | none: use `text`, which lists what was created, changed and removed |
+| `command`   | none: use `text`, the lines it printed                              |
+
+Install a package with `sedge install <name>`: an official short name (`telegram`, `slack`,
+`github`, `web`, `local`, `mqtt`) means `@sedge-hq/<name>`; anything else is an npm name as written,
+or the path of a package folder. A folder is packed the way it would be published, along
 with the workspace packages it depends on, so you can try a package before it's on npm.
 
 To remove one, disconnect what uses it, then `sedge uninstall <name>`.
@@ -114,14 +135,14 @@ To remove one, disconnect what uses it, then `sedge uninstall <name>`.
 - **`webhook`** listens on `http://127.0.0.1:4747` (change `port` and `host`), and each POST is an
   event. Senders give the token you chose, as `Authorization: Bearer <token>`, as `?token=<token>`,
   or as a GitHub webhook secret. A delivery id header (`X-GitHub-Delivery`, `X-Request-Id`,
-  `Idempotency-Key`) drops a retried delivery. It only listens on this machine unless you set
-  `host`; to receive from outside, put a tunnel in front of it.
-- **`files`** looks at a folder (or one file) every 10 seconds and reports what was created,
-  changed or removed, optionally only files matching a `pattern` like `**/*.csv`.
+  `Idempotency-Key`, `Webhook-Id`) drops a retried delivery. It only listens on this machine unless
+  you set `host`; to receive from outside, put a tunnel in front of it.
+- **`files`** looks at a folder (or one file) every `seconds` (default 10) and reports what was
+  created, changed or removed, optionally only files matching a `pattern` like `**/*.csv`.
 - **`command`** runs a shell command. A long-running one (`tail -n0 -f app.log`,
   `mosquitto_sub -t sensors/#`) reports each burst of lines it prints, and is started again if
   it exits. With `minutes`, it runs on a schedule instead and reports when its output changes
-  (`df -h /`, `systemctl is-active api`). Anything a command can read becomes a signal this way:
+  (`df -h /`, `systemctl is-active api`). It runs in your home folder unless you set `cwd`. Anything a command can read becomes a signal this way:
   sensors, queues, MQTT topics, a service's status.
 
 ## MQTT
@@ -133,8 +154,8 @@ sent, with JSON laid out. The broker can be `mqtt://`, `mqtts://` (TLS) or `wss:
 a password goes to the keychain like any secret.
 
 Each message's details are its `topic` and `payload`, with JSON as values, so a condition can
-read a field: `payload.moisture < 30`. It keeps a session on the broker, so messages sent while
-sedge was stopped arrive when it's back. A topic's retained value, which brokers send again on
+read a field: `payload.moisture < 30`. It keeps a session on the broker, so messages sent at QoS 1
+or 2 while sedge was stopped arrive when it's back (brokers don't keep QoS 0 messages). A topic's retained value, which brokers send again on
 every subscribe, isn't reported. Sensors publish often, so a `when` and a `throttle` are usually
 worth setting: "tell me when the basil's soil is dry, at most once an hour".
 

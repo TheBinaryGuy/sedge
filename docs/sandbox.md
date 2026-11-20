@@ -29,11 +29,15 @@ so a change never applies to a run halfway through.
 
 - **Writing**: in the folder the run works in, sedge's workspace and memory, temp, the package
   caches (`~/.cache`, `~/.npm`, `~/.bun/install/cache`, `~/Library/Caches`), and the folders in
-  `writable`. Anywhere else, a command fails with "Operation not permitted".
+  `writable`. Anywhere else, a command fails ("Operation not permitted" on macOS, "Read-only file
+  system" on Linux).
 - **Reading**: everything, except what's hidden.
 - **Hidden**: `~/.ssh`, `~/.aws`, `~/.azure`, `~/.gnupg`, `~/.kube`, `~/.docker`, `~/.netrc`,
-  `~/.config/gh`, `~/.config/gcloud`, your pi logins (`~/.pi/agent/auth.json`),
-  `~/Library/Keychains`, sedge's config and secrets, and what you list in `hidden`. A hidden path
+  `~/.npmrc`, `~/.git-credentials`, `~/.config/git/credentials`, `~/.config/gh`,
+  `~/.config/gcloud`, your pi logins and MCP sign-ins (`~/.pi/agent/auth.json`, `mcp-auth.json`,
+  or `SEDGE_AGENT_DIR`'s), `~/Library/Keychains`, sedge's config and secrets, and what you list in
+  `hidden`. Anything else holding a credential (a `.env` file, another tool's login) isn't hidden
+  unless you list it. A hidden path
   can't be read or listed, a link that leads into one is hidden too, and `send_message` won't
   attach one.
 - **Network**: open unless `network` is `false`. Then commands can't connect anywhere, this machine
@@ -67,3 +71,8 @@ all** while it's on. They fail and say why, rather than running unconfined.
 
 The agent sees the refusal like any failed command and says what it couldn't do. If it should have
 been allowed, add the folder to `writable`, or turn `network` back on, and restart the daemon.
+
+Tools that need a hidden login fail inside it: `gh` (its login is in `~/.config/gh`), `git push`
+over SSH, `npm publish`. That's the trade: the agent can't use your credentials, so it can't leak
+them either. On Linux, a `writable` or `hidden` path that doesn't exist when the daemon starts is
+left out until the next start.

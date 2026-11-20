@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, inArray, notInArray, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, like, notInArray, or, sql } from 'drizzle-orm';
 import { Context, Effect, Layer } from 'effect';
 import { Database } from './database';
 import { inbox, type InboxItem } from './schema';
@@ -46,7 +46,7 @@ export class Inbox extends Context.Service<
         ) => Effect.Effect<ReadonlyArray<InboxItem>>;
         /** Threads with an event waiting or being worked on. */
         readonly activeThreads: Effect.Effect<ReadonlyArray<string>>;
-        /** The latest events, newest first; one thread's, or all. */
+        /** The latest events, newest first; one thread's (with its subagents'), or all. */
         readonly list: (options: {
             readonly thread?: string | undefined;
             readonly limit: number;
@@ -172,7 +172,13 @@ export class Inbox extends Context.Service<
                     .select()
                     .from(inbox)
                     .where(
-                        options.thread === undefined ? undefined : eq(inbox.thread, options.thread),
+                        // A thread's own events, and its subagents'.
+                        options.thread === undefined
+                            ? undefined
+                            : or(
+                                  eq(inbox.thread, options.thread),
+                                  like(inbox.thread, `${options.thread}#sub:%`),
+                              ),
                     )
                     .orderBy(desc(inbox.createdAt), sql`rowid desc`)
                     .limit(options.limit)

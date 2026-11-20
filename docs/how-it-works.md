@@ -20,7 +20,8 @@ Everything that should wake the agent becomes an event in the inbox, a table in
 - a [signal](./channels-and-signals.md) firing (CI failed);
 - a timer coming due;
 - your answer to an approval;
-- a task from the terminal (`/sedge bg <task>` in the TUI).
+- a message from another [agent](./agents.md) (`tell`), a subagent's task, or a subagent's answer;
+- a task from the terminal (`/sedge bg <task>`, `/sedge tell <agent> <task>`, or `tell_agent`).
 
 Each event has an id from its source, so one that arrives twice is stored once. The worker
 drains the inbox: a run for every conversation with work, all at once, never two for the same one. Events that

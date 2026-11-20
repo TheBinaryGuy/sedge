@@ -50,7 +50,7 @@ interface CompletionDetails {
 
 const COLLAPSED_LINES = 6;
 
-const HELP = `/sedge                         the dashboard: agents, inbox, outbox, timers, memory
+const HELP = `/sedge                         the dashboard: agents, inbox, runs, outbox, timers, memory, logs
 /sedge <tab> [agent]           open it on a tab, or on one agent's share
 /sedge status                  the daemon's version and what it's doing
 /sedge bg <task>               hand a task to the daemon; a note appears when it's done
@@ -189,7 +189,8 @@ export const sedgeExtension = (paths: SedgePaths): InlineExtension => ({
         });
 
         pi.registerCommand('sedge', {
-            description: 'The daemon: its agents, inbox, outbox, timers and memory; bg, tell, stop',
+            description:
+                'The daemon: its agents, inbox, runs, outbox, timers, memory and logs; bg, tell, stop',
             getArgumentCompletions: (prefix) =>
                 [...TABS, 'status', 'bg', 'tell', 'stop']
                     .filter((value) => value.startsWith(prefix))

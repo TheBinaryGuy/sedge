@@ -5,7 +5,8 @@ topics on your broker (Mosquitto, Home Assistant's, EMQX, HiveMQ), with `+` and 
 each message wakes sedge with its topic and payload.
 
 - `mqtt://`, `mqtts://` (TLS) and `wss://` (WebSocket) brokers; a password goes to your keychain.
-- A session kept on the broker: messages sent while sedge was stopped arrive when it's back.
+- A session kept on the broker: messages sent at QoS 1 or 2 while sedge was stopped arrive when
+  it's back (QoS 0 messages aren't kept by brokers).
 - Retained values, sent again on every subscribe, aren't reported.
 
 Each message's details are its `topic` and `payload`, with JSON as values, so a condition can read

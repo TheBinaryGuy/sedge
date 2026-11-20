@@ -1,6 +1,6 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 660" width="1200" height="660" role="img" aria-labelledby="title desc">
     <title id="title">How sedge works</title>
-    <desc id="desc">Channels, signals, timers and the terminal put events into the inbox. It starts a run on pi-durable, which works with memory, skills, MCP servers, tools and approvals. What the run sends leaves through the outbox to you on your channel, and your reply comes back as an event.</desc>
+    <desc id="desc">Channels, signals, timers, the terminal and other agents put events into the inbox, which drops repeats, batches, triages and keeps to your limits. It starts runs on pi-durable, many at once, which work with memory, skills, MCP servers, tools (optionally sandboxed), approvals and subagents. What a run sends leaves through the outbox to you on your channel, and your reply comes back as an event.</desc>
     <style>
     text { font-family: Geist, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
     .head { font-size: 14px; font-weight: 600; }
@@ -20,7 +20,8 @@
 <path d="M64 171L44 171" fill="none" stroke="#8b949e" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0 7" stroke-opacity="0.6"/>
 <path d="M64 233L44 233" fill="none" stroke="#8b949e" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0 7" stroke-opacity="0.6"/>
 <path d="M64 295L44 295" fill="none" stroke="#8b949e" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0 7" stroke-opacity="0.6"/>
-<path d="M64 489L44 489" fill="none" stroke="#8b949e" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0 7" stroke-opacity="0.6"/>
+<path d="M64 477L44 477" fill="none" stroke="#8b949e" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0 7" stroke-opacity="0.6"/>
+<path d="M64 537L44 537" fill="none" stroke="#8b949e" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0 7" stroke-opacity="0.6"/>
 <path d="M44 390L60 390" fill="none" stroke="#3fb950" stroke-width="3" stroke-linecap="round" stroke-dasharray="0 6"/>
 <path d="M60,390L52.97933950487702,386.16459569116637L52.97933950487702,393.83540430883363Z" fill="#3fb950"/>
 <path d="M284 390L338 390" fill="none" stroke="#3fb950" stroke-width="3" stroke-linecap="round" stroke-dasharray="0 6"/>
@@ -43,15 +44,18 @@
 <path d="M595 434L595 476" fill="none" stroke="#8b949e" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0 7"/>
 <path d="M595,476L598.3559787702294,469.85692206676737L591.6440212297706,469.85692206676737Z" fill="#8b949e"/>
 <text class="sub" x="605" y="460" text-anchor="start" fill="#8b949e">each call checked</text>
+<path d="M771 434L771 476" fill="none" stroke="#8b949e" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0 7"/>
+<path d="M771,476L774.3559787702294,469.85692206676737L767.6440212297706,469.85692206676737Z" fill="#8b949e"/>
+<text class="sub" x="781" y="460" text-anchor="start" fill="#8b949e">starts</text>
 <path d="M507 354L507 198L306 198L306 295L286 295" fill="none" stroke="#8b949e" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0 7"/>
 <path d="M286,295L292.14307793323263,298.3559787702294L292.14307793323263,291.6440212297706Z" fill="#8b949e"/>
 <text class="sub" x="340" y="190" text-anchor="start" fill="#8b949e">sets a timer</text>
 <path d="M852 390L900 390" fill="none" stroke="#3fb950" stroke-width="3" stroke-linecap="round" stroke-dasharray="0 6"/>
 <path d="M900,390L892.979339504877,386.16459569116637L892.979339504877,393.83540430883363Z" fill="#3fb950"/>
 <text class="sub" x="880" y="378" text-anchor="middle" fill="#8b949e">sends</text>
-<path d="M676 513L975 513L975 430" fill="none" stroke="#8b949e" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0 7" stroke-opacity="0.6"/>
+<path d="M595 548L595 562L975 562L975 430" fill="none" stroke="#8b949e" stroke-width="2.2" stroke-linecap="round" stroke-dasharray="0 7" stroke-opacity="0.6"/>
 <path d="M975,430L971.6440212297706,436.14307793323263L978.3559787702294,436.14307793323263Z" fill="#8b949e"/>
-<text class="sub" x="686" y="503" text-anchor="start" fill="#8b949e">approve / deny buttons</text>
+<text class="sub" x="686" y="556" text-anchor="start" fill="#8b949e">approve / deny buttons</text>
 <path d="M1050 390L1094 390" fill="none" stroke="#3fb950" stroke-width="3" stroke-linecap="round" stroke-dasharray="0 6"/>
 <path d="M1094,390L1086.979339504877,386.16459569116637L1086.979339504877,393.83540430883363Z" fill="#3fb950"/>
 <g fill="#e6edf3"><circle cx="1118" cy="350" r="2.4"/><circle cx="1124" cy="350" r="2.4"/><circle cx="1130" cy="350" r="2.4"/><circle cx="1112" cy="356" r="2.4"/><circle cx="1118" cy="356" r="2.4"/><circle cx="1124" cy="356" r="2.4"/><circle cx="1130" cy="356" r="2.4"/><circle cx="1136" cy="356" r="2.4"/><circle cx="1112" cy="362" r="2.4"/><circle cx="1118" cy="362" r="2.4"/><circle cx="1124" cy="362" r="2.4"/><circle cx="1130" cy="362" r="2.4"/><circle cx="1136" cy="362" r="2.4"/><circle cx="1118" cy="368" r="2.4"/><circle cx="1124" cy="368" r="2.4"/><circle cx="1130" cy="368" r="2.4"/><circle cx="1112" cy="380" r="2.4"/><circle cx="1118" cy="380" r="2.4"/><circle cx="1124" cy="380" r="2.4"/><circle cx="1130" cy="380" r="2.4"/><circle cx="1136" cy="380" r="2.4"/><circle cx="1106" cy="386" r="2.4"/><circle cx="1112" cy="386" r="2.4"/><circle cx="1118" cy="386" r="2.4"/><circle cx="1124" cy="386" r="2.4"/><circle cx="1130" cy="386" r="2.4"/><circle cx="1136" cy="386" r="2.4"/><circle cx="1142" cy="386" r="2.4"/><circle cx="1106" cy="392" r="2.4"/><circle cx="1112" cy="392" r="2.4"/><circle cx="1118" cy="392" r="2.4"/><circle cx="1124" cy="392" r="2.4"/><circle cx="1130" cy="392" r="2.4"/><circle cx="1136" cy="392" r="2.4"/><circle cx="1142" cy="392" r="2.4"/><circle cx="1106" cy="398" r="2.4"/><circle cx="1112" cy="398" r="2.4"/><circle cx="1118" cy="398" r="2.4"/><circle cx="1124" cy="398" r="2.4"/><circle cx="1130" cy="398" r="2.4"/><circle cx="1136" cy="398" r="2.4"/><circle cx="1142" cy="398" r="2.4"/></g>
@@ -69,16 +73,19 @@
 <rect x="64" y="270" width="216" height="50" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
 <text class="title" x="80" y="292" fill="#e6edf3">Timers</text>
 <text class="sub" x="80" y="309" fill="#8b949e">follow-ups, cron</text>
-<rect x="64" y="464" width="216" height="50" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
-<text class="title" x="80" y="486" fill="#e6edf3">Terminal</text>
-<text class="sub" x="80" y="503" fill="#8b949e">sedge, sedge -p</text>
+<rect x="64" y="452" width="216" height="50" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<text class="title" x="80" y="474" fill="#e6edf3">Terminal</text>
+<text class="sub" x="80" y="491" fill="#8b949e">sedge, sedge -p</text>
+<rect x="64" y="512" width="216" height="50" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<text class="title" x="80" y="534" fill="#e6edf3">Agents</text>
+<text class="sub" x="80" y="551" fill="#8b949e">tell, subagents' answers</text>
 <rect x="64" y="354" width="216" height="72" rx="10" fill="#3fb950" stroke="#3fb950" stroke-width="1.5"/>
 <text class="title" x="80" y="380" fill="#0d1117">Event inbox</text>
-<text class="sub" x="80" y="397" fill="#0d1117">repeats dropped, a queue</text>
-<text class="sub" x="80" y="411" fill="#0d1117">answered together</text>
+<text class="sub" x="80" y="397" fill="#0d1117">repeats dropped, batched,</text>
+<text class="sub" x="80" y="411" fill="#0d1117">triaged, kept to limits</text>
 <rect x="344" y="354" width="502" height="72" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
 <text class="title" x="595" y="387" text-anchor="middle" fill="#e6edf3">A run</text>
-<text class="sub" x="595" y="404" text-anchor="middle" fill="#8b949e">pi-durable · picks up where it stopped after a restart</text>
+<text class="sub" x="595" y="404" text-anchor="middle" fill="#8b949e">pi-durable · many at once · each picks up after a restart</text>
 <rect x="344" y="224" width="150" height="58" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
 <text class="title" x="360" y="250" fill="#e6edf3">Memory</text>
 <text class="sub" x="360" y="267" fill="#8b949e">files it keeps</text>
@@ -88,12 +95,16 @@
 <rect x="696" y="224" width="150" height="58" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
 <text class="title" x="712" y="250" fill="#e6edf3">MCP servers</text>
 <text class="sub" x="712" y="267" fill="#8b949e">your mcp.json</text>
-<rect x="344" y="484" width="150" height="58" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<rect x="344" y="484" width="150" height="72" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
 <text class="title" x="360" y="510" fill="#e6edf3">Tools</text>
 <text class="sub" x="360" y="527" fill="#8b949e">read, edit, bash</text>
+<text class="sub" x="360" y="541" fill="#8b949e">optional sandbox</text>
 <rect x="520" y="484" width="150" height="58" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
 <text class="title" x="536" y="510" fill="#e6edf3">Approvals</text>
 <text class="sub" x="536" y="527" fill="#8b949e">asks you first</text>
+<rect x="696" y="484" width="150" height="58" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
+<text class="title" x="712" y="510" fill="#e6edf3">Subagents</text>
+<text class="sub" x="712" y="527" fill="#8b949e">in parallel, report back</text>
 <rect x="906" y="358" width="138" height="64" rx="10" fill="#161b22" stroke="#30363d" stroke-width="1.5"/>
 <text class="title" x="922" y="387" fill="#e6edf3">Outbox</text>
 <text class="sub" x="922" y="404" fill="#8b949e">sent with retries</text>

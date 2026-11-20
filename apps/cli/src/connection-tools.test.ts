@@ -2,7 +2,7 @@ import { mkdtemp, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { bundleModule, kitPackage } from './connection-tools';
+import { bundleModule, kitPackage, packageSpec } from './connection-tools';
 
 describe('create_signal', () => {
     it('recognises a file that belongs to a package of channels and signals, so the package is installed instead', async () => {
@@ -28,4 +28,15 @@ describe('create_signal', () => {
         expect(bundled.code).toContain('hello from the helper');
         expect(bundled.code).not.toContain("from './helper'");
     }, 30_000);
+});
+
+describe('install names', () => {
+    it('scopes the official short names, and installs any other name as written', () => {
+        expect(packageSpec('telegram')).toBe('@sedge-hq/telegram');
+        expect(packageSpec('mqtt')).toBe('@sedge-hq/mqtt');
+        // A community package with a plain npm name is that package, not one of ours.
+        expect(packageSpec('sedge-rss')).toBe('sedge-rss');
+        expect(packageSpec('@someone/sedge-x')).toBe('@someone/sedge-x');
+        expect(packageSpec('github:someone/repo')).toBe('github:someone/repo');
+    });
 });

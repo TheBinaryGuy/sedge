@@ -108,7 +108,7 @@ for (const { os, cpu } of targets) {
             {
                 name,
                 version,
-                description: `The sedge binary for ${os}-${cpu}. Install \`sedge\` instead.`,
+                description: `The sedge binary for ${os}-${cpu}. Install \`${CLI_PACKAGE}\` instead.`,
                 license: manifest.license,
                 repository: manifest.repository,
                 os: [os === 'windows' ? 'win32' : os],
@@ -118,6 +118,12 @@ for (const { os, cpu } of targets) {
             null,
             4,
         )}\n`,
+    );
+    // npm shows this on the package's page: say what it is, and where to go instead.
+    const platform = { darwin: 'macOS', linux: 'Linux', windows: 'Windows' }[os] ?? os;
+    await writeFile(
+        join(dir, 'README.md'),
+        `# ${name}\n\nThe [sedge](https://sedge.sh) binary for ${platform} on ${cpu}. You don't install this yourself: \`${CLI_PACKAGE}\` depends on it and npm picks the one for your machine.\n\n\`\`\`sh\nnpm i -g ${CLI_PACKAGE}\n\`\`\`\n\nOr \`curl -fsSL sedge.sh | sh\`. The docs are at [sedge.sh/docs](https://sedge.sh/docs).\n`,
     );
 }
 

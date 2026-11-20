@@ -8,12 +8,13 @@ us or anyone else, and no exporter to turn on by accident.
 
 ## Runs
 
-Every run is recorded when it ends:
+Every run is recorded when it ends (events [triage](./channels-and-signals.md#filtering-throttling-and-triage)
+skipped never started one; they show in the inbox as skipped):
 
 - which agent ran, and what woke it (a Telegram message, a signal, a timer);
 - how long it took, and whether it worked; if not, why;
 - each tool call, with how long it took and whether it failed;
-- the tokens it used, and their cost at the model's listed price (see
+- the tokens it used, and their cost at the model's listed price, when it lists one (see
   [Limits and costs](./limits.md)).
 
 `sedge dash runs` (or `/sedge runs` in the TUI) lists them, newest first. Select one for its tool
@@ -34,7 +35,10 @@ warn, error).
 The dashboard's header counts, since the daemon started:
 
 - runs, and how many failed;
-- how long runs take on average, and the slowest.
+- how long runs take on average, and the slowest;
+
+and what the agents used today: tokens and their cost, against your
+[daily limits](./limits.md) when you set them.
 
 These are Effect metrics, kept in memory. The daemon also counts tool calls, events by source, and
 deliveries.

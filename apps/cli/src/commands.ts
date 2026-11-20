@@ -404,7 +404,9 @@ const update = Command.make(
         if (!info.applied)
             return yield* Console.log(`Could not install ${info.latest}; see the daemon log.`);
         yield* withDaemon(({ client }) => client.Shutdown({ restart: true }));
-        yield* Console.log(`Updated to ${info.latest}. The daemon restarts once it is idle.`);
+        yield* Console.log(
+            `Updated to ${info.latest}. The daemon restarts now; a run it cuts short picks up where it stopped.`,
+        );
     }),
 ).pipe(Command.withDescription('Update sedge to the latest release'));
 

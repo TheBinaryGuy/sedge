@@ -69,6 +69,8 @@ const sampleRuns = [
         startedAt: t - 182 * m,
         finishedAt: t - 182 * m + 9_400,
         ok: true,
+        tokens: 9_870,
+        cost: 0.0318,
         tools: [
             { name: 'read', ms: 40, error: false },
             { name: 'grep', ms: 120, error: false },
@@ -83,6 +85,8 @@ const sampleRuns = [
         startedAt: t - 95 * m,
         finishedAt: t - 95 * m + 21_300,
         ok: true,
+        tokens: 31_240,
+        cost: 0.1022,
         tools: [
             { name: 'mcp__github__get_job_logs', ms: 2_800, error: false },
             { name: 'tell', ms: 30, error: false },
@@ -96,6 +100,8 @@ const sampleRuns = [
         startedAt: t - 94 * m,
         finishedAt: t - 94 * m + 6_100,
         ok: true,
+        tokens: 7_150,
+        cost: 0.0231,
         tools: [
             { name: 'send_message', ms: 190, error: false },
             { name: 'bash', ms: 15, error: true },
@@ -109,6 +115,8 @@ const sampleRuns = [
         startedAt: t - 61 * m,
         finishedAt: t - 61 * m + 38_700,
         ok: true,
+        tokens: 18_420,
+        cost: 0.0612,
         tools: [
             { name: 'bash', ms: 31_200, error: false },
             { name: 'send_message', ms: 240, error: false },
@@ -207,6 +215,7 @@ await writeFile(
                 instruction: 'Tell me when main breaks.',
             },
         },
+        limits: { dailyCost: 5 },
     }),
 );
 await mkdir(join(home, 'memory/agents/ci'), { recursive: true });
@@ -330,6 +339,15 @@ timer.run(
     'active',
     now + 14 * 60 * min,
     now,
+);
+// Today's usage, as the limits keep it: the sample runs' tokens and cost.
+const day = new Date(now);
+db.prepare('insert or replace into kv (key, value) values (?, ?)').run(
+    `usage:${day.getFullYear()}-${String(day.getMonth() + 1).padStart(2, '0')}-${String(day.getDate()).padStart(2, '0')}`,
+    JSON.stringify({
+        tokens: sampleRuns.reduce((sum, run) => sum + (run.tokens ?? 0), 0),
+        cost: sampleRuns.reduce((sum, run) => sum + (run.cost ?? 0), 0),
+    }),
 );
 db.close();
 

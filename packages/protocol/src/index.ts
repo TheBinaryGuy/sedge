@@ -186,6 +186,15 @@ export class StatsInfo extends Schema.Class<StatsInfo>('sedge/protocol/StatsInfo
     tools: Schema.Array(Count),
     events: Schema.Array(Count),
     deliveries: Schema.Array(Count),
+    /** What the agents used today (local time), and the daily limits, when set. */
+    today: Schema.optional(
+        Schema.Struct({
+            tokens: Schema.Number,
+            cost: Schema.Number,
+            dailyTokens: Schema.NullOr(Schema.Number),
+            dailyCost: Schema.NullOr(Schema.Number),
+        }),
+    ),
 }) {}
 
 export class AgentError extends Schema.TaggedError<AgentError>()('AgentError', {

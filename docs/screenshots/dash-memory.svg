@@ -6,12 +6,12 @@
 <text x="486.5" y="21" fill="#8b949e" text-anchor="middle" style="font-size:12px">sedge dash · memory</text>
 <text x="24.4" y="81" fill="#3fb950" textLength="50.400000000000006" lengthAdjust="spacingAndGlyphs">▗ ▖ ▗ </text>
 <text x="91.60000000000001" y="81" fill="#e6edf3" font-weight="700" textLength="42" lengthAdjust="spacingAndGlyphs">sedge</text>
-<text x="142" y="81" fill="#6e7681" textLength="50.400000000000006" lengthAdjust="spacingAndGlyphs">v0.3.1</text>
+<text x="142" y="81" fill="#6e7681" textLength="58.800000000000004" lengthAdjust="spacingAndGlyphs">v0.10.0</text>
 <text x="24.4" y="99" fill="#3fb950" textLength="50.400000000000006" lengthAdjust="spacingAndGlyphs">▐▖▐▗▞ </text>
 <text x="91.60000000000001" y="99" fill="#3fb950" textLength="33.6" lengthAdjust="spacingAndGlyphs">idle</text>
-<text x="125.2" y="99" fill="#6e7681" textLength="285.6" lengthAdjust="spacingAndGlyphs"> · 0 queued · 3 timers · pid 54665</text>
+<text x="125.2" y="99" fill="#6e7681" textLength="285.6" lengthAdjust="spacingAndGlyphs"> · 0 queued · 3 timers · pid 36996</text>
 <text x="24.4" y="117" fill="#3fb950" textLength="50.400000000000006" lengthAdjust="spacingAndGlyphs"> ▜█▛  </text>
-<text x="91.60000000000001" y="117" fill="#6e7681" textLength="134.4" lengthAdjust="spacingAndGlyphs">the daemon, live</text>
+<text x="91.60000000000001" y="117" fill="#6e7681" textLength="462" lengthAdjust="spacingAndGlyphs">the daemon, live · today 66,680 tokens · $0.22 of $5.00</text>
 <text x="24.4" y="153" fill="#8b949e" textLength="84" lengthAdjust="spacingAndGlyphs"> 1 agents </text>
 <text x="116.80000000000001" y="153" fill="#8b949e" textLength="75.60000000000001" lengthAdjust="spacingAndGlyphs"> 2 inbox </text>
 <text x="200.8" y="153" fill="#8b949e" textLength="67.2" lengthAdjust="spacingAndGlyphs"> 3 runs </text>

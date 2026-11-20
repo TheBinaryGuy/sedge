@@ -31,9 +31,13 @@ const HIDDEN = [
     '~/.kube',
     '~/.docker',
     '~/.netrc',
+    '~/.npmrc',
+    '~/.git-credentials',
+    '~/.config/git/credentials',
     '~/.config/gh',
     '~/.config/gcloud',
     '~/.pi/agent/auth.json',
+    '~/.pi/agent/mcp-auth.json',
     '~/Library/Keychains',
 ];
 

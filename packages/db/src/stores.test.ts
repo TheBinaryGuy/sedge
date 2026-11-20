@@ -91,6 +91,23 @@ describe('Inbox', () => {
         ),
     );
 
+    it.effect('lists an agent’s events with its subagents’, and no one else’s', () =>
+        fresh(
+            Effect.gen(function* () {
+                const inbox = yield* Inbox;
+                yield* inbox.enqueue(event('agent:ci', 'build failed', '1'));
+                yield* inbox.enqueue(event('agent:ci#sub:ab12', 'find the flaky test', '2'));
+                yield* inbox.enqueue(event('agent:cie', 'another agent', '3'));
+                yield* inbox.enqueue(event('main', 'hello', '4'));
+                const ci = yield* inbox.list({ thread: 'agent:ci', limit: 10 });
+                expect(ci.map((e) => e.prompt).sort()).toEqual([
+                    'build failed',
+                    'find the flaky test',
+                ]);
+            }),
+        ),
+    );
+
     it.effect('never starts a second run for a thread that has one going', () =>
         fresh(
             Effect.gen(function* () {

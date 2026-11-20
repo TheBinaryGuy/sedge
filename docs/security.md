@@ -20,7 +20,7 @@ sedge runs with your rights on your machine. These are the limits it keeps.
 | Writing files (`write`, `edit`)                                               | `permissions.write`, default **allow** |
 | Shell (`bash`)                                                                | `permissions.bash`, default **ask**    |
 | MCP tools and anything else                                                   | `permissions.mcp`, default **ask**     |
-| sedge's own (`send_message`, timers)                                          | allowed                                |
+| sedge's own (`send_message`, `tell`, `subagent`, timers)                      | allowed                                |
 
 `ask` holds the call and sends you the exact command with **Approve** / **Deny** buttons on your
 channel. Approving lets that exact call (same tool, same input) through once; the agent makes it
@@ -32,12 +32,15 @@ refused. Set any of the three to `allow`, `ask` or `deny` in the [config](./conf
 Approvals decide whether a command runs; the [sandbox](./sandbox.md) limits what it can do once it
 does. With it on, the daemon's commands run in the operating system's sandbox (Seatbelt on macOS,
 bubblewrap on Linux): they can only write in the run's folder, the workspace, temp and the folders
-you allow, can't read your credentials or sedge's secrets, and can be cut off from the network. It's
-off unless you turn it on.
+you allow, can't read the credentials it hides (SSH keys, cloud, git and npm logins, your pi logins)
+or sedge's secrets, and can be cut off from the network. It's off unless you turn it on.
 
 ## Off limits, always
 
-No run, watched or not, may read or change `~/.sedge/config.json` or the fallback secrets file.
+In the daemon's runs, watched or not, a tool call that names `~/.sedge/config.json` or the fallback
+secrets file by its full path is refused. That stops the agent reaching for them directly, not every
+way there (a relative path, a script that reads them); with the [sandbox](./sandbox.md) on, they're
+hidden for real. The TUI's own agent is told never to read them.
 
 ## Secrets
 
@@ -65,8 +68,10 @@ you to read in `sedge dash`.
 ## Code you add
 
 Packages you install and signals you register run inside the daemon with your rights, outside
-[the sandbox](#the-sandbox). sedge asks before installing or registering, and shows you the file to review. What you
-approve is copied, and that copy is what runs.
+[the sandbox](#the-sandbox). In the TUI, sedge asks before installing a package (saying when it's
+a community one, with its npm page) and before registering a signal it wrote, showing you the file;
+what you approve is copied, and that copy is what runs. `sedge install` on the command line
+installs what you name.
 
 The `command` signal runs the command you give it in your shell, with your rights, for as long as
 it's connected; you see the command before you confirm. The `webhook` signal listens only on this

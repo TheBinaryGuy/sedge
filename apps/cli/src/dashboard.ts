@@ -314,14 +314,29 @@ export class DashboardView implements Component {
         const st = this.stats;
         if (this.status?.update)
             return paint.dim(`${this.status.update} installed, applies on restart`);
-        if (!st || st.runs === 0) return paint.dim('the daemon, live');
+        if (!st || st.runs === 0) return paint.dim('the daemon, live') + this.todayLine();
         return (
             paint.dim(`since ${when(st.since)}: ${st.runs} run${st.runs === 1 ? '' : 's'} · `) +
             (st.failed ? paint.error(`${st.failed} failed`) : paint.success('none failed')) +
             paint.dim(
                 `${st.averageSeconds !== null ? ` · ${st.averageSeconds.toFixed(1)}s on average` : ''}${st.slowestSeconds !== null ? ` · slowest ${Math.round(st.slowestSeconds)}s` : ''}`,
-            )
+            ) +
+            this.todayLine()
         );
+    }
+
+    /** Today's tokens and cost, against the daily limits when set; amber once one is reached. */
+    private todayLine() {
+        const { paint } = this.options;
+        const today = this.stats?.today;
+        if (!today) return '';
+        const { tokens, cost, dailyTokens, dailyCost } = today;
+        if (tokens === 0 && dailyTokens === null && dailyCost === null) return '';
+        const text = `today ${tokens.toLocaleString()} tokens${dailyTokens !== null ? ` of ${dailyTokens.toLocaleString()}` : ''} · ${usd(cost)}${dailyCost !== null ? ` of ${usd(dailyCost)}` : ''}`;
+        const reached =
+            (dailyTokens !== null && tokens >= dailyTokens) ||
+            (dailyCost !== null && cost >= dailyCost);
+        return paint.dim(' · ') + (reached ? paint.warning(text) : paint.dim(text));
     }
 
     handleInput(data: string) {

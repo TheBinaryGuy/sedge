@@ -3,8 +3,11 @@ title: Configuration
 description: config.json, the files in ~/.sedge, and environment variables.
 ---
 
-Most things are set up by asking sedge in the TUI. The rest is `~/.sedge/config.json`. The daemon
-reads it at start; after editing it, restart: `sedge stop && sedge start`.
+Most things are set up by asking sedge in the TUI. The rest is `~/.sedge/config.json`.
+
+`agents` and `limits` are read again whenever they're used, so a change applies at once. The rest
+(`workspace`, `connections`, `permissions`, `sandbox`, `triageModel`, `dreaming`) is read when the
+daemon starts: after editing those, restart it with `sedge stop && sedge start`.
 
 ## config.json
 
@@ -28,7 +31,7 @@ reads it at start; after editing it, restart: `sedge stop && sedge start`.
 | `workspace`         | Where unwatched runs work (files they create land here).                                             | `~/.sedge/workspace` |
 | `sandbox`           | Commands in the OS sandbox: `enabled`, `network`, `writable`, `hidden`. See [Sandbox](./sandbox.md). | off                  |
 | `limits`            | What the agents may use: runs, tokens, money, subagents. See [Limits and costs](./limits.md).        | unlimited            |
-| `triageModel`       | The model that triages signals with `triage` on, as `provider/model`.                                | cheapest of yours    |
+| `triageModel`       | The model that triages signals with `triage` on, as `provider/model`.                                | see below            |
 | `dreaming`          | The nightly memory review. `false` turns it off. See [Memory](./memory.md).                          | on                   |
 | `permissions.bash`  | Shell commands in unwatched runs: `allow`, `ask` or `deny`.                                          | `ask`                |
 | `permissions.write` | File writes and edits in unwatched runs.                                                             | `allow`              |
@@ -71,33 +74,42 @@ What happens when one is reached, and how to spend less to begin with:
 
 It's set when the daemon starts; restart after changing it. See [Sandbox](./sandbox.md).
 
+## Triage model
+
+Without `triageModel`, triage uses the cheapest priced model of your default model's provider; if
+the provider lists no prices (a subscription), one whose name says it's small (`mini`, `haiku`,
+`flash`, …); and failing that, your default model. Set it (`"triageModel": "openai/gpt-5-mini"`) to
+choose.
+
 ## Files
 
 Everything lives in `~/.sedge` (or `SEDGE_HOME`):
 
-| Path                   | What                                                                                                            |
-| ---------------------- | --------------------------------------------------------------------------------------------------------------- |
-| `config.json`          | The settings above.                                                                                             |
-| `memory/`              | `main`'s [memory](./memory.md), with `MEMORY.md` as its index; each agent's is in `memory/agents/<name>/`.      |
-| `workspace/`           | Where unwatched runs work.                                                                                      |
-| `sedge.db`             | Inbox, timers, outbox, approvals.                                                                               |
-| `agent/durable.sqlite` | The agent's conversations.                                                                                      |
-| `packages/`            | Installed packages of channels and signals.                                                                     |
-| `kinds/`               | Signals and channels you registered.                                                                            |
-| `logs/`                | The daemon's log, and the [logs and runs](./logs-and-runs.md) `sedge dash` shows (`sedge.jsonl`, `runs.jsonl`). |
-| `bin/`                 | The standalone install.                                                                                         |
-| `secrets.json`         | Secrets, only on machines without a keychain.                                                                   |
+| Path                   | What                                                                                                        |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `config.json`          | The settings above.                                                                                         |
+| `sedge.sock`           | The socket the TUI and the daemon talk over (a named pipe on Windows).                                      |
+| `daemon.lock`          | Holds the running daemon's process id, so only one runs.                                                    |
+| `memory/`              | `main`'s [memory](./memory.md), with `MEMORY.md` as its index; each agent's is in `memory/agents/<name>/`.  |
+| `workspace/`           | Where unwatched runs work.                                                                                  |
+| `sedge.db`             | Inbox, timers, outbox, approvals.                                                                           |
+| `agent/durable.sqlite` | The agent's conversations.                                                                                  |
+| `packages/`            | Installed packages of channels and signals.                                                                 |
+| `kinds/`               | Signals and channels you registered.                                                                        |
+| `logs/`                | `daemon.log`, and the [logs and runs](./logs-and-runs.md) `sedge dash` shows (`sedge.jsonl`, `runs.jsonl`). |
+| `bin/`                 | The standalone install.                                                                                     |
+| `secrets.json`         | Secrets, only on machines without a keychain.                                                               |
 
 Model logins, `models.json`, `mcp.json` and skills are pi's, in `~/.pi/agent`.
 
 ## Environment variables
 
-| Variable                 | What it does                                                                             |
-| ------------------------ | ---------------------------------------------------------------------------------------- |
-| `SEDGE_HOME`             | Use another folder than `~/.sedge` (a second, separate sedge).                           |
-| `SEDGE_NO_UPDATE`        | Set to `1` to only report updates instead of installing them.                            |
-| `SEDGE_AGENT_DIR`        | Use another pi agent folder for the daemon's logins and models.                          |
-| `SEDGE_CODING_AGENT_DIR` | The agent folder the TUI uses (logins, models, settings, themes); default `~/.pi/agent`. |
-| `SEDGE_SECRET_STORE`     | `file` keeps secrets in `~/.sedge/secrets.json` (owner-only) instead of the OS keychain. |
-| `SEDGE_REGISTRY`         | The npm registry to check for updates.                                                   |
-| `SEDGE_GITHUB_API`       | The GitHub API to check standalone releases against.                                     |
+| Variable                 | What it does                                                                              |
+| ------------------------ | ----------------------------------------------------------------------------------------- |
+| `SEDGE_HOME`             | Use another folder than `~/.sedge` (a second, separate sedge).                            |
+| `SEDGE_NO_UPDATE`        | Set to `1` to only report updates instead of installing them.                             |
+| `SEDGE_AGENT_DIR`        | Another pi agent folder for the daemon: logins, models, `mcp.json`, MCP sign-ins, skills. |
+| `SEDGE_CODING_AGENT_DIR` | The agent folder the TUI uses (logins, models, settings, themes); default `~/.pi/agent`.  |
+| `SEDGE_SECRET_STORE`     | `file` keeps secrets in `~/.sedge/secrets.json` (owner-only) instead of the OS keychain.  |
+| `SEDGE_REGISTRY`         | The npm registry to check for updates.                                                    |
+| `SEDGE_GITHUB_API`       | The GitHub API to check standalone releases against.                                      |

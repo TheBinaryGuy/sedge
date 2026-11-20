@@ -151,7 +151,8 @@ const draw = () => {
         { x: 64, y: Y + 54, w: 216, h: 50, title: 'Channels', sub: 'Telegram, Slack, …' },
         { x: 64, y: Y + 116, w: 216, h: 50, title: 'Signals', sub: 'CI failed, a feed moved' },
         { x: 64, y: Y + 178, w: 216, h: 50, title: 'Timers', sub: 'follow-ups, cron' },
-        { x: 64, y: Y + 372, w: 216, h: 50, title: 'Terminal', sub: 'sedge, sedge -p' },
+        { x: 64, y: Y + 360, w: 216, h: 50, title: 'Terminal', sub: 'sedge, sedge -p' },
+        { x: 64, y: Y + 420, w: 216, h: 50, title: 'Agents', sub: "tell, subagents' answers" },
     ];
     const inbox: Box = {
         x: 64,
@@ -159,7 +160,7 @@ const draw = () => {
         w: 216,
         h: 72,
         title: 'Event inbox',
-        sub: ['repeats dropped, a queue', 'answered together'],
+        sub: ['repeats dropped, batched,', 'triaged, kept to limits'],
         hot: true,
     };
     const mid = (b: Box) => b.y + b.h / 2;
@@ -193,7 +194,7 @@ const draw = () => {
         w: 502,
         h: 72,
         title: 'A run',
-        sub: 'pi-durable · picks up where it stopped after a restart',
+        sub: 'pi-durable · many at once · each picks up after a restart',
         center: true,
     };
     wire(
@@ -227,9 +228,9 @@ const draw = () => {
         x: 344,
         y: Y + 392,
         w: 150,
-        h: 58,
+        h: 72,
         title: 'Tools',
-        sub: 'read, edit, bash',
+        sub: ['read, edit, bash', 'optional sandbox'],
     };
     const approvals: Box = {
         x: 520,
@@ -238,6 +239,14 @@ const draw = () => {
         h: 58,
         title: 'Approvals',
         sub: 'asks you first',
+    };
+    const subagents: Box = {
+        x: 696,
+        y: Y + 392,
+        w: 150,
+        h: 58,
+        title: 'Subagents',
+        sub: 'in parallel, report back',
     };
 
     wire(
@@ -276,6 +285,11 @@ const draw = () => {
         [595, approvals.y - 8],
     ]);
     label(605, run.y + run.h + 34, 'each call checked');
+    wire([
+        [771, run.y + run.h + 8],
+        [771, subagents.y - 8],
+    ]);
+    label(781, run.y + run.h + 34, 'starts');
 
     // Sets a timer: up over the top row and back into Timers.
     const timers = sources[2]!;
@@ -305,15 +319,18 @@ const draw = () => {
         { main: true },
     );
     label(880, mid(run) - 12, 'sends', 'middle');
+    // Below Subagents, to the outbox.
+    const under = Y + 470;
     wire(
         [
-            [approvals.x + approvals.w + 6, mid(approvals)],
-            [975, mid(approvals)],
+            [595, approvals.y + approvals.h + 6],
+            [595, under],
+            [975, under],
             [975, outbox.y + outbox.h + 8],
         ],
         { faint: true },
     );
-    label(686, mid(approvals) - 10, 'approve / deny buttons');
+    label(686, under - 6, 'approve / deny buttons');
 
     // You: a person in dots.
     const you = { x: 1124, y: mid(outbox) };
@@ -362,11 +379,23 @@ const draw = () => {
     );
     label(W / 2, H - 46, 'your reply comes back as an event', 'middle');
 
-    for (const b of [...sources, inbox, run, memory, skills, mcp, tools, approvals, outbox]) box(b);
+    for (const b of [
+        ...sources,
+        inbox,
+        run,
+        memory,
+        skills,
+        mcp,
+        tools,
+        approvals,
+        subagents,
+        outbox,
+    ])
+        box(b);
 
     const svg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" role="img" aria-labelledby="title desc">
     <title id="title">How sedge works</title>
-    <desc id="desc">Channels, signals, timers and the terminal put events into the inbox. It starts a run on pi-durable, which works with memory, skills, MCP servers, tools and approvals. What the run sends leaves through the outbox to you on your channel, and your reply comes back as an event.</desc>
+    <desc id="desc">Channels, signals, timers, the terminal and other agents put events into the inbox, which drops repeats, batches, triages and keeps to your limits. It starts runs on pi-durable, many at once, which work with memory, skills, MCP servers, tools (optionally sandboxed), approvals and subagents. What a run sends leaves through the outbox to you on your channel, and your reply comes back as an event.</desc>
     <style>
     text { font-family: Geist, Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
     .head { font-size: 14px; font-weight: 600; }

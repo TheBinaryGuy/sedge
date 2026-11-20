@@ -16,9 +16,11 @@ const text = (value: string) => ({
     details: undefined,
 });
 
-/** `telegram` means the official `@sedge-hq/telegram`; anything with a scope, slash or dot is as given. */
-export const packageSpec = (name: string) =>
-    /^[a-z][a-z0-9-]*$/.test(name) ? `@sedge-hq/${name}` : name;
+/** The official packages of channels and signals, each `@sedge-hq/<name>`. */
+export const OFFICIAL = new Set(['telegram', 'slack', 'github', 'web', 'local', 'mqtt']);
+
+/** `telegram` means the official `@sedge-hq/telegram`; any other name is as given. */
+export const packageSpec = (name: string) => (OFFICIAL.has(name) ? `@sedge-hq/${name}` : name);
 
 const describeKind = (kind: KindInfo) =>
     [
@@ -364,7 +366,7 @@ export const registerConnectionTools = (pi: ExtensionAPI, withDaemon: WithDaemon
         name: 'install',
         label: 'Install',
         description:
-            'Install a package of channels and signals: a short name like "telegram" (the official @sedge-hq/telegram), a full npm name, or the path of a package folder (one whose package.json lists "sedge": { "plugins": … }). Its code runs inside the sedge daemon with the user\'s rights, so the user confirms first.',
+            'Install a package of channels and signals: an official short name (telegram, slack, github, web, local, mqtt: @sedge-hq/<name>), any npm package name, or the path of a package folder (one whose package.json lists "sedge": { "plugins": … }). Its code runs inside the sedge daemon with the user\'s rights, so the user confirms first.',
         parameters: Type.Object({
             name: Type.String({ description: 'e.g. "telegram", an npm name, or a folder path.' }),
         }),

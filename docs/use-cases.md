@@ -93,7 +93,8 @@ export default defineSignal({
 - **What it sets up:** `github-ci` on your repository.
 - **What you get:** nothing for a flaky test that passes the second time. For a real failure,
   which job failed, the error, and the commit that likely caused it. Rerunning is a shell
-  command (`gh run rerun`), so it asks you first unless you've allowed shell commands.
+  command (`gh run rerun`), so it asks you first unless you've allowed shell commands. With the
+  [sandbox](./sandbox.md) on, `gh`'s login is hidden, so it can't rerun; it tells you instead.
 
 ### Errors climbing in your logs
 
@@ -141,7 +142,9 @@ export default defineSignal({
 - **What you get:** the same CI messages, from `ci`. Over time it remembers which tests are
   flaky. It can `tell` the main agent when a failure needs something only you can do.
 
-For a job with many parts, an agent can also start [subagents](./agents.md#subagents):
+For a job with many parts, an agent can also start [subagents](./agents.md#subagents). Send this
+from your phone, or hand it over in the TUI with `/sedge tell main …` (the TUI's own chat has no
+subagents):
 
 > Check which of our 6 services still use the old logging library, and how hard each would be to
 > move.

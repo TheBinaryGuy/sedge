@@ -18,7 +18,7 @@ curl -fsSL sedge.sh | sh      # or: npm i -g @sedge-hq/sedge
 ```sh
 sedge                  # the TUI
 sedge -p "…"           # one reply, then exit
-sedge dash             # what the agents are doing: inbox, outbox, timers, memory
+sedge dash             # what the agents are doing: inbox, runs, outbox, timers, memory, logs
 sedge start --service  # keep the daemon running across logins
 sedge stop
 sedge update
@@ -37,7 +37,7 @@ cheap triage model keep a noisy signal from waking it for nothing. Both come as 
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/architecture-dark.svg">
-  <img src="docs/architecture-light.svg" alt="How sedge works: channels, signals, timers and the terminal put events into the inbox; a durable run works with memory, skills, MCP servers, tools and approvals; what it sends leaves through the outbox to you, and your reply comes back as an event." width="100%">
+  <img src="docs/architecture-light.svg" alt="How sedge works: channels, signals, timers, the terminal and other agents put events into the inbox, which drops repeats, batches, triages and keeps to your limits; durable runs, many at once, work with memory, skills, MCP servers, tools (optionally sandboxed), approvals and subagents; what they send leaves through the outbox to you, and your reply comes back as an event." width="100%">
 </picture>
 
 Behind the TUI, a daemon keeps working after you close the terminal: an inbox of events, timers
@@ -47,9 +47,9 @@ durable ([pi-durable](https://github.com/earendil-works/pi/tree/main/packages/du
 restart cuts short picks up where it stopped. The agent is [pi](https://github.com/earendil-works/pi),
 bundled; your logins are in `~/.pi/agent`.
 
-**[Read the docs](docs/index.md)**: getting started, how it works, channels and signals, agents,
-memory, extensions, MCP and skills, limits and costs, security, the sandbox, configuration, and
-writing your own.
+**[Read the docs](docs/index.md)**: getting started, use cases, channels and signals, agents,
+memory, extensions, MCP and skills, how it works, logs and runs, limits and costs, security, the
+sandbox, commands, configuration, writing your own, and development.
 
 ## Prior art
 

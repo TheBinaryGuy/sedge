@@ -45,7 +45,8 @@ The daemon reads the same global `mcp.json` as pi (`~/.pi/agent/mcp.json`), with
   output is used (`"!op read op://vault/github/token"`).
 - `"enabled": false` skips a server. `exposure` / `toolExposure` set to `"hidden"` hide tools.
 - Tools are found on demand: the agent searches with `tool_search` and only then sees a tool's
-  schema, so many servers cost nothing until used.
+  schema, so many servers cost nothing until used. Set `exposure` to `"direct"` for a server
+  whose tools should be offered up front.
 - In runs you're not watching, MCP calls ask for approval first, like shell commands (see
   [Security](./security.md)).
 - Servers start with the daemon. After changing `mcp.json`, restart it:

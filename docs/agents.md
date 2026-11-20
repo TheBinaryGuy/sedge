@@ -56,9 +56,10 @@ its memory. It can't message you or other agents, set timers or start subagents 
 only does its task and answers. When a call needs your approval, the request comes from the
 subagent, and it carries on where it stopped once you answer.
 
-Subagents' runs show up in the inbox under the agent that started them (`main#sub:3f2a9c1d`).
-A task started from the terminal can't start subagents, because nobody hears what arrives after
-it ends. [`limits.subagents`](./limits.md) caps how many one agent has working at
+Subagents' events and runs show up in `sedge dash` under the agent that started them
+(`main#sub:3f2a9c1d`). A background task from the TUI (`/sedge bg`) can't start subagents, because
+nobody hears what arrives after it ends; a task you hand an agent with `/sedge tell` or
+`tell_agent` runs in that agent's conversation, and can. [`limits.subagents`](./limits.md) caps how many one agent has working at
 once, and `limits.runsPerHour` counts an agent's subagents with it.
 
 ## See what they're doing
@@ -103,7 +104,12 @@ Agents live in `~/.sedge/config.json` (see [Configuration](./configuration.md)):
         }
     },
     "connections": {
-        "github-ci": { "kind": "ci", "settings": { "repo": "me/app" }, "agent": "ci" }
+        "github-ci": {
+            "kind": "github-ci",
+            "settings": { "repo": "me/app" },
+            "secrets": ["token"],
+            "agent": "ci"
+        }
     }
 }
 ```

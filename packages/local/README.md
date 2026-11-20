@@ -15,7 +15,12 @@ In `sedge`, say "tell me when a CSV lands in ~/Downloads/reports", "wake me when
 webhook fires and the site is down", or "watch the soil sensor's MQTT topic and tell me when the
 basil is dry".
 
+A webhook's details are its `path` and `body` (JSON as values), so a condition like
+`body.status = failed` can pick the deliveries that matter.
+
 The command runs in your shell with your rights, and the webhook listens only on this machine
-unless you set `host`.
+unless you set `host`. With sedge's [sandbox](https://github.com/sedge-hq/sedge/blob/main/docs/sandbox.md)
+on, the agent's own commands are confined; the `command` signal's command is yours, and runs as you
+wrote it.
 
 [Channels and signals](https://github.com/sedge-hq/sedge/blob/main/docs/channels-and-signals.md) · MIT

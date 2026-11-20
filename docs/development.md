@@ -29,6 +29,9 @@ install, connect, pairing, a reply, an approval and disconnect, with real model 
 your logins. `SEDGE_BIN=dist/npm/sedge-<os>-<cpu>/bin/sedge` runs it against a compiled binary
 (`bun scripts/build.ts` builds one for this machine).
 
+`bun install` sets up a pre-push hook (`.githooks/pre-push`) that runs the same checks and refuses a
+push that fails them.
+
 The scripts run [Turborepo](https://turborepo.dev) with its anonymous telemetry turned off
 (`TURBO_TELEMETRY_DISABLED=1`), here and in CI.
 
@@ -43,8 +46,14 @@ The scripts run [Turborepo](https://turborepo.dev) with its anonymous telemetry 
 | `packages/db`       | Inbox, timers, outbox, approvals (SQLite, Drizzle).                         |
 | `packages/protocol` | The RPCs between the TUI and the daemon.                                    |
 | `packages/core`     | Paths, config, version, logo.                                               |
+| `packages/config`   | Shared formatter, lint and TypeScript settings.                             |
 | `packages/kit`      | [`@sedge-hq/kit`](./kit.md), published.                                     |
-| `packages/telegram` | `@sedge-hq/telegram`, published.                                            |
+| `packages/telegram` | `@sedge-hq/telegram`, the reference channel, published.                     |
+| `packages/slack`    | `@sedge-hq/slack`, published.                                               |
+| `packages/github`   | `@sedge-hq/github`: CI failures, reviews and mentions, published.           |
+| `packages/web`      | `@sedge-hq/web`: page changes and feeds, published.                         |
+| `packages/local`    | `@sedge-hq/local`: webhook, files and command signals, published.           |
+| `packages/mqtt`     | `@sedge-hq/mqtt`, published.                                                |
 | `docs`              | These pages.                                                                |
 | `scripts`           | Build, release, and the generated pictures (`logo.ts`, `architecture.ts`).  |
 

@@ -14,7 +14,9 @@ and every tool call and result. sedge reads the totals from the model's provider
 whether it answered or failed, and prices them at the model's listed price (USD). A subscription
 login (a ChatGPT or Claude plan) often lists no price: its runs count tokens, at $0.
 
-`sedge dash runs` shows each run's tokens and cost when you select it, next to its tool calls. See
+`sedge dash` shows today's total in its header (`today 66,680 tokens · $0.22`), against your daily
+limits when you set them (`of $5.00`), in amber once one is reached. `sedge dash runs` shows each
+run's tokens and cost when you select it, next to its tool calls. See
 [Logs and runs](./logs-and-runs.md).
 
 ## Spend less on each event
@@ -53,13 +55,18 @@ Limits are a ceiling, for a runaway loop or a signal gone wild. Each is off unti
 - Events from signals, timers and other agents **wait in the inbox**. Nothing is dropped: they go
   on when the hour's runs age out, the day turns, or you raise the limit.
 - **Your own messages, approvals and terminal tasks still get answers**, even past a limit.
-- sedge **tells you once** on your channel for each limit it reaches ("Sedge has paused automated
-  work: today's budget of $5.00 is used up").
+- sedge **tells you once** on your channel: once a day for the daily budget ("Sedge has paused
+  automated work: today's budget of $5.00 is used up"), once an hour for each agent past
+  `runsPerHour`.
 - Past `subagents`, an agent that tries to start another is told to wait for the ones it has, or
   to do the part itself.
 
-A run counts toward the day once it ends, so the run that crosses a limit finishes. Usage is what
-the provider reports; with a subscription login, use `dailyTokens`, as its cost reads $0.
+A run counts toward the day once it ends, so the runs already going when a limit is crossed finish,
+and can take it a little over. Usage is what the provider reports; with a subscription login, use
+`dailyTokens`, as its cost reads $0.
+
+`runsPerHour` counts by agent: `main`'s includes terminal tasks and the nightly dream, which are
+`main`'s too. The dream is automated, so it waits when the day's budget is used up.
 
 ## What it doesn't cover
 

@@ -6,12 +6,12 @@
 <text x="486.5" y="21" fill="#8b949e" text-anchor="middle" style="font-size:12px">sedge dash · outbox</text>
 <text x="24.4" y="81" fill="#3fb950" textLength="50.400000000000006" lengthAdjust="spacingAndGlyphs">▗ ▖ ▗ </text>
 <text x="91.60000000000001" y="81" fill="#e6edf3" font-weight="700" textLength="42" lengthAdjust="spacingAndGlyphs">sedge</text>
-<text x="142" y="81" fill="#6e7681" textLength="50.400000000000006" lengthAdjust="spacingAndGlyphs">v0.3.1</text>
+<text x="142" y="81" fill="#6e7681" textLength="58.800000000000004" lengthAdjust="spacingAndGlyphs">v0.10.0</text>
 <text x="24.4" y="99" fill="#3fb950" textLength="50.400000000000006" lengthAdjust="spacingAndGlyphs">▐▖▐▗▞ </text>
 <text x="91.60000000000001" y="99" fill="#3fb950" textLength="33.6" lengthAdjust="spacingAndGlyphs">idle</text>
-<text x="125.2" y="99" fill="#6e7681" textLength="285.6" lengthAdjust="spacingAndGlyphs"> · 0 queued · 3 timers · pid 54665</text>
+<text x="125.2" y="99" fill="#6e7681" textLength="285.6" lengthAdjust="spacingAndGlyphs"> · 0 queued · 3 timers · pid 36996</text>
 <text x="24.4" y="117" fill="#3fb950" textLength="50.400000000000006" lengthAdjust="spacingAndGlyphs"> ▜█▛  </text>
-<text x="91.60000000000001" y="117" fill="#6e7681" textLength="134.4" lengthAdjust="spacingAndGlyphs">the daemon, live</text>
+<text x="91.60000000000001" y="117" fill="#6e7681" textLength="462" lengthAdjust="spacingAndGlyphs">the daemon, live · today 66,680 tokens · $0.22 of $5.00</text>
 <text x="24.4" y="153" fill="#8b949e" textLength="84" lengthAdjust="spacingAndGlyphs"> 1 agents </text>
 <text x="116.80000000000001" y="153" fill="#8b949e" textLength="75.60000000000001" lengthAdjust="spacingAndGlyphs"> 2 inbox </text>
 <text x="200.8" y="153" fill="#8b949e" textLength="67.2" lengthAdjust="spacingAndGlyphs"> 3 runs </text>
@@ -25,20 +25,20 @@
 <text x="125.2" y="171" fill="#6e7681" textLength="100.80000000000001" lengthAdjust="spacingAndGlyphs"> · main · ci</text>
 <text x="24.4" y="189" fill="#6e7681" textLength="924" lengthAdjust="spacingAndGlyphs">──────────────────────────────────────────────────────────────────────────────────────────────────────────────</text>
 <text x="16" y="207" fill="#3fb950" textLength="8.4" lengthAdjust="spacingAndGlyphs">›</text>
-<text x="32.8" y="207" fill="#6e7681" textLength="151.20000000000002" lengthAdjust="spacingAndGlyphs">Nov 19 at 02:37 PM</text>
+<text x="32.8" y="207" fill="#6e7681" textLength="151.20000000000002" lengthAdjust="spacingAndGlyphs">Nov 20 at 08:49 AM</text>
 <text x="200.8" y="207" fill="#e6edf3" font-weight="700" textLength="84" lengthAdjust="spacingAndGlyphs">main      </text>
 <text x="293.2" y="207" fill="#3fb950" textLength="58.800000000000004" lengthAdjust="spacingAndGlyphs">sent   </text>
 <text x="352" y="207" fill="#e6edf3" textLength="604.8000000000001" lengthAdjust="spacingAndGlyphs"> Fixed and pushed; CI is green again.                                   </text>
-<text x="32.8" y="225" fill="#6e7681" textLength="151.20000000000002" lengthAdjust="spacingAndGlyphs">Nov 19 at 02:03 PM</text>
+<text x="32.8" y="225" fill="#6e7681" textLength="151.20000000000002" lengthAdjust="spacingAndGlyphs">Nov 20 at 08:15 AM</text>
 <text x="200.8" y="225" fill="#e6edf3" font-weight="700" textLength="84" lengthAdjust="spacingAndGlyphs">main      </text>
 <text x="293.2" y="225" fill="#3fb950" textLength="58.800000000000004" lengthAdjust="spacingAndGlyphs">sent   </text>
 <text x="360.40000000000003" y="225" fill="#d29922" textLength="75.60000000000001" lengthAdjust="spacingAndGlyphs">approval </text>
 <text x="436" y="225" fill="#e6edf3" textLength="520.8000000000001" lengthAdjust="spacingAndGlyphs">Sedge wants to run: bash: bun run format &amp;&amp; git push          </text>
-<text x="32.8" y="243" fill="#6e7681" textLength="151.20000000000002" lengthAdjust="spacingAndGlyphs">Nov 19 at 02:02 PM</text>
+<text x="32.8" y="243" fill="#6e7681" textLength="151.20000000000002" lengthAdjust="spacingAndGlyphs">Nov 20 at 08:14 AM</text>
 <text x="200.8" y="243" fill="#e6edf3" font-weight="700" textLength="84" lengthAdjust="spacingAndGlyphs">main      </text>
 <text x="293.2" y="243" fill="#3fb950" textLength="58.800000000000004" lengthAdjust="spacingAndGlyphs">sent   </text>
 <text x="352" y="243" fill="#e6edf3" textLength="604.8000000000001" lengthAdjust="spacingAndGlyphs"> **ci**: main is red. `lint` fails in apps/site/components/mdx.tsx: a...</text>
-<text x="32.8" y="261" fill="#6e7681" textLength="151.20000000000002" lengthAdjust="spacingAndGlyphs">Nov 19 at 12:34 PM</text>
+<text x="32.8" y="261" fill="#6e7681" textLength="151.20000000000002" lengthAdjust="spacingAndGlyphs">Nov 20 at 06:46 AM</text>
 <text x="200.8" y="261" fill="#e6edf3" font-weight="700" textLength="84" lengthAdjust="spacingAndGlyphs">main      </text>
 <text x="293.2" y="261" fill="#3fb950" textLength="58.800000000000004" lengthAdjust="spacingAndGlyphs">sent   </text>
 <text x="352" y="261" fill="#e6edf3" textLength="604.8000000000001" lengthAdjust="spacingAndGlyphs"> Morning! Two things today: the release PR is ready to merge, and the...</text>
@@ -47,7 +47,7 @@
 <text x="66.4" y="477" fill="#e6edf3" textLength="50.400000000000006" lengthAdjust="spacingAndGlyphs"> main </text>
 <text x="116.80000000000001" y="477" fill="#6e7681" textLength="8.4" lengthAdjust="spacingAndGlyphs">·</text>
 <text x="133.60000000000002" y="477" fill="#3fb950" textLength="33.6" lengthAdjust="spacingAndGlyphs">sent</text>
-<text x="167.20000000000002" y="477" fill="#6e7681" textLength="218.4" lengthAdjust="spacingAndGlyphs"> · sent Nov 19 at 02:37 PM</text>
+<text x="167.20000000000002" y="477" fill="#6e7681" textLength="218.4" lengthAdjust="spacingAndGlyphs"> · sent Nov 20 at 08:49 AM</text>
 <text x="16" y="513" fill="#e6edf3" textLength="940.8000000000001" lengthAdjust="spacingAndGlyphs">  Fixed and pushed; CI is green again.                                                                          </text>
 <text x="24.4" y="549" fill="#6e7681" textLength="604.8000000000001" lengthAdjust="spacingAndGlyphs">← → or 1–7 tabs · a agent · ↑ ↓ select · enter more · r refresh · q quit</text>
 </svg>
