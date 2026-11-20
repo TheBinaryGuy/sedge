@@ -1,5 +1,14 @@
 # sedge
 
+## 0.13.0
+
+### Minor Changes
+
+- [`a490824`](https://github.com/sedge-hq/sedge/commit/a4908244904385ac0ee0b0a0a24585273cdef3b8) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - pi extensions in the daemon: list them in `piExtensions` in config.json, and their tools, their
+  `tool_call` checks and their model providers work in runs you're not watching. Nothing loads
+  unless listed. What needs a person doesn't carry over: dialogs answer no, so a check that asks
+  before something risky blocks it.
+
 ## 0.12.0
 
 ### Minor Changes
