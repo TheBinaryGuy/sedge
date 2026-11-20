@@ -1,0 +1,97 @@
+packages/core/src/config.ts
+  s_fe732417ee9cdb::t_9bc744b8f88299 104-114
+  s_fe732417ee9cdb::t_ee2efe8f8a7bd2 29-32
+packages/daemon/src/agents.ts
+  s_fe732417ee9cdb::t_eb1801aa8e6495 44-50,169,183
+docs/security.md
+  s_fe732417ee9cdb::t_fae92ee8c4b65a 17-19,23
+  s_fe732417ee9cdb::t_f4c8c61a580af9 20-22,30-54
+  s_fe732417ee9cdb::t_072e975109cb53 55
+.changeset/permissions-by-source.md
+  s_fe732417ee9cdb::t_6b58ee76b0e9a0 1-13
+packages/db/src/timers.ts
+  s_fe732417ee9cdb::t_1d06af696e8b60 14-15
+apps/cli/scripts/e2e-telegram.ts
+  s_fe732417ee9cdb::t_11cb401ed71937 9-10,440-519
+  s_fe732417ee9cdb::t_645078a212a1a4 520
+packages/db/src/schema/index.ts
+  s_fe732417ee9cdb::t_1d06af696e8b60 62-63
+  s_fe732417ee9cdb::t_8bdc9b7298829d 36-39
+packages/daemon/src/server.ts
+  s_fe732417ee9cdb::t_4ec846676ccb3d 213
+apps/cli/src/dashboard.ts
+  s_fe732417ee9cdb::t_3ddf813d52f978 118,120
+packages/agent/src/triage.ts
+  s_fe732417ee9cdb::t_e21dcd459c7b15 10-11,14-18,23-24,60,64,66-73,77-78,80,88-99,106,113
+packages/agent/src/index.ts
+  s_fe732417ee9cdb::t_e21dcd459c7b15 10,14,133,218
+packages/db/src/migrations.gen.ts
+  s_fe732417ee9cdb::t_8bdc9b7298829d 41-44,47-48
+  s_fe732417ee9cdb::t_1d06af696e8b60 45-46,49-51
+packages/daemon/src/host.test.ts
+  s_fe732417ee9cdb::t_540d0785bf765c 1-33
+packages/protocol/src/index.ts
+  s_fe732417ee9cdb::t_4ec846676ccb3d 98-100,128-129,292-293,312-313
+apps/cli/src/guide.ts
+  s_fe732417ee9cdb::t_fae92ee8c4b65a 20,30
+apps/cli/src/connection-tools.ts
+  s_fe732417ee9cdb::t_34d4ea0649a995 44-48,88-99,109-110,118-119,295-296,332,354-359
+packages/agent/src/durable.ts
+  s_fe732417ee9cdb::t_e21dcd459c7b15 24,330
+  s_fe732417ee9cdb::t_b095c9ffc6461e 100-108,234-239
+packages/daemon/src/connections.ts
+  s_fe732417ee9cdb::t_ee2efe8f8a7bd2 118,120-125,576-579,581-588
+  s_fe732417ee9cdb::t_8bc2406621eac3 43-56,105-109,355-356,378-382,419-420,422-425,427,430-431,510-516,520-522
+  s_fe732417ee9cdb::t_3e3b90a0453a14 163,241
+packages/daemon/src/runtime.test.ts
+  s_fe732417ee9cdb::t_540d0785bf765c 73,77-83,297-317,361
+  s_fe732417ee9cdb::t_51e9fc6fafd889 62,318-360
+  s_fe732417ee9cdb::t_7d66f49123a199 22-27
+  s_fe732417ee9cdb::t_33c9005cc768b0 48-52
+packages/daemon/src/host.ts
+  s_fe732417ee9cdb::t_fc3ef3b8cacfcd 304
+  s_fe732417ee9cdb::t_eb1801aa8e6495 260-261,285
+  s_fe732417ee9cdb::t_9bc744b8f88299 2,24-42,122-123,138-139,142-147
+  s_fe732417ee9cdb::t_a30678794ff6ad 190,229
+packages/daemon/src/runtime.ts
+  s_fe732417ee9cdb::t_fc3ef3b8cacfcd 433
+  s_fe732417ee9cdb::t_3e3b90a0453a14 146-148,254,292
+  s_fe732417ee9cdb::t_c7e06bfc758533 1,82,159-216,259
+docs/how-it-works.md
+  s_fe732417ee9cdb::t_f4c8c61a580af9 65-66
+packages/db/drizzle/20261120052920_untrusted-and-labels/snapshot.json
+  s_fe732417ee9cdb::t_1d06af696e8b60 1-678
+docs/configuration.md
+  s_fe732417ee9cdb::t_fae92ee8c4b65a 29-41
+  s_fe732417ee9cdb::t_f4c8c61a580af9 46-47
+docs/channels-and-signals.md
+  s_fe732417ee9cdb::t_fae92ee8c4b65a 27-28,88-89,99-130
+  s_fe732417ee9cdb::t_bda3ec8e0ff093 131
+packages/agent/src/host.ts
+  s_fe732417ee9cdb::t_9bc744b8f88299 7-11
+packages/db/src/inbox.ts
+  s_fe732417ee9cdb::t_8bdc9b7298829d 15-16
+  s_fe732417ee9cdb::t_ee2efe8f8a7bd2 51-52,212-215,220
+packages/db/drizzle/20261120052920_untrusted-and-labels/migration.sql
+  s_fe732417ee9cdb::t_1d06af696e8b60 1-3
+packages/agent/src/durable.test.ts
+  s_fe732417ee9cdb::t_51e9fc6fafd889 415-436
+docs/use-cases.md
+  s_fe732417ee9cdb::t_6b58ee76b0e9a0 54-63
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "202e7f0b670497a9aa68015d47928139ee72b1a2",
+  "prompts": {},
+  "sessions": {
+    "s_fe732417ee9cdb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b6666194-df82-46a7-a1ef-33e06788ffe9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "TheBinaryGuy <hello@thebinary.dev>"
+    }
+  }
+}
