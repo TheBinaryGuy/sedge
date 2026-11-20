@@ -1,6 +1,6 @@
 {
     "name": "@sedge-hq/web",
-    "version": "0.1.1",
+    "version": "0.1.2",
     "description": "Web pages and feeds for sedge: tell me when this page changes, or something new is posted.",
     "keywords": [
         "atom",

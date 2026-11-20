@@ -1,6 +1,6 @@
 {
     "name": "@sedge-hq/mqtt",
-    "version": "0.2.0",
+    "version": "0.2.1",
     "description": "MQTT for sedge: wake it when a message arrives on a topic, from a sensor, a home hub or a device.",
     "keywords": [
         "iot",

@@ -1,5 +1,14 @@
 # @sedge-hq/telegram
 
+## 0.2.3
+
+### Patch Changes
+
+- [`ddceba7`](https://github.com/sedge-hq/sedge/commit/ddceba756e262824740f5827d20e84fceb62ecf4) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - Updated READMEs: each package's settings, the details its events carry for sedge's `when`
+  conditions, and in the kit, optional secrets and putting a happening's data in `details`.
+- Updated dependencies [[`ddceba7`](https://github.com/sedge-hq/sedge/commit/ddceba756e262824740f5827d20e84fceb62ecf4)]:
+  - @sedge-hq/kit@0.3.3
+
 ## 0.2.2
 
 ### Patch Changes

@@ -1,6 +1,6 @@
 {
     "name": "@sedge-hq/kit",
-    "version": "0.3.2",
+    "version": "0.3.3",
     "description": "Build channels and signals for sedge, the always-on agent.",
     "keywords": [
         "agent",
