@@ -35,7 +35,7 @@ const refuse = (message: string) =>
     Console.error(message).pipe(Effect.andThen(Effect.sync(() => void (process.exitCode = 1))));
 
 const sedge = Command.make('sedge').pipe(
-    Command.withDescription('An always-on agent that lives on your machine.'),
+    Command.withDescription('An always-on, event-driven agent that lives on your machine.'),
 );
 
 /** `sedge start`: make sure the daemon is running. `--foreground` is the daemon itself. */

@@ -2,7 +2,7 @@
 
 <h1 align="center">sedge</h1>
 
-<p align="center">An always-on agent that lives on your machine, built on <a href="https://github.com/earendil-works/pi">pi</a>.</p>
+<p align="center">An always-on, event-driven agent that lives on your machine, built on <a href="https://github.com/earendil-works/pi">pi</a>.</p>
 
 <p align="center">
   <a href="https://github.com/sedge-hq/sedge/actions/workflows/ci.yml"><img alt="CI" src="https://img.shields.io/github/actions/workflow/status/sedge-hq/sedge/ci.yml?branch=main&label=ci"></a>

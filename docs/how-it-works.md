@@ -6,8 +6,8 @@ description: Events go into an inbox, a run handles them, and replies leave thro
 ![How sedge works: events go into the inbox, a durable run handles them, and what it says leaves through the outbox](./architecture-light.svg#gh-light-mode-only)
 ![How sedge works: events go into the inbox, a durable run handles them, and what it says leaves through the outbox](./architecture-dark.svg#gh-dark-mode-only)
 
-An always-on agent is not running all the time. It sleeps until something happens, wakes for a
-short run, and sleeps again. sedge follows the pattern in
+An always-on agent is not running all the time. sedge is event-driven: it sleeps until something
+happens, wakes for a short run, and sleeps again. sedge follows the pattern in
 [Building always-on agents](https://claude.com/resources/articles/building-always-on-agents),
 with five parts.
 

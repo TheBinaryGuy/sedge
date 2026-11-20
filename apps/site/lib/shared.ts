@@ -6,7 +6,7 @@ export const repositoryUrl = `https://github.com/${repository.user}/${repository
 
 /** What the home page says first, and its social image. */
 export const tagline = {
-    title: 'An always-on agent that lives on your machine.',
+    title: 'An always-on, event-driven agent that lives on your machine.',
     description:
         'sedge is a coding agent with a daemon behind it that keeps working after you close the terminal.',
 };

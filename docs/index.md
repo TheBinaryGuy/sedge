@@ -1,10 +1,10 @@
 ---
 title: Introduction
-description: An always-on agent that lives on your machine.
+description: An always-on, event-driven agent that lives on your machine.
 ---
 
 sedge is an agent that keeps working after you close the terminal. You talk to it in a TUI on
-your computer, or from your phone on Telegram or Slack. It wakes when something happens (a message, a
+your computer, or from your phone on Telegram or Slack. It's event-driven: it wakes when something happens (a message, a
 timer, your CI failing), does the work, tells you what matters, and goes back to sleep.
 
 ![How sedge works: events go into the inbox, a durable run handles them, and what it says leaves through the outbox](./architecture-light.svg#gh-light-mode-only)
