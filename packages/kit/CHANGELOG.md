@@ -1,5 +1,13 @@
 # @sedge-hq/kit
 
+## 0.3.2
+
+### Patch Changes
+
+- [`6578312`](https://github.com/sedge-hq/sedge/commit/65783129c655d5296ae08b5c99c3dae0b027dcb1) Thanks [@TheBinaryGuy](https://github.com/TheBinaryGuy)! - `field.optional(secret(...))` stays a secret: it's typed into a hidden field and kept in the
+  keychain, and your code gets it as a plain string. Before, wrapping a secret made it an ordinary
+  setting.
+
 ## 0.3.1
 
 ### Patch Changes

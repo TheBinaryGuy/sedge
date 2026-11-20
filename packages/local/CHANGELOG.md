@@ -1,5 +1,12 @@
 # @sedge-hq/local
 
+## 0.1.1
+
+### Patch Changes
+
+- Updated dependencies [[`6578312`](https://github.com/sedge-hq/sedge/commit/65783129c655d5296ae08b5c99c3dae0b027dcb1)]:
+  - @sedge-hq/kit@0.3.2
+
 ## 0.1.0
 
 ### Minor Changes

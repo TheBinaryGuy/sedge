@@ -1,6 +1,6 @@
 {
     "name": "@sedge-hq/github",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "description": "GitHub for sedge: CI that fails, reviews you're asked for, issues and PRs assigned to you.",
     "keywords": [
         "ci",
