@@ -1,0 +1,133 @@
+docs/screenshots/tui-sedge-inbox.svg
+  s_fe732417ee9cdb::t_eacdb827eb8c6b 9
+  s_fe732417ee9cdb::t_0261fd7d873c8b 34,39,44,49,54,59
+apps/cli/src/guide.ts
+  s_fe732417ee9cdb::t_1afbe766f203c6 16,19-20,23,26,32,66
+packages/mqtt/README.md
+  s_fe732417ee9cdb::t_69c9809e339f67 8-9
+packages/github/README.md
+  s_fe732417ee9cdb::t_69c9809e339f67 14-18
+apps/cli/src/connection-tools.ts
+  s_fe732417ee9cdb::t_c727b00bf2ab4f 19-23,369
+docs/use-cases.md
+  s_fe732417ee9cdb::t_2fb5a73fc29e29 96-97,145-147
+docs/screenshots/dash-inbox.svg
+  s_fe732417ee9cdb::t_eacdb827eb8c6b 9
+  s_fe732417ee9cdb::t_0261fd7d873c8b 12,14,27,32,38,43,48,53,65
+docs/security.md
+  s_fe732417ee9cdb::t_1253ba8ca1cacf 23,35-36,40-43,71-74
+docs/channels-and-signals.md
+  s_fe732417ee9cdb::t_f892c32c631bc0 111-126
+  s_fe732417ee9cdb::t_8c2b300b7047fc 27-28,54-55,62,64,67-68,73-74,79-86,138-141,145
+  s_fe732417ee9cdb::t_ce863b77e7e2cb 157-158
+docs/mcp-and-skills.md
+  s_fe732417ee9cdb::t_2fb5a73fc29e29 48-49
+packages/db/src/stores.test.ts
+  s_fe732417ee9cdb::t_bc8e534c16bb75 94-110
+docs/getting-started.md
+  s_fe732417ee9cdb::t_1253ba8ca1cacf 75-77
+apps/cli/src/commands.ts
+  s_fe732417ee9cdb::t_c727b00bf2ab4f 407-409
+packages/db/src/inbox.ts
+  s_fe732417ee9cdb::t_c727b00bf2ab4f 1,49,175-181
+docs/how-it-works.md
+  s_fe732417ee9cdb::t_2fb5a73fc29e29 23-24
+apps/cli/src/main.ts
+  s_fe732417ee9cdb::t_1afbe766f203c6 19
+packages/daemon/src/telemetry.ts
+  s_fe732417ee9cdb::t_b0294fe4410c07 203-209
+docs/commands.md
+  s_fe732417ee9cdb::t_1253ba8ca1cacf 12,14,16,18,34
+  s_fe732417ee9cdb::t_036306602c7c3b 75-77
+.changeset/audit-fixes.md
+  s_fe732417ee9cdb::t_0dac41ea47a446 1-9
+docs/agents.md
+  s_fe732417ee9cdb::t_2fb5a73fc29e29 59-62,107-112
+docs/configuration.md
+  s_fe732417ee9cdb::t_b464affec9f731 6-10,34,77-83,88-101,107-115
+apps/site/components/diagram.tsx
+  s_fe732417ee9cdb::t_a035a49dfdf8b1 5
+docs/screenshots/dash-memory.svg
+  s_fe732417ee9cdb::t_0261fd7d873c8b 12,14
+  s_fe732417ee9cdb::t_ccf54d788a05de 9
+docs/logs-and-runs.md
+  s_fe732417ee9cdb::t_2fb5a73fc29e29 11-12,17
+  s_fe732417ee9cdb::t_5d669e2e4e4e99 38-41
+apps/cli/src/extension.ts
+  s_fe732417ee9cdb::t_1afbe766f203c6 53,192-193
+docs/screenshots/dash-outbox.svg
+  s_fe732417ee9cdb::t_0261fd7d873c8b 12,14,28,32,37,41,50
+  s_fe732417ee9cdb::t_3fee74353feb5a 9
+README.md
+  s_fe732417ee9cdb::t_1253ba8ca1cacf 21,50-52
+  s_fe732417ee9cdb::t_a035a49dfdf8b1 40
+docs/screenshots/dash-logs.svg
+  s_fe732417ee9cdb::t_0261fd7d873c8b 12,14,29,33,37,42
+  s_fe732417ee9cdb::t_20dac71ecd9884 9
+docs/screenshots/dash-runs.svg
+  s_fe732417ee9cdb::t_0261fd7d873c8b 12,14,27-28,34,40,46,52,58,60,62-68
+  s_fe732417ee9cdb::t_f4d5dacdadca8f 9
+packages/agent/src/sandbox.ts
+  s_fe732417ee9cdb::t_b0294fe4410c07 34-36,40
+scripts/build.ts
+  s_fe732417ee9cdb::t_8ac9678d29a1e3 111
+  s_fe732417ee9cdb::t_34c1615bef02e6 122-127
+packages/daemon/src/sandbox.ts
+  s_fe732417ee9cdb::t_b0294fe4410c07 3,17-27
+scripts/screenshots.ts
+  s_fe732417ee9cdb::t_bbce2d0ae7559e 72-73,88-89,103-104,118-119
+  s_fe732417ee9cdb::t_82b9f50ba18412 218,343-350
+  s_fe732417ee9cdb::t_e48a2f7b831c22 351
+packages/local/README.md
+  s_fe732417ee9cdb::t_0b926cc3ff19f6 18-20,22-24
+docs/development.md
+  s_fe732417ee9cdb::t_036306602c7c3b 49
+  s_fe732417ee9cdb::t_b464affec9f731 32-34,51-56
+docs/sandbox.md
+  s_fe732417ee9cdb::t_036306602c7c3b 32-33,36-40,74-78
+packages/telegram/README.md
+  s_fe732417ee9cdb::t_69c9809e339f67 9-10
+packages/web/README.md
+  s_fe732417ee9cdb::t_69c9809e339f67 9-12
+apps/cli/src/connection-tools.test.ts
+  s_fe732417ee9cdb::t_bc8e534c16bb75 5,32-41
+  s_fe732417ee9cdb::t_ddf0c58baa42b7 42
+docs/limits.md
+  s_fe732417ee9cdb::t_036306602c7c3b 58-60,64-69
+  s_fe732417ee9cdb::t_3800847cc283d9 17-19
+apps/cli/src/dashboard.ts
+  s_fe732417ee9cdb::t_d054796436ac34 317,323-324,328-339
+  s_fe732417ee9cdb::t_85fcd83a6f8f5e 340-341
+.changeset/dash-today.md
+  s_fe732417ee9cdb::t_309eba6b365ebd 1-6
+docs/architecture-dark.svg
+  s_fe732417ee9cdb::t_d4f8248e9055d6 3,23-24,47-49,56,58,76-81,84-85,88,98,101,105-107
+docs/architecture-light.svg
+  s_fe732417ee9cdb::t_191ad521465e1c 3,23-24,47-49,56,58,76-81,84-85,88,98,101,105-107
+docs/screenshots/dash-agents.svg
+  s_fe732417ee9cdb::t_2c2fd69650a865 9,12,14
+docs/screenshots/tui.svg
+  s_fe732417ee9cdb::t_beb6c038605c0d 9
+packages/daemon/src/server.ts
+  s_fe732417ee9cdb::t_75228693b7426e 26,58,272-273,301-305
+packages/protocol/src/index.ts
+  s_fe732417ee9cdb::t_2fe2463f386fe9 189-197
+scripts/architecture.ts
+  s_fe732417ee9cdb::t_40367098b77630 154-155,163,197,231,233,243-250,288-292,322-323,326-328,333,382-394,398
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "c3c53a2f12c9a0ba9b3a4357a6051fdf55f141cb",
+  "prompts": {},
+  "sessions": {
+    "s_fe732417ee9cdb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b6666194-df82-46a7-a1ef-33e06788ffe9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "TheBinaryGuy <hello@thebinary.dev>"
+    }
+  }
+}
