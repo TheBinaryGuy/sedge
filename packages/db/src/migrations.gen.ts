@@ -29,5 +29,14 @@ export const migrations: Array<MigrationMeta> = [
         "folderMillis": 1795076039000,
         "hash": "c3ae59aa74ed8b6b9db73b90945ee3ee1564af065e5b41e0d602a95068bb35fe",
         "name": "20261119081359_outbox-extra"
+    },
+    {
+        "sql": [
+            "ALTER TABLE `inbox` ADD `hold_until` integer;"
+        ],
+        "bps": true,
+        "folderMillis": 1795140453000,
+        "hash": "61fd7e54e96dd461f60ef88af141625b37a31cd43a009c7f39e5729659ce51ff",
+        "name": "20261120020733_inbox-hold"
     }
 ];

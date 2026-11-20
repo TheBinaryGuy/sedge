@@ -19,3 +19,4 @@ export {
     type Policy,
 } from './config';
 export { ABOUT } from './about';
+export { checkEventOptions, type EventOptions, parseDuration, passes } from './events';

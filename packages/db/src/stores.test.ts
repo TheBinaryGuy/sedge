@@ -48,6 +48,30 @@ describe('Inbox', () => {
         ),
     );
 
+    it.effect('holds an event until its time, and hands it over with an earlier run', () =>
+        fresh(
+            Effect.gen(function* () {
+                const inbox = yield* Inbox;
+                const later = Date.now() + 60_000;
+                yield* inbox.enqueue({ ...event('agent:ci', 'held', '1'), holdUntil: later });
+                yield* inbox.enqueue({ ...event('agent:ci', 'held too', '2'), holdUntil: later });
+                expect(yield* inbox.claimBatch()).toEqual([]);
+
+                // Something that can't wait for the agent takes the held events along.
+                yield* inbox.enqueue(event('agent:ci', 'now', '3'));
+                expect((yield* inbox.claimBatch()).map((e) => e.prompt)).toEqual([
+                    'held',
+                    'held too',
+                    'now',
+                ]);
+
+                // Once the time comes, it goes on its own.
+                yield* inbox.enqueue({ ...event('main', 'due', '4'), holdUntil: Date.now() - 1 });
+                expect((yield* inbox.claimBatch()).map((e) => e.prompt)).toEqual(['due']);
+            }),
+        ),
+    );
+
     it.effect('never starts a second run for a thread that has one going', () =>
         fresh(
             Effect.gen(function* () {

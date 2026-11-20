@@ -5,7 +5,8 @@
  * path a user takes: install the Telegram package, connect the channel (the token must land in the
  * keychain, not the config), check a stranger gets no answer, pair through the invite link, message
  * the agent and get an answer in the chat (with "typing…" meanwhile), approve a shell command from
- * the chat's buttons, have main start a subagent and get its answer back, and disconnect (the token leaves the keychain). The agent steps call the model
+ * the chat's buttons, have main start a subagent and get its answer back, filter and batch a
+ * webhook signal's events, and disconnect (the token leaves the keychain). The agent steps call the model
  * through your logins. Exits non-zero on the first failure.
  *
  * SEDGE_BIN=dist/npm/sedge-<os>-<cpu>/bin/sedge runs the same walk against a compiled binary.
@@ -283,6 +284,58 @@ try {
         );
     });
     pass(`main got: ${subReport.prompt.replaceAll('\n', ' ')}`);
+
+    step('a webhook signal: events that don’t match are dropped, the rest arrive in one run');
+    const local = sedge('install', join(root, 'packages/local'));
+    const localInstalled = (await new Response(local.stdout).text()).trim();
+    if ((await local.exited) !== 0)
+        fail(`install failed: ${await new Response(local.stderr).text()}`);
+    if (!localInstalled.includes('webhook (signal)'))
+        fail(`no webhook signal after install: ${localInstalled}`);
+    const probe = Bun.serve({ port: 0, fetch: () => new Response() });
+    const port = probe.port!;
+    void probe.stop(true);
+    await withDaemon(({ client }) =>
+        client.Connect({
+            name: 'hook',
+            kind: 'webhook',
+            settings: { port },
+            secrets: { token: 'hook-secret' },
+            instruction: 'Nothing to do: end your turn without sending anything.',
+            match: 'deploy',
+            batch: '3s',
+        }),
+    );
+    const post = (body: string) =>
+        fetch(`http://127.0.0.1:${port}/`, {
+            method: 'POST',
+            headers: { authorization: 'Bearer hook-secret' },
+            body,
+        }).then(
+            (response) => response.status,
+            () => 0,
+        );
+    await poll('the webhook to listen', async () =>
+        (await post('deploy api')) === 202 ? true : undefined,
+    );
+    await post('just noise');
+    await post('deploy web');
+    const hooked = await poll('both deploys handled', async () => {
+        const items = await withDaemon(({ client }) => client.Inbox({ agent: 'main', limit: 50 }));
+        const mine = items.filter((item) => item.source === 'hook');
+        return mine.length >= 2 && mine.every((item) => item.finishedAt !== null)
+            ? mine
+            : undefined;
+    });
+    if (hooked.some((item) => item.prompt.includes('just noise')))
+        fail('an event that did not match got through');
+    if (hooked.length !== 2) fail(`expected 2 events, got ${hooked.length}`);
+    if (hooked[0]!.finishedAt !== hooked[1]!.finishedAt)
+        fail('the batched events were handled in separate runs');
+    const held = hooked[0]!.finishedAt! - Math.min(...hooked.map((item) => item.createdAt));
+    if (held < 3000) fail(`the batch was handed over after ${held} ms, before its 3s window`);
+    pass(`2 of 3 posts got through, handled together after ${held} ms`);
+    await withDaemon(({ client }) => client.Disconnect({ name: 'hook' }));
 
     step('uninstall waits until nothing of the package is connected');
     const early = sedge('uninstall', 'telegram');

@@ -16,6 +16,12 @@ const Connection = Schema.Struct({
     /** The agent that handles what it brings; `main` when unset. */
     agent: Schema.optional(Schema.String),
     enabled: Schema.optional(Schema.Boolean),
+    /** For a signal: only events whose text matches this regular expression (any case). */
+    match: Schema.optional(Schema.String),
+    /** For a signal: no events whose text matches this regular expression (any case). */
+    ignore: Schema.optional(Schema.String),
+    /** For a signal: hold events this long (`30s`, `5m`) after the first, then hand them over together. */
+    batch: Schema.optional(Schema.String),
 });
 export type ConnectionEntry = typeof Connection.Type;
 

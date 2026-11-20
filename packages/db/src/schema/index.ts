@@ -31,6 +31,8 @@ export const inbox = sqliteTable(
         createdAt,
         startedAt: integer('started_at', { mode: 'number' }),
         finishedAt: integer('finished_at', { mode: 'number' }),
+        /** Not handed to the agent before this time, so events of a batching signal go together. */
+        holdUntil: integer('hold_until', { mode: 'number' }),
     },
     (table) => [
         index('inbox_status_created_idx').on(table.status, table.createdAt),

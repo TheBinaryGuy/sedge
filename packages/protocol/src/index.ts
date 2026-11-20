@@ -87,6 +87,10 @@ export class ConnectionInfo extends Schema.Class<ConnectionInfo>('sedge/protocol
     status: Schema.String,
     running: Schema.Boolean,
     instruction: Schema.NullOr(Schema.String),
+    /** For a signal: only events matching this, none matching `ignore`, held `batch` long. */
+    match: Schema.optional(Schema.NullOr(Schema.String)),
+    ignore: Schema.optional(Schema.NullOr(Schema.String)),
+    batch: Schema.optional(Schema.NullOr(Schema.String)),
 }) {}
 
 /** An agent: `main` (sedge itself) or one you made, and how it is doing. */
@@ -256,8 +260,25 @@ export class SedgeRpcs extends RpcGroup.make(
             settings: Options,
             secrets: Schema.Record(Schema.String, Schema.String),
             instruction: Schema.NullOr(Schema.String),
+            match: Schema.optional(Schema.String),
+            ignore: Schema.optional(Schema.String),
+            batch: Schema.optional(Schema.String),
         },
         success: Schema.Struct({ invite: Schema.NullOr(Schema.String) }),
+        error: ConnectionError,
+    }),
+    /**
+     * Changes what a signal does when it fires: its instruction, `match` and `ignore` filters and
+     * `batch` window. A field left out stays as it is; `null` clears it.
+     */
+    Rpc.make('UpdateSignal', {
+        payload: {
+            name: Schema.String,
+            instruction: Schema.optional(Schema.NullOr(Schema.String)),
+            match: Schema.optional(Schema.NullOr(Schema.String)),
+            ignore: Schema.optional(Schema.NullOr(Schema.String)),
+            batch: Schema.optional(Schema.NullOr(Schema.String)),
+        },
         error: ConnectionError,
     }),
     Rpc.make('Disconnect', { payload: { name: Schema.String }, error: ConnectionError }),

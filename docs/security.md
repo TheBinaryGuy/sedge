@@ -59,3 +59,7 @@ you to read in `sedge dash`.
 Packages you install and signals you register run inside the daemon with your rights, outside any
 sandbox. sedge asks before installing or registering, and shows you the file to review. What you
 approve is copied, and that copy is what runs.
+
+The `command` signal runs the command you give it in your shell, with your rights, for as long as
+it's connected; you see the command before you confirm. The `webhook` signal listens only on this
+machine unless you set its `host`, and turns away any request without the token you chose.

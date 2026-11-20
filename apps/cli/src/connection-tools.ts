@@ -30,7 +30,40 @@ const describeKind = (kind: KindInfo) =>
     ].join('\n');
 
 const describeConnection = (connection: ConnectionInfo) =>
-    `- ${connection.name} (${connection.kind}): ${connection.status}${connection.instruction ? `\n    when it fires: ${connection.instruction}` : ''}`;
+    [
+        `- ${connection.name} (${connection.kind}): ${connection.status}`,
+        ...(connection.instruction ? [`    when it fires: ${connection.instruction}`] : []),
+        ...(connection.match ? [`    only events matching: ${connection.match}`] : []),
+        ...(connection.ignore ? [`    ignoring events matching: ${connection.ignore}`] : []),
+        ...(connection.batch ? [`    batched: ${connection.batch}`] : []),
+    ].join('\n');
+
+const EVENT_OPTIONS = {
+    match: Type.Optional(
+        Type.String({
+            description:
+                'For a signal: only events whose text matches this regular expression (any case), e.g. "fail|error".',
+        }),
+    ),
+    ignore: Type.Optional(
+        Type.String({
+            description:
+                'For a signal: drop events whose text matches this regular expression (any case).',
+        }),
+    ),
+    batch: Type.Optional(
+        Type.String({
+            description:
+                'For a signal that fires often: hold events this long after the first (30s, 5m, 1h) and hand them to the agent together, in one run.',
+        }),
+    ),
+};
+
+const describeOptions = (options: { match?: string; ignore?: string; batch?: string }) => [
+    ...(options.match ? [`· only events matching: ${options.match}`] : []),
+    ...(options.ignore ? [`· ignoring events matching: ${options.ignore}`] : []),
+    ...(options.batch ? [`· batched: ${options.batch}`] : []),
+];
 
 /** The nearest package.json above `dir` that declares sedge channels or signals, if any. */
 export const kitPackage = async (
@@ -128,7 +161,7 @@ export const registerConnectionTools = (pi: ExtensionAPI, withDaemon: WithDaemon
         name: 'connect',
         label: 'Connect',
         description:
-            "Connect a channel or signal of an installed kind. Pass its settings except secrets: the user is asked for each secret in a hidden field. For a signal, `instruction` says what to do when it fires, in the user's words. The user confirms first. A channel returns an invite link that pairs the user's account.",
+            "Connect a channel or signal of an installed kind. Pass its settings except secrets: the user is asked for each secret in a hidden field. For a signal, `instruction` says what to do when it fires, in the user's words; `match` and `ignore` filter its events before they wake the agent, and `batch` gathers a noisy one's events into one run. The user confirms first. A channel returns an invite link that pairs the user's account.",
         promptSnippet: 'Connect a channel (Telegram …) or a signal (CI, a feed …)',
         promptGuidelines: [
             'Never ask the user to paste a token or password into the chat: connect asks for secrets in a hidden field.',
@@ -140,6 +173,7 @@ export const registerConnectionTools = (pi: ExtensionAPI, withDaemon: WithDaemon
             instruction: Type.Optional(
                 Type.String({ description: 'For a signal: what to do when it fires.' }),
             ),
+            ...EVENT_OPTIONS,
         }),
         execute: async (_id, params, _signal, _update, ctx) => {
             const kinds = await withDaemon(({ client }) => client.Kinds());
@@ -164,6 +198,7 @@ export const registerConnectionTools = (pi: ExtensionAPI, withDaemon: WithDaemon
                     kind.summary,
                     ...shown,
                     ...(params.instruction ? [`· when it fires: ${params.instruction}`] : []),
+                    ...describeOptions(params),
                     ...(kind.fields.some((f) => f.secret)
                         ? ['Secrets are asked for next and kept in your keychain.']
                         : []),
@@ -197,6 +232,9 @@ export const registerConnectionTools = (pi: ExtensionAPI, withDaemon: WithDaemon
                         settings,
                         secrets,
                         instruction: params.instruction ?? null,
+                        ...(params.match ? { match: params.match } : {}),
+                        ...(params.ignore ? { ignore: params.ignore } : {}),
+                        ...(params.batch ? { batch: params.batch } : {}),
                     })
                     .pipe(Effect.result),
             );
@@ -224,6 +262,42 @@ export const registerConnectionTools = (pi: ExtensionAPI, withDaemon: WithDaemon
                 link._tag === 'Failure'
                     ? `No invite: ${message(link.failure)}`
                     : `Invite link (one use, 30 minutes): ${link.success}`,
+            );
+        },
+    });
+
+    pi.registerTool({
+        name: 'update_signal',
+        label: 'Update signal',
+        description:
+            'Change what a connected signal does when it fires: its `instruction`, the `match` and `ignore` filters, or the `batch` window. Leave out what stays; pass an empty string to clear one. The user confirms first.',
+        parameters: Type.Object({
+            name: Type.String(),
+            instruction: Type.Optional(Type.String()),
+            ...EVENT_OPTIONS,
+        }),
+        execute: async (_id, params, _signal, _update, ctx) => {
+            const { name, ...changes } = params;
+            const shown = Object.entries(changes).map(([key, value]) =>
+                value ? `· ${key}: ${value}` : `· ${key}: (cleared)`,
+            );
+            if (shown.length === 0) return text('Nothing to change.');
+            const ok = await ctx.ui.confirm(`Change the signal "${name}"?`, shown.join('\n'));
+            if (!ok) return text('The user declined; nothing changed.');
+            const updated = await withDaemon(({ client }) =>
+                client
+                    .UpdateSignal({
+                        name,
+                        ...Object.fromEntries(
+                            Object.entries(changes).map(([key, value]) => [key, value || null]),
+                        ),
+                    })
+                    .pipe(Effect.result),
+            );
+            return text(
+                updated._tag === 'Failure'
+                    ? `Not changed: ${message(updated.failure)}`
+                    : `Changed ${name}; it applies to the next event.`,
             );
         },
     });

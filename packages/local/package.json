@@ -1,0 +1,50 @@
+{
+    "name": "@sedge-hq/local",
+    "version": "0.0.0",
+    "description": "Webhooks, files and commands for sedge: wake it when something posts to it, a folder changes, or a command prints something new.",
+    "keywords": [
+        "command",
+        "files",
+        "sedge",
+        "sedge-kit",
+        "webhook"
+    ],
+    "homepage": "https://sedge.sh",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/sedge-hq/sedge.git",
+        "directory": "packages/local"
+    },
+    "files": [
+        "src",
+        "!src/**/*.test.ts"
+    ],
+    "type": "module",
+    "exports": {
+        ".": "./src/webhook.ts"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "typecheck": "tsc --noEmit",
+        "test": "bun --bun vitest run --passWithNoTests"
+    },
+    "dependencies": {
+        "@sedge-hq/kit": "workspace:*"
+    },
+    "devDependencies": {
+        "@sedge-hq/config": "workspace:*",
+        "@types/bun": "1.4.4",
+        "typescript": "7.0.2",
+        "vitest": "5.1.1"
+    },
+    "sedge": {
+        "plugins": [
+            "./src/webhook.ts",
+            "./src/files.ts",
+            "./src/command.ts"
+        ]
+    }
+}

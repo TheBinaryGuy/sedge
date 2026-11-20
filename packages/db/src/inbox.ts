@@ -1,4 +1,4 @@
-import { and, asc, count, desc, eq, inArray, notInArray, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, isNull, lte, notInArray, or, sql } from 'drizzle-orm';
 import { Context, Effect, Layer } from 'effect';
 import { Database } from './database';
 import { inbox, type InboxItem } from './schema';
@@ -10,6 +10,8 @@ export interface NewEvent {
     readonly thread: string;
     readonly prompt: string;
     readonly cwd: string;
+    /** Wait until this time (ms): a batching signal's events go to the agent together. */
+    readonly holdUntil?: number | undefined;
 }
 
 export type Outcome = { readonly result: string } | { readonly error: string };
@@ -26,7 +28,8 @@ export class Inbox extends Context.Service<
         /**
          * Claims every pending event of the thread whose oldest event is next in line, so several
          * messages sent in a row become one run and one reply. Threads in `busy` are skipped: they
-         * have a run going, and one thread never has two.
+         * have a run going, and one thread never has two. An event held until later doesn't start
+         * a run, but goes along with one that starts sooner.
          */
         readonly claimBatch: (
             busy?: ReadonlyArray<string>,
@@ -67,12 +70,16 @@ export class Inbox extends Context.Service<
                                 .select({ thread: inbox.thread })
                                 .from(inbox)
                                 .where(
-                                    busy.length > 0
-                                        ? and(
-                                              eq(inbox.status, 'pending'),
-                                              notInArray(inbox.thread, [...busy]),
-                                          )
-                                        : eq(inbox.status, 'pending'),
+                                    and(
+                                        eq(inbox.status, 'pending'),
+                                        or(
+                                            isNull(inbox.holdUntil),
+                                            lte(inbox.holdUntil, Date.now()),
+                                        ),
+                                        busy.length > 0
+                                            ? notInArray(inbox.thread, [...busy])
+                                            : undefined,
+                                    ),
                                 )
                                 .orderBy(asc(inbox.createdAt), sql`rowid`)
                                 .limit(1);

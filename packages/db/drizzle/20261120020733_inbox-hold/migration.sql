@@ -1,0 +1,1 @@
+ALTER TABLE `inbox` ADD `hold_until` integer;

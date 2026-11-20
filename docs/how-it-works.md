@@ -25,7 +25,8 @@ Everything that should wake the agent becomes an event in the inbox, a table in
 Each event has an id from its source, so one that arrives twice is stored once. The worker
 drains the inbox: a run for every conversation with work, all at once, never two for the same one. Events that
 arrive while a conversation's run is going are answered together in its next run, so three
-quick messages get one reply, not three.
+quick messages get one reply, not three. A signal with a `batch` window holds its events for that
+long, so a burst of them gets one run too.
 
 ## The run
 

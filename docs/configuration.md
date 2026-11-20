@@ -34,7 +34,10 @@ reads it at start; after editing it, restart: `sedge stop && sedge start`.
 
 Each connection has a `kind`, its `settings` (never secrets), `secrets` (the names of the
 settings kept in the keychain), an optional `instruction` for a signal, an optional `agent` that
-handles it (default `main`), and `enabled: false` to pause it.
+handles it (default `main`), and `enabled: false` to pause it. A signal can also have `match` and
+`ignore` (regular expressions an event's text must or must not match) and `batch` (how long to
+hold its events and hand them over together, like `5m`); see
+[Filtering and batching](./channels-and-signals.md#filtering-and-batching).
 
 ## Files
 

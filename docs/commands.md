@@ -48,6 +48,7 @@ Ask in your own words; these are what it uses.
 | `uninstall`     | Remove a package; what it provides must be disconnected first (you confirm). |
 | `connect`       | Connect a channel or signal; asks for secrets in a hidden field.             |
 | `invite`        | A new one-time pairing link for a channel.                                   |
+| `update_signal` | Change a signal's instruction, filters or batch window (you confirm).        |
 | `disconnect`    | Stop one and delete its settings and secrets (you confirm).                  |
 | `create_signal` | Register a signal or channel module it wrote (you review it first).          |
 | `agents`        | The daemon's agents, what each handles, and how each is doing.               |

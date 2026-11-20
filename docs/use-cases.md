@@ -104,6 +104,15 @@ export default defineSignal({
   `TimeoutError` from the payments client. The deploy at 14:05 changed its timeout from 30s to
   3s (a1c9f2e)." It reads the log and your repository before it writes.
 
+### A deploy finishes
+
+> Our deploy script can call a webhook when it's done. When it does, check the site is up and the
+> error rate is normal, and only tell me if something's off.
+
+- **What it sets up:** `webhook`, with a token for your deploy script to send.
+- **What you get:** nothing when the deploy is fine. When it isn't: "The deploy at 16:02 is up,
+  but /checkout returns 500 since then; the log says the new env var `STRIPE_KEY` is missing."
+
 ### Review requests and mentions
 
 > Tell me when someone asks me for a review or mentions me on GitHub. Skip the bots.

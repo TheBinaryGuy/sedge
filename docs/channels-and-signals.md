@@ -52,6 +52,22 @@ A signal reports what happened as data, never as instructions: text inside a CI 
 gave when connecting it ("tell me if it's my commit", "retry once, then tell me"). Signals report
 into the `main` conversation, so a follow-up question on Telegram has the context.
 
+### Filtering and batching
+
+A signal can fire more than you care about. Three settings on any signal decide what reaches the
+agent, so a noisy one doesn't start a model run for each event:
+
+- **`match`**: only events whose text matches this regular expression (any case), like
+  `fail|error`.
+- **`ignore`**: drop events that match this one, like `dependabot`.
+- **`batch`**: hold events this long after the first (`30s`, `5m`, `1h`) and hand them over
+  together, in one run. Held events are kept in the inbox, so a restart doesn't lose them, and
+  anything else that wakes the same agent first takes them along.
+
+Say it when connecting ("only tell me about failures on main, at most every 10 minutes"), or
+change it later ("stop telling me about dependabot"): the TUI's agent sets these with `connect`
+and `update_signal`, and you confirm.
+
 ## Kinds
 
 | Kind        | Type    | Package                                                                                                                        |
@@ -62,12 +78,32 @@ into the `main` conversation, so a follow-up question on Telegram has the contex
 | `github`    | signal  | [`@sedge-hq/github`](https://github.com/sedge-hq/sedge/blob/main/packages/github): reviews asked of you, assignments, mentions |
 | `web-page`  | signal  | [`@sedge-hq/web`](https://github.com/sedge-hq/sedge/blob/main/packages/web): a page whose text changes                         |
 | `feed`      | signal  | [`@sedge-hq/web`](https://github.com/sedge-hq/sedge/blob/main/packages/web): new posts on an RSS or Atom feed                  |
+| `webhook`   | signal  | [`@sedge-hq/local`](https://github.com/sedge-hq/sedge/blob/main/packages/local): HTTP POSTs to a local address                 |
+| `files`     | signal  | [`@sedge-hq/local`](https://github.com/sedge-hq/sedge/blob/main/packages/local): files created, changed or removed in a folder |
+| `command`   | signal  | [`@sedge-hq/local`](https://github.com/sedge-hq/sedge/blob/main/packages/local): what a shell command prints                   |
 
 Install a package with `sedge install <name>` (a short name means `@sedge-hq/<name>`), a full npm
 name, or the path of a package folder. A folder is packed the way it would be published, along
 with the workspace packages it depends on, so you can try a package before it's on npm.
 
 To remove one, disconnect what uses it, then `sedge uninstall <name>`.
+
+## Webhooks, files and commands
+
+`@sedge-hq/local` covers what happens on your machine or can reach it:
+
+- **`webhook`** listens on `http://127.0.0.1:4747` (change `port` and `host`), and each POST is an
+  event. Senders give the token you chose, as `Authorization: Bearer <token>`, as `?token=<token>`,
+  or as a GitHub webhook secret. A delivery id header (`X-GitHub-Delivery`, `X-Request-Id`,
+  `Idempotency-Key`) drops a retried delivery. It only listens on this machine unless you set
+  `host`; to receive from outside, put a tunnel in front of it.
+- **`files`** looks at a folder (or one file) every 10 seconds and reports what was created,
+  changed or removed, optionally only files matching a `pattern` like `**/*.csv`.
+- **`command`** runs a shell command. A long-running one (`tail -n0 -f app.log`,
+  `mosquitto_sub -t sensors/#`) reports each burst of lines it prints, and is started again if
+  it exits. With `minutes`, it runs on a schedule instead and reports when its output changes
+  (`df -h /`, `systemctl is-active api`). Anything a command can read becomes a signal this way:
+  sensors, queues, MQTT topics, a service's status.
 
 ## Slack
 

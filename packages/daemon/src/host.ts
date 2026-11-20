@@ -1,5 +1,5 @@
 import type { AgentHost, Outgoing, RunContext, TimerSpec, ToolDecision } from '@sedge-hq/agent';
-import { ABOUT, type Policy } from '@sedge-hq/core';
+import { ABOUT, parseDuration, type Policy } from '@sedge-hq/core';
 import { Approvals, Inbox, Outbox, Timers } from '@sedge-hq/db';
 import { Context, Cron, Effect, Result } from 'effect';
 import { createHash } from 'node:crypto';
@@ -51,20 +51,6 @@ const summarize = (toolName: string, input: Record<string, unknown>) => {
     return `${toolName}: ${detail.length > 400 ? `${detail.slice(0, 400)}…` : detail}`;
 };
 
-const DURATION = /^(\d+(?:\.\d+)?)\s*(s|sec|m|min|h|hr|d|day|w|week)s?$/i;
-const UNIT_MS: Record<string, number> = {
-    s: 1_000,
-    sec: 1_000,
-    m: 60_000,
-    min: 60_000,
-    h: 3_600_000,
-    hr: 3_600_000,
-    d: 86_400_000,
-    day: 86_400_000,
-    w: 604_800_000,
-    week: 604_800_000,
-};
-
 /** When a timer spec first fires, or why it can't. */
 export const resolveTimer = (
     spec: TimerSpec,
@@ -76,13 +62,10 @@ export const resolveTimer = (
         return { kind: 'schedule', nextRunAt: Cron.next(cron.success, new Date(now)).getTime() };
     }
     if (spec.in) {
-        const match = DURATION.exec(spec.in.trim());
-        if (!match)
+        const delay = parseDuration(spec.in);
+        if (delay === undefined)
             return { error: `Can't read the delay "${spec.in}"; use forms like 30m, 2h, 1d.` };
-        return {
-            kind: 'followup',
-            nextRunAt: now + Number(match[1]) * UNIT_MS[match[2]!.toLowerCase()]!,
-        };
+        return { kind: 'followup', nextRunAt: now + delay };
     }
     if (spec.at) {
         const at = Date.parse(spec.at);

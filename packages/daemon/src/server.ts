@@ -303,6 +303,7 @@ const HandlersLive = SedgeRpcs.toLayer(
             CheckSettings: ({ kind, settings }) => connections.check(kind, settings),
             Connect: (input) => connections.connect(input),
             Disconnect: ({ name }) => connections.disconnect(name),
+            UpdateSignal: ({ name, ...changes }) => connections.update(name, changes),
             Invite: ({ name }) => connections.invite(name),
             AddKind: ({ name, code }) => connections.addKind(name, code),
             ReloadKinds: () => connections.reloadKinds,
