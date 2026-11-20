@@ -29,6 +29,9 @@ install, connect, pairing, a reply, an approval and disconnect, with real model 
 your logins. `SEDGE_BIN=dist/npm/sedge-<os>-<cpu>/bin/sedge` runs it against a compiled binary
 (`bun scripts/build.ts` builds one for this machine).
 
+The scripts run [Turborepo](https://turborepo.dev) with its anonymous telemetry turned off
+(`TURBO_TELEMETRY_DISABLED=1`), here and in CI.
+
 ## The repository
 
 | Path                | What                                                                        |
