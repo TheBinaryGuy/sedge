@@ -1,0 +1,93 @@
+packages/db/src/schema/index.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 34-35
+docs/use-cases.md
+  s_fe732417ee9cdb::t_a587ee59b4154c 107-115
+packages/local/src/files.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 1-94
+packages/local/package.json
+  s_fe732417ee9cdb::t_a587ee59b4154c 1-50
+docs/security.md
+  s_fe732417ee9cdb::t_a587ee59b4154c 62-65
+packages/local/src/command.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 1-96
+packages/protocol/src/index.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 90-93,263-265,270-281
+  s_fe732417ee9cdb::t_0e0823627e29f9 282-283
+packages/daemon/src/server.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 306
+packages/local/src/webhook.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 1-79
+packages/db/src/inbox.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 1,13-14,31-32,73-82
+apps/cli/src/guide.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 29
+packages/local/vitest.config.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 1-3
+packages/core/src/config.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 19-24
+packages/local/README.md
+  s_fe732417ee9cdb::t_a587ee59b4154c 1-21
+packages/daemon/src/connections.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 2-10,39-43,84-92,104-111,136,194-204,207,210-212,307-309,324-332,361-370,377,436-463,481
+packages/db/drizzle/20261120020733_inbox-hold/snapshot.json
+  s_fe732417ee9cdb::t_a587ee59b4154c 1-648
+packages/core/src/events.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 1-56
+docs/configuration.md
+  s_fe732417ee9cdb::t_a587ee59b4154c 37-40
+packages/db/src/migrations.gen.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 32-40
+.changeset/local-signals.md
+  s_fe732417ee9cdb::t_a587ee59b4154c 1-7
+.changeset/signal-filters.md
+  s_fe732417ee9cdb::t_a587ee59b4154c 1-8
+packages/daemon/src/host.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 2,65-66,68
+packages/local/src/local.test.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 1-138
+packages/core/src/events.test.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 1-23
+docs/commands.md
+  s_fe732417ee9cdb::t_a587ee59b4154c 51
+packages/local/tsconfig.json
+  s_fe732417ee9cdb::t_a587ee59b4154c 1
+docs/channels-and-signals.md
+  s_fe732417ee9cdb::t_a587ee59b4154c 55-70,81-83,91-106
+  s_fe732417ee9cdb::t_bca9d021716664 107
+apps/cli/src/connection-tools.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 33-66,164,176,201,235-237,269-301
+  s_fe732417ee9cdb::t_e2e4e741d94547 302-304
+packages/core/src/index.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 22
+apps/cli/scripts/e2e-telegram.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 8-9,288-338
+  s_fe732417ee9cdb::t_35917c06faac79 339
+packages/local/src/queue.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 1-36
+scripts/release.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 88,99
+packages/db/src/stores.test.ts
+  s_fe732417ee9cdb::t_a587ee59b4154c 51-74
+docs/how-it-works.md
+  s_fe732417ee9cdb::t_a587ee59b4154c 28-29
+packages/db/drizzle/20261120020733_inbox-hold/migration.sql
+  s_fe732417ee9cdb::t_a587ee59b4154c 1
+bun.lock
+  s_fe732417ee9cdb::t_be24d66d6c8587 177-189,711-712
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "cab6c2d47ec5869af4310ce2822d6c28d6fc8c3b",
+  "prompts": {},
+  "sessions": {
+    "s_fe732417ee9cdb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b6666194-df82-46a7-a1ef-33e06788ffe9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "TheBinaryGuy <hello@thebinary.dev>"
+    }
+  }
+}
