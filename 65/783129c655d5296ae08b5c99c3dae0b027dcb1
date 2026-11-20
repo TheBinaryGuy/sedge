@@ -1,0 +1,54 @@
+packages/kit/src/effect.ts
+  s_fe732417ee9cdb::t_6af8ffed50f5a9 325-327,329-331
+packages/mqtt/src/mqtt.ts
+  s_fe732417ee9cdb::t_9bc9ef7be33d00 1-20,23-127
+  s_fe732417ee9cdb::t_52524f85b5f555 21-22
+apps/cli/src/guide.ts
+  s_fe732417ee9cdb::t_42711c1def761a 29
+packages/kit/src/index.test.ts
+  s_fe732417ee9cdb::t_34edc34a712fa5 30-46
+packages/kit/src/index.ts
+  s_fe732417ee9cdb::t_746a7d0c4a21cf 154-155,158
+.changeset/mqtt-official.md
+  s_fe732417ee9cdb::t_52524f85b5f555 1-6
+.changeset/mqtt-signal.md
+  s_fe732417ee9cdb::t_52524f85b5f555 1-7
+packages/mqtt/tsconfig.json
+  s_fe732417ee9cdb::t_4e658c14460aa3 1
+.changeset/optional-secrets.md
+  s_fe732417ee9cdb::t_52524f85b5f555 1-7
+packages/mqtt/vitest.config.ts
+  s_fe732417ee9cdb::t_4e658c14460aa3 1-3
+packages/mqtt/package.json
+  s_fe732417ee9cdb::t_4e658c14460aa3 1-49
+scripts/release.ts
+  s_fe732417ee9cdb::t_42711c1def761a 88,100
+docs/channels-and-signals.md
+  s_fe732417ee9cdb::t_42711c1def761a 84,109-120
+  s_fe732417ee9cdb::t_76ca66a5a20e1d 121
+docs/use-cases.md
+  s_fe732417ee9cdb::t_52524f85b5f555 18-19
+  s_fe732417ee9cdb::t_42711c1def761a 17
+packages/mqtt/README.md
+  s_fe732417ee9cdb::t_52524f85b5f555 1-15
+packages/mqtt/src/mqtt.test.ts
+  s_fe732417ee9cdb::t_a7a1533858d269 1-121
+bun.lock
+  s_fe732417ee9cdb::t_2103f7f38afabf 190-204,728-729,858-859,950-955,976-977,982-985,988-989,1030-1031,1034-1035,1116-1117,1128-1129,1132-1133,1200-1201,1216-1217,1222-1223,1226-1227,1288,1416-1417,1424-1429,1478-1481,1490-1491,1504-1505,1540-1543,1568-1571,1578-1579,1584-1585,1622-1623,1654-1655,1676-1683,1690-1691,1742-1743,1756-1757
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.5",
+  "base_commit_sha": "65783129c655d5296ae08b5c99c3dae0b027dcb1",
+  "prompts": {},
+  "sessions": {
+    "s_fe732417ee9cdb": {
+      "agent_id": {
+        "tool": "claude",
+        "id": "b6666194-df82-46a7-a1ef-33e06788ffe9",
+        "model": "claude-opus-5-5"
+      },
+      "human_author": "TheBinaryGuy <hello@thebinary.dev>"
+    }
+  }
+}
