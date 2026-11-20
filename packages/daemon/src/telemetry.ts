@@ -34,6 +34,10 @@ export interface RunRecord {
     readonly ok: boolean;
     readonly error?: string;
     readonly tools: ReadonlyArray<ToolTiming>;
+    /** Tokens the run used, as the model's provider reported them. */
+    readonly tokens?: number;
+    /** What those tokens cost at the model's listed price, in USD; 0 when it lists none. */
+    readonly cost?: number;
 }
 
 export type Level = 'debug' | 'info' | 'warn' | 'error';

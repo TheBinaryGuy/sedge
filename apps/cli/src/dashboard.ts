@@ -65,6 +65,9 @@ const filesUnder = async (dir: string, root = dir): Promise<Array<string>> => {
     return nested.flat().sort();
 };
 
+/** Money at the model's listed price: cents and up as cents, less than that to a tenth of one. */
+const usd = (amount: number) => `$${amount >= 0.01 ? amount.toFixed(2) : amount.toFixed(4)}`;
+
 const seconds = (ms: number) =>
     ms < 1000
         ? `${ms}ms`
@@ -137,6 +140,11 @@ const loadRows = async (
                 line: `${paint.dim(when(run.startedAt))}  ${paint.bold(owner(run.thread).padEnd(10))} ${run.ok ? paint.success('ok    ') : paint.error('failed')} ${paint.muted(seconds(took).padStart(7))}  ${paint.muted(run.sources.join(', ').padEnd(12))} ${paint.dim(tools || 'no tools')}`,
                 detail: [
                     `${paint.dim('started')} ${when(run.startedAt)} ${paint.dim('· took')} ${seconds(took)} ${paint.dim('·')} ${run.events} event${run.events === 1 ? '' : 's'} ${paint.dim('from')} ${run.sources.join(', ')}`,
+                    ...(run.tokens === undefined
+                        ? []
+                        : [
+                              `${paint.dim('used')} ${run.tokens.toLocaleString()} tokens${run.cost ? ` ${paint.dim('·')} ${usd(run.cost)}` : ''}`,
+                          ]),
                     ...(run.error ? ['', paint.error(run.error)] : []),
                     ...(run.tools.length
                         ? [

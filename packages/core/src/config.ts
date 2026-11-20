@@ -71,6 +71,21 @@ export const SedgeConfig = Schema.Struct({
             subagents: Schema.optional(Schema.Number),
         }),
     ),
+    /**
+     * Run the daemon's commands in the OS sandbox (Seatbelt on macOS, bubblewrap on Linux) and keep
+     * its file tools to the same rules. Off unless `enabled`.
+     */
+    sandbox: Schema.optional(
+        Schema.Struct({
+            enabled: Schema.optional(Schema.Boolean),
+            /** Whether commands may reach the network. Default: yes. */
+            network: Schema.optional(Schema.Boolean),
+            /** More folders it may write to, besides the run's folder, the workspace and temp. */
+            writable: Schema.optional(Schema.Array(Schema.String)),
+            /** More files and folders nothing in it may read. */
+            hidden: Schema.optional(Schema.Array(Schema.String)),
+        }),
+    ),
     /** Nightly dreaming, when the agent reviews its conversations and tidies its memory. On by default. */
     dreaming: Schema.optional(Schema.Boolean),
     /**

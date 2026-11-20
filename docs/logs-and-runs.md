@@ -12,7 +12,9 @@ Every run is recorded when it ends:
 
 - which agent ran, and what woke it (a Telegram message, a signal, a timer);
 - how long it took, and whether it worked; if not, why;
-- each tool call, with how long it took and whether it failed.
+- each tool call, with how long it took and whether it failed;
+- the tokens it used, and their cost at the model's listed price (see
+  [Limits and costs](./limits.md)).
 
 `sedge dash runs` (or `/sedge runs` in the TUI) lists them, newest first. Select one for its tool
 calls on a timeline.

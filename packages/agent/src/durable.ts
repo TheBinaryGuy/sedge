@@ -20,6 +20,7 @@ import type { AgentHost, RunContext } from './host';
 import { type McpServerState, openMcp } from './mcp';
 import { recallExtension } from './recall';
 import { actionsExtension, searchTools, sedgeExtension, skillsExtension } from './tools';
+import { type Sandbox, sandboxedEnv } from './sandbox';
 import { type Triage, triage, triageModel } from './triage';
 
 export interface ModelChoice {
@@ -42,6 +43,8 @@ export interface DurableOptions {
     readonly mcp?: { readonly file: string; readonly version: string };
     /** Your skills, as the prompt lists them, for a run in `cwd`. */
     readonly skills?: (cwd: string) => string | undefined;
+    /** When set, commands run in the OS sandbox and file tools keep to its rules. */
+    readonly sandbox?: Sandbox | undefined;
 }
 
 export interface Item {
@@ -99,7 +102,7 @@ export const openDurable = async (options: DurableOptions) => {
 
     const registry = createRegistry();
     registry.install(createCodingTools());
-    registry.install(searchTools);
+    registry.install(searchTools(options.sandbox?.isHidden));
     registry.install(sedgeExtension(options.host, runFor));
     const actions = actionsExtension(options.host, runFor);
     registry.install(actions);
@@ -116,7 +119,12 @@ export const openDurable = async (options: DurableOptions) => {
         {
             models: options.models,
             registry,
-            env: ({ cwd }) => new NodeExecutionEnv({ cwd: cwd ?? options.workspace }),
+            env: ({ cwd }) => {
+                const local = new NodeExecutionEnv({ cwd: cwd ?? options.workspace });
+                return options.sandbox
+                    ? sandboxedEnv(local, options.sandbox.forRun(local.cwd))
+                    : local;
+            },
             settings: { followUpMode: 'all', steeringMode: 'all', afterFailedRun: 'withdraw' },
             onReport: (report) =>
                 options.report(

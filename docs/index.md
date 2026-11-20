@@ -50,11 +50,12 @@ you were waiting on comes out. sedge is the coding agent that's still there.
 ## Use it
 
 [Getting started](./getting-started.md) · [Use cases](./use-cases.md) · [Channels and signals](./channels-and-signals.md) ·
-[Agents](./agents.md) · [Memory](./memory.md) · [MCP and skills](./mcp-and-skills.md)
+[Agents](./agents.md) · [Memory](./memory.md) · [Extensions, MCP and skills](./mcp-and-skills.md)
 
 ## Understand it
 
-[How it works](./how-it-works.md) · [Logs and runs](./logs-and-runs.md) · [Security](./security.md)
+[How it works](./how-it-works.md) · [Logs and runs](./logs-and-runs.md) ·
+[Limits and costs](./limits.md) · [Security](./security.md) · [Sandbox](./sandbox.md)
 
 ## Look things up
 

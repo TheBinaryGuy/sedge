@@ -161,6 +161,9 @@ export class RunInfo extends Schema.Class<RunInfo>('sedge/protocol/RunInfo')({
     tools: Schema.Array(
         Schema.Struct({ name: Schema.String, ms: Schema.Number, error: Schema.Boolean }),
     ),
+    /** Tokens the run used, and their cost at the model's listed price (USD). */
+    tokens: Schema.optional(Schema.Number),
+    cost: Schema.optional(Schema.Number),
 }) {}
 
 /** One line of the daemon's log. */

@@ -8,6 +8,7 @@ import { Settings } from './settings';
 import { Agents } from './agents';
 import { Connections } from './connections';
 import { Limits } from './limits';
+import { sedgeSandbox } from './sandbox';
 import { WorkerWake } from './runtime';
 import { agentOf, MAIN, memoryOf, subagentOf, subagentThread } from './threads';
 
@@ -97,6 +98,7 @@ export const makeHost = Effect.gen(function* () {
     const services = yield* Effect.context<never>();
     const run = <A>(effect: Effect.Effect<A>) => Effect.runPromiseWith(services)(effect);
     const { paths, config } = settings;
+    const sandbox = sedgeSandbox(paths, config, settings.workspace);
 
     const policyFor = (toolName: string): Policy => {
         if (READ_ONLY.has(toolName)) return 'allow';
@@ -222,6 +224,8 @@ ${memory.head || '(empty)'}${memory.cut ? `\n\n(${MEMORY_INDEX} goes on; only it
                 return 'Not sent: no channel is connected. The user can connect one in sedge ("set up telegram").';
             }
             const { text, choices, files } = message;
+            const hidden = files?.find((file) => sandbox?.isHidden(file.path));
+            if (hidden) return `Not sent: ${hidden.path} is hidden by the sandbox.`;
             await run(
                 outbox.enqueue({
                     thread: current.thread,

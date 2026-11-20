@@ -27,6 +27,14 @@ channel. Approving lets that exact call (same tool, same input) through once; th
 again. Denying tells the agent to find another way. With no channel connected, an `ask` call is
 refused. Set any of the three to `allow`, `ask` or `deny` in the [config](./configuration.md).
 
+## The sandbox
+
+Approvals decide whether a command runs; the [sandbox](./sandbox.md) limits what it can do once it
+does. With it on, the daemon's commands run in the operating system's sandbox (Seatbelt on macOS,
+bubblewrap on Linux): they can only write in the run's folder, the workspace, temp and the folders
+you allow, can't read your credentials or sedge's secrets, and can be cut off from the network. It's
+off unless you turn it on.
+
 ## Off limits, always
 
 No run, watched or not, may read or change `~/.sedge/config.json` or the fallback secrets file.
@@ -56,8 +64,8 @@ you to read in `sedge dash`.
 
 ## Code you add
 
-Packages you install and signals you register run inside the daemon with your rights, outside any
-sandbox. sedge asks before installing or registering, and shows you the file to review. What you
+Packages you install and signals you register run inside the daemon with your rights, outside
+[the sandbox](#the-sandbox). sedge asks before installing or registering, and shows you the file to review. What you
 approve is copied, and that copy is what runs.
 
 The `command` signal runs the command you give it in your shell, with your rights, for as long as

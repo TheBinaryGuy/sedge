@@ -11,7 +11,7 @@ import { Connections } from './connections';
 import { Limits } from './limits';
 import { Runtime, WorkerWake } from './runtime';
 import { Settings } from './settings';
-import { openTelemetry } from './telemetry';
+import { openTelemetry, Telemetry } from './telemetry';
 import { subagentThread } from './threads';
 
 /** The runtime over real stores, with `answer` and `triage` standing in for the model. */
@@ -259,7 +259,19 @@ describe('the inbox worker', () => {
         await Bun.sleep(300);
         const waiting = (await pending()).map((item) => item.prompt).sort();
         const notices = await told();
+        const records = await runtime.runPromise(
+            Effect.gen(function* () {
+                return yield* (yield* Telemetry).runs({ limit: 10 });
+            }),
+        );
         await runtime.dispose();
+
+        // Each run's record says what it used, for sedge dash runs.
+        expect(records.map((r) => [r.tokens, r.cost])).toEqual([
+            [1000, 2],
+            [1000, 2],
+            [1000, 2],
+        ]);
 
         expect(ran.map((r) => r.split('] ')[1])).toEqual(['timer one', 'timer two', 'hello']);
         expect(waiting).toEqual(['signal four', 'timer three']);

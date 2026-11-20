@@ -176,8 +176,9 @@ export class Runtime extends Context.Service<
                               )
                         : undefined;
 
-                    // Each tool call's timing, for the run's record.
+                    // Each tool call's timing, and what the run used, for its record.
                     const startedAt = Date.now();
+                    let used: { tokens: number; cost: number } | undefined;
                     const open = new Map<string, number>();
                     const tools: Array<ToolTiming> = [];
                     const timeTools = (event: AgentEvent) => {
@@ -212,6 +213,7 @@ export class Runtime extends Context.Service<
                                               cwd: last.cwd,
                                               subagent: sub !== undefined,
                                               onSpent: (spent) => {
+                                                  used = spent;
                                                   Effect.runForkWith(services)(limits.spend(spent));
                                               },
                                               items: batch.map((item) => ({
@@ -264,6 +266,7 @@ export class Runtime extends Context.Service<
                             ok: outcome.ok,
                             ...(outcome.ok ? {} : { error: outcome.text }),
                             tools,
+                            ...(used ? { tokens: used.tokens, cost: used.cost } : {}),
                         });
                     if (outcome.ok) {
                         for (const itemId of itemIds) {

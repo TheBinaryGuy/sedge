@@ -14,7 +14,7 @@
 import { sedgePaths } from '@sedge-hq/core';
 import { openSecretStore } from '@sedge-hq/daemon';
 import { Effect, Stream } from 'effect';
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { Daemon, DaemonLive, waitUntil } from '../src/client';
@@ -138,13 +138,21 @@ const withDaemon = <A, E>(use: (d: Daemon['Service']) => Effect.Effect<A, E>) =>
 let daemon: ReturnType<typeof Bun.spawn> | undefined;
 try {
     step('start the daemon');
+    // With the sandbox on where this machine has one, so every step below runs inside it.
+    const sandboxed =
+        process.platform === 'darwin' ||
+        (process.platform === 'linux' && Bun.which('bwrap') !== null);
+    if (sandboxed) {
+        await mkdir(home, { recursive: true });
+        await writeFile(paths.config, JSON.stringify({ sandbox: { enabled: true } }));
+    }
     daemon = Bun.spawn([...cli, 'start', '--foreground'], {
         env,
         stdout: Bun.file(join(home, 'daemon.out')),
         stderr: Bun.file(join(home, 'daemon.out')),
     });
     if (!(await Effect.runPromise(waitUntil(paths, true)))) fail('daemon did not listen');
-    pass(`listening (home ${home})`);
+    pass(`listening (home ${home})${sandboxed ? ', sandbox on' : ''}`);
 
     step('sedge install the Telegram package');
     // From the package folder: sedge packs it the way it would be published, then installs it.

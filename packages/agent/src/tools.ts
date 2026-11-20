@@ -160,91 +160,105 @@ const cwdOf = (api: ToolExecutionApi) =>
 const under = (api: ToolExecutionApi, path?: string) =>
     path ? (isAbsolute(path) ? path : resolve(cwdOf(api), path)) : cwdOf(api);
 
-const walk = async function* (dir: string, glob: Bun.Glob, root: string): AsyncGenerator<string> {
+const walk = async function* (
+    dir: string,
+    glob: Bun.Glob,
+    root: string,
+    hidden: (path: string) => boolean = () => false,
+): AsyncGenerator<string> {
+    if (hidden(dir)) return;
     const entries = await readdir(dir, { withFileTypes: true }).catch(() => []);
     for (const entry of entries) {
         if (SKIP.has(entry.name)) continue;
         const path = join(dir, entry.name);
-        if (entry.isDirectory()) yield* walk(path, glob, root);
+        if (hidden(path)) continue;
+        if (entry.isDirectory()) yield* walk(path, glob, root, hidden);
         else if (glob.match(relative(root, path))) yield path;
     }
 };
 
-export const searchTools = defineExtension({
-    name: 'search',
-    tools: [
-        defineTool({
-            name: 'ls',
-            description: 'List a directory (the working directory by default).',
-            parameters: obj({ path: opt(str()) }),
-            execute: async (args, api) => {
-                const dir = under(api, args.path);
-                const entries = await readdir(dir, { withFileTypes: true }).catch(
-                    (error: Error) => error,
-                );
-                if (entries instanceof Error) return text(entries.message, true);
-                const lines = entries
-                    .slice(0, 500)
-                    .map((e) => (e.isDirectory() ? `${e.name}/` : e.name))
-                    .sort();
-                return text(lines.join('\n') || '(empty)');
-            },
-        }),
-        defineTool({
-            name: 'find',
-            description:
-                'Find files by glob, like `**/*.ts` or `src/**/config.*`, skipping node_modules and .git.',
-            parameters: obj({ pattern: str(), path: opt(str()) }),
-            execute: async (args, api) => {
-                const root = under(api, args.path);
-                const found: Array<string> = [];
-                for await (const path of walk(root, new Bun.Glob(args.pattern), root)) {
-                    found.push(relative(root, path));
-                    if (found.length >= 1000) break;
-                }
-                return text(found.join('\n') || 'No files match.');
-            },
-        }),
-        defineTool({
-            name: 'grep',
-            description:
-                'Search file contents with a regular expression. `glob` narrows the files (default all), `limit` caps the matches (default 200).',
-            parameters: obj({
-                pattern: str(),
-                path: opt(str()),
-                glob: opt(str()),
-                limit: opt(int()),
+/** `ls`, `find` and `grep`; with `hidden`, they skip what the sandbox hides. */
+export const searchTools = (hidden: (path: string) => boolean = () => false) =>
+    defineExtension({
+        name: 'search',
+        tools: [
+            defineTool({
+                name: 'ls',
+                description: 'List a directory (the working directory by default).',
+                parameters: obj({ path: opt(str()) }),
+                execute: async (args, api) => {
+                    const dir = under(api, args.path);
+                    if (hidden(dir)) return text(`${dir} is hidden by the sandbox.`, true);
+                    const entries = await readdir(dir, { withFileTypes: true }).catch(
+                        (error: Error) => error,
+                    );
+                    if (entries instanceof Error) return text(entries.message, true);
+                    const lines = entries
+                        .slice(0, 500)
+                        .map((e) => (e.isDirectory() ? `${e.name}/` : e.name))
+                        .sort();
+                    return text(lines.join('\n') || '(empty)');
+                },
             }),
-            execute: async (args, api) => {
-                let regex: RegExp;
-                try {
-                    regex = new RegExp(args.pattern);
-                } catch (error) {
-                    return text(`Invalid pattern: ${(error as Error).message}`, true);
-                }
-                const root = under(api, args.path);
-                const limit = args.limit ?? 200;
-                const single = await stat(root).then(
-                    (s) => s.isFile(),
-                    () => false,
-                );
-                const files = single ? [root] : walk(root, new Bun.Glob(args.glob ?? '**/*'), root);
-                const matches: Array<string> = [];
-                for await (const file of files) {
-                    if ((await stat(file)).size > 1_000_000) continue;
-                    const content = await readFile(file, 'utf8').catch(() => '');
-                    if (content.includes('\u0000')) continue;
-                    for (const [i, line] of content.split('\n').entries()) {
-                        if (!regex.test(line)) continue;
-                        matches.push(
-                            `${single ? file : relative(root, file)}:${i + 1}: ${line.slice(0, 300)}`,
-                        );
+            defineTool({
+                name: 'find',
+                description:
+                    'Find files by glob, like `**/*.ts` or `src/**/config.*`, skipping node_modules and .git.',
+                parameters: obj({ pattern: str(), path: opt(str()) }),
+                execute: async (args, api) => {
+                    const root = under(api, args.path);
+                    if (hidden(root)) return text(`${root} is hidden by the sandbox.`, true);
+                    const found: Array<string> = [];
+                    for await (const path of walk(root, new Bun.Glob(args.pattern), root, hidden)) {
+                        found.push(relative(root, path));
+                        if (found.length >= 1000) break;
+                    }
+                    return text(found.join('\n') || 'No files match.');
+                },
+            }),
+            defineTool({
+                name: 'grep',
+                description:
+                    'Search file contents with a regular expression. `glob` narrows the files (default all), `limit` caps the matches (default 200).',
+                parameters: obj({
+                    pattern: str(),
+                    path: opt(str()),
+                    glob: opt(str()),
+                    limit: opt(int()),
+                }),
+                execute: async (args, api) => {
+                    let regex: RegExp;
+                    try {
+                        regex = new RegExp(args.pattern);
+                    } catch (error) {
+                        return text(`Invalid pattern: ${(error as Error).message}`, true);
+                    }
+                    const root = under(api, args.path);
+                    if (hidden(root)) return text(`${root} is hidden by the sandbox.`, true);
+                    const limit = args.limit ?? 200;
+                    const single = await stat(root).then(
+                        (s) => s.isFile(),
+                        () => false,
+                    );
+                    const files = single
+                        ? [root]
+                        : walk(root, new Bun.Glob(args.glob ?? '**/*'), root, hidden);
+                    const matches: Array<string> = [];
+                    for await (const file of files) {
+                        if ((await stat(file)).size > 1_000_000) continue;
+                        const content = await readFile(file, 'utf8').catch(() => '');
+                        if (content.includes('\u0000')) continue;
+                        for (const [i, line] of content.split('\n').entries()) {
+                            if (!regex.test(line)) continue;
+                            matches.push(
+                                `${single ? file : relative(root, file)}:${i + 1}: ${line.slice(0, 300)}`,
+                            );
+                            if (matches.length >= limit) break;
+                        }
                         if (matches.length >= limit) break;
                     }
-                    if (matches.length >= limit) break;
-                }
-                return text(matches.join('\n') || 'No matches.');
-            },
-        }),
-    ],
-});
+                    return text(matches.join('\n') || 'No matches.');
+                },
+            }),
+        ],
+    });

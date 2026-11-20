@@ -12,6 +12,7 @@ import { Connections } from './connections';
 import { DispatcherLive } from './dispatcher';
 import { makeHost } from './host';
 import { Limits } from './limits';
+import { sedgeSandbox } from './sandbox';
 import { ensureMemory } from './memory';
 import { Runtime, WorkerWake } from './runtime';
 import { DaemonControl, ServerLive, type ShutdownRequest } from './server';
@@ -113,7 +114,10 @@ export const runDaemon = (
         const agent = Layer.unwrap(
             makeHost.pipe(
                 Effect.map((host) =>
-                    Agent.layer(defaultAgentConfig(paths.home, workspace, host, options.loadPi)),
+                    Agent.layer({
+                        ...defaultAgentConfig(paths.home, workspace, host, options.loadPi),
+                        sandbox: sedgeSandbox(paths, config, workspace),
+                    }),
                 ),
             ),
         ).pipe(Layer.provide(delivery));

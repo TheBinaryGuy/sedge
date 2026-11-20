@@ -6,11 +6,20 @@ import { Context, Effect, Layer, Semaphore } from 'effect';
 import { join } from 'node:path';
 import type { Durable, Item, ModelChoice, Spent } from './durable';
 import type { AgentHost, RunContext } from './host';
+import type { Sandbox } from './sandbox';
 import type { Triage } from './triage';
 
 export type { AgentHost, Outgoing, RunContext, TimerSpec, ToolDecision } from './host';
 export type { Item, ModelChoice, Spent } from './durable';
 export type { Triage } from './triage';
+export {
+    type Sandbox,
+    type SandboxPolicy,
+    type SandboxSettings,
+    sandboxedCommand,
+    sandboxedEnv,
+    sandboxPolicy,
+} from './sandbox';
 
 type Pi = typeof PiModule;
 
@@ -28,6 +37,8 @@ export interface AgentConfig {
     readonly loadPi: () => Promise<Pi>;
     /** Memory, outbox, timers and permissions, provided by the daemon. */
     readonly host: AgentHost;
+    /** When set, commands run in the OS sandbox and file tools keep to its rules. */
+    readonly sandbox?: Sandbox | undefined;
     /** Models and the model choice, for tests; pi's logins and default model otherwise. */
     readonly models?: () => Promise<{
         readonly models: Models;
@@ -155,6 +166,7 @@ export class Agent extends Context.Service<
                             ...(skills ? { skills } : {}),
                             ...(mcp ? { mcp } : {}),
                             host: config.host,
+                            ...(config.sandbox ? { sandbox: config.sandbox } : {}),
                             report: (message) => console.error(`[agent] ${message}`),
                         });
                     })().catch((error: unknown) => {

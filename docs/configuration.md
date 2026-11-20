@@ -23,17 +23,18 @@ reads it at start; after editing it, restart: `sedge stop && sedge start`.
 }
 ```
 
-| Setting             | What it does                                                                        | Default              |
-| ------------------- | ----------------------------------------------------------------------------------- | -------------------- |
-| `workspace`         | Where unwatched runs work (files they create land here).                            | `~/.sedge/workspace` |
-| `limits`            | What the agents may use: runs, tokens, money, subagents. See [Limits](#limits).     | unlimited            |
-| `triageModel`       | The model that triages signals with `triage` on, as `provider/model`.               | cheapest of yours    |
-| `dreaming`          | The nightly memory review. `false` turns it off. See [Memory](./memory.md).         | on                   |
-| `permissions.bash`  | Shell commands in unwatched runs: `allow`, `ask` or `deny`.                         | `ask`                |
-| `permissions.write` | File writes and edits in unwatched runs.                                            | `allow`              |
-| `permissions.mcp`   | MCP tools and other tools in unwatched runs.                                        | `ask`                |
-| `agents`            | Agents besides `main`, by name, each with its `purpose`. See [Agents](./agents.md). | none                 |
-| `connections`       | Channels and signals by name. Written by `connect`; edit with care.                 | none                 |
+| Setting             | What it does                                                                                         | Default              |
+| ------------------- | ---------------------------------------------------------------------------------------------------- | -------------------- |
+| `workspace`         | Where unwatched runs work (files they create land here).                                             | `~/.sedge/workspace` |
+| `sandbox`           | Commands in the OS sandbox: `enabled`, `network`, `writable`, `hidden`. See [Sandbox](./sandbox.md). | off                  |
+| `limits`            | What the agents may use: runs, tokens, money, subagents. See [Limits and costs](./limits.md).        | unlimited            |
+| `triageModel`       | The model that triages signals with `triage` on, as `provider/model`.                                | cheapest of yours    |
+| `dreaming`          | The nightly memory review. `false` turns it off. See [Memory](./memory.md).                          | on                   |
+| `permissions.bash`  | Shell commands in unwatched runs: `allow`, `ask` or `deny`.                                          | `ask`                |
+| `permissions.write` | File writes and edits in unwatched runs.                                                             | `allow`              |
+| `permissions.mcp`   | MCP tools and other tools in unwatched runs.                                                         | `ask`                |
+| `agents`            | Agents besides `main`, by name, each with its `purpose`. See [Agents](./agents.md).                  | none                 |
+| `connections`       | Channels and signals by name. Written by `connect`; edit with care.                                  | none                 |
 
 Each connection has a `kind`, its `settings` (never secrets), `secrets` (the names of the
 settings kept in the keychain), an optional `instruction` for a signal, an optional `agent` that
@@ -46,24 +47,29 @@ details, like `temperature > 30`), `throttle` (how long to stay quiet after an e
 
 ## Limits
 
-Every limit is off until you set it, so sedge is unlimited by default. `limits` is read again
-whenever config.json changes: a new limit applies without a restart.
+Every limit is off until you set it. `limits` is read again whenever config.json changes, so a new
+limit applies without a restart.
 
-| Limit                | What it caps                                                             |
-| -------------------- | ------------------------------------------------------------------------ |
-| `limits.runsPerHour` | Runs in the last hour, for each agent with its subagents.                |
-| `limits.dailyTokens` | Tokens across all agents today (local time), triage included.            |
-| `limits.dailyCost`   | Money across all agents today, at the models' listed prices, in USD.     |
-| `limits.subagents`   | Subagents one agent can have working at once; it's told to wait past it. |
+| Limit                | What it caps                                                 |
+| -------------------- | ------------------------------------------------------------ |
+| `limits.runsPerHour` | Runs in the last hour, for each agent with its subagents.    |
+| `limits.dailyTokens` | Tokens across all agents today, triage included.             |
+| `limits.dailyCost`   | Money across all agents today, at the models' listed prices. |
+| `limits.subagents`   | Subagents one agent can have working at once.                |
 
-When a limit is reached, events from signals, timers and agents wait in the inbox; nothing is
-dropped, and they go on when the hour's runs age out, the day turns, or you raise the limit. Your
-own messages, approvals and terminal tasks still get answers. sedge tells you once, on your
-channel, for each limit it reaches.
+What happens when one is reached, and how to spend less to begin with:
+[Limits and costs](./limits.md).
 
-A run counts toward the day once it ends, so the last run before a limit can take it over. Usage
-comes from what the model's provider reports; a subscription login often lists no price, so use
-`dailyTokens` there.
+## Sandbox
+
+| Setting            | What it does                                                  | Default |
+| ------------------ | ------------------------------------------------------------- | ------- |
+| `sandbox.enabled`  | Runs the daemon's commands in the operating system's sandbox. | off     |
+| `sandbox.network`  | Whether commands may connect anywhere.                        | `true`  |
+| `sandbox.writable` | More folders it may write to.                                 | none    |
+| `sandbox.hidden`   | More files and folders nothing in it may read.                | none    |
+
+It's set when the daemon starts; restart after changing it. See [Sandbox](./sandbox.md).
 
 ## Files
 

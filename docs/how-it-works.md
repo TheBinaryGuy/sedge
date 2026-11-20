@@ -27,7 +27,7 @@ drains the inbox: a run for every conversation with work, all at once, never two
 arrive while a conversation's run is going are answered together in its next run, so three
 quick messages get one reply, not three. A signal with a `batch` window holds its events for that
 long, so a burst of them gets one run too, and one with `triage` on has a cheap model decide first
-whether its events need a run at all. [Limits](./configuration.md#limits), when you set them, hold
+whether its events need a run at all. [Limits](./limits.md), when you set them, hold
 automated events back once an agent has had its runs for the hour or the day's budget is spent.
 
 ## The run
@@ -43,6 +43,8 @@ Conversations are called threads:
 
 - `main`: you and sedge, on every channel. Signals report here too, unless they belong to an agent.
 - `agent:<name>`: each [agent](./agents.md) you made. Agents message each other with `tell`.
+- `<thread>#sub:<id>`: a [subagent](./agents.md#subagents) an agent started for one task. Its
+  answer goes back to that agent's thread as an event.
 - `cli:<folder>`: a task from the terminal, one per folder.
 - `dream`: the nightly [memory](./memory.md) review.
 
@@ -63,6 +65,16 @@ In runs you're not watching, risky tool calls (shell commands, MCP tools) wait f
 The agent's call is held, you get the command with Approve / Deny buttons, and your answer comes
 back as an event. See [Security](./security.md).
 
+## Limits and the sandbox
+
+Two optional settings bound what the agent can do on its own:
+
+- **Limits** cap runs per hour for each agent, tokens and money per day, and subagents at once.
+  When one is reached, automated events wait in the inbox and your own messages still go through.
+  See [Limits and costs](./limits.md).
+- **The sandbox** runs the agent's commands in the operating system's sandbox, so they write only
+  where you allow and never read your credentials. See [Sandbox](./sandbox.md).
+
 ## The outbox
 
 Nothing the agent writes reaches you unless it calls `send_message`. Messages go to the outbox
@@ -73,10 +85,11 @@ failure. Messages can carry buttons (your pick comes back as an event) and files
 
 - **The TUI** (`sedge`) is pi's interactive session with sedge's extension. Its own chat stays in
   the TUI; it talks to the daemon only to show status, hand off background tasks and set things
-  up.
+  up. Your pi extensions load here.
 - **The daemon** (`sedge start`) runs everything above. The two talk over a Unix socket
   (`~/.sedge/sedge.sock`). `sedge` never waits for the daemon: it starts it in the background and
-  connects when it's up.
+  connects when it's up. Its runs get your MCP servers and skills, but not pi extensions; see
+  [Extensions, MCP and skills](./mcp-and-skills.md).
 
 ## Prior art
 
