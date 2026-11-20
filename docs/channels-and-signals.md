@@ -81,6 +81,7 @@ and `update_signal`, and you confirm.
 | `webhook`   | signal  | [`@sedge-hq/local`](https://github.com/sedge-hq/sedge/blob/main/packages/local): HTTP POSTs to a local address                 |
 | `files`     | signal  | [`@sedge-hq/local`](https://github.com/sedge-hq/sedge/blob/main/packages/local): files created, changed or removed in a folder |
 | `command`   | signal  | [`@sedge-hq/local`](https://github.com/sedge-hq/sedge/blob/main/packages/local): what a shell command prints                   |
+| `mqtt`      | signal  | [`@sedge-hq/mqtt`](https://github.com/sedge-hq/sedge/blob/main/packages/mqtt): messages on MQTT topics                         |
 
 Install a package with `sedge install <name>` (a short name means `@sedge-hq/<name>`), a full npm
 name, or the path of a package folder. A folder is packed the way it would be published, along
@@ -104,6 +105,19 @@ To remove one, disconnect what uses it, then `sedge uninstall <name>`.
   it exits. With `minutes`, it runs on a schedule instead and reports when its output changes
   (`df -h /`, `systemctl is-active api`). Anything a command can read becomes a signal this way:
   sensors, queues, MQTT topics, a service's status.
+
+## MQTT
+
+Sensors, home hubs and devices often publish to an MQTT broker (Mosquitto, Home Assistant's,
+EMQX, HiveMQ). The `mqtt` signal subscribes to the topics you give it, with `+` and `#`
+wildcards (`home/+/soil`, `sensors/#`), and each message is an event: its topic, and what was
+sent, with JSON laid out. The broker can be `mqtt://`, `mqtts://` (TLS) or `wss://` (WebSocket);
+a password goes to the keychain like any secret.
+
+It keeps a session on the broker, so messages sent while sedge was stopped arrive when it's back.
+A topic's retained value, which brokers send again on every subscribe, isn't reported. Sensors
+publish often, so a `match` and a `batch` window are usually worth setting: "tell me when the
+basil's soil is dry, at most every hour".
 
 ## Slack
 

@@ -14,8 +14,9 @@ sedge writes a small signal with [the kit](./kit.md) and shows it to you before 
 > I've got a sensor in the basil pot at http://plant.local/reading. Tell me when the soil gets
 > dry or the room gets too hot, and offer to run the pump.
 
-- **What it sets up:** a signal it writes for your sensor. It reads the sensor every 10 minutes
-  and reports when moisture drops below 30% or the temperature goes above 30 °C.
+- **What it sets up:** a signal it writes for your sensor (or `mqtt`, if the sensor publishes to
+  a broker). It reads the sensor every 10 minutes and reports when moisture drops below 30% or
+  the temperature goes above 30 °C.
 - **What you get:** "The basil is at 24% moisture and 31 °C. Water it?", with **Water** and
   **Not now** buttons. **Water** runs the pump command, after an approval unless you've allowed
   it.

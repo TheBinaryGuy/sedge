@@ -322,10 +322,13 @@ export const field = {
     list: (description: string) => Schema.Array(Schema.String).annotate({ description }),
     oneOf: <const V extends ReadonlyArray<string>>(values: V, description: string) =>
         Schema.Literals(values).annotate({ description }),
-    optional: <S extends Schema.Top>(schema: S) =>
-        Schema.optional(schema).annotate({
+    /** Works on a `secret(...)` too: it stays secret, kept in the keychain when it's given. */
+    optional: <S extends Schema.Top>(schema: S) => {
+        const optional = Schema.optional(schema).annotate({
             description: SchemaAST.resolveDescription(schema.ast) ?? '',
-        }),
+        });
+        return SECRET in schema ? Object.assign(optional, { [SECRET]: true as const }) : optional;
+    },
 };
 
 // ── Helpers for watching ───────────────────────────────────────────────────────────────────────

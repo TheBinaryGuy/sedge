@@ -1,0 +1,49 @@
+{
+    "name": "@sedge-hq/mqtt",
+    "version": "0.0.0",
+    "description": "MQTT for sedge: wake it when a message arrives on a topic, from a sensor, a home hub or a device.",
+    "keywords": [
+        "iot",
+        "mqtt",
+        "sedge",
+        "sedge-kit"
+    ],
+    "homepage": "https://sedge.sh",
+    "license": "MIT",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/sedge-hq/sedge.git",
+        "directory": "packages/mqtt"
+    },
+    "files": [
+        "src",
+        "!src/**/*.test.ts"
+    ],
+    "type": "module",
+    "exports": {
+        ".": "./src/mqtt.ts"
+    },
+    "publishConfig": {
+        "access": "public"
+    },
+    "scripts": {
+        "typecheck": "tsc --noEmit",
+        "test": "bun --bun vitest run --passWithNoTests"
+    },
+    "dependencies": {
+        "@sedge-hq/kit": "workspace:*",
+        "mqtt": "5.16.1"
+    },
+    "devDependencies": {
+        "@sedge-hq/config": "workspace:*",
+        "@types/bun": "1.4.4",
+        "aedes": "1.2.0",
+        "typescript": "7.0.2",
+        "vitest": "5.1.1"
+    },
+    "sedge": {
+        "plugins": [
+            "./src/mqtt.ts"
+        ]
+    }
+}

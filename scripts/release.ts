@@ -85,7 +85,7 @@ if (onNpm(CLI_PACKAGE, version) || (process.env.GITHUB_ACTIONS && tagged(`v${ver
 }
 
 /*
- * The kit and the packages built on it (`@sedge-hq/kit`, then telegram, slack, github, web and local) version on their own,
+ * The kit and the packages built on it (`@sedge-hq/kit`, then telegram, slack, github, web, local and mqtt) version on their own,
  * kit first since the others depend on it. Each is packed the way bun publishes (workspace
  * references rewritten) and published when its version is new.
  */
@@ -97,6 +97,7 @@ for (const dir of [
     'packages/github',
     'packages/web',
     'packages/local',
+    'packages/mqtt',
 ]) {
     const pkg = (await Bun.file(join(root, dir, 'package.json')).json()) as {
         name: string;

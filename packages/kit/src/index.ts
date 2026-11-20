@@ -151,13 +151,11 @@ const kitFor = (host: Host, signal: AbortSignal): Kit => ({
 // ── Settings as your code sees them ────────────────────────────────────────────────────────────
 
 type Fields = Schema.Struct.Fields;
+/** A secret's value as plain text; spreads over a union, so an optional secret is too. */
+type Plain<T> = T extends Redacted.Redacted<infer A> ? A : T;
 /** Your settings, decoded: secrets as plain strings. */
 export type Settings<F extends Fields> = {
-    readonly [
-        K in keyof Schema.Struct<F>['Type']
-    ]: Schema.Struct<F>['Type'][K] extends Redacted.Redacted<infer A>
-        ? A
-        : Schema.Struct<F>['Type'][K];
+    readonly [K in keyof Schema.Struct<F>['Type']]: Plain<Schema.Struct<F>['Type'][K]>;
 };
 
 const decoder = <F extends Fields>(settings: F) => {

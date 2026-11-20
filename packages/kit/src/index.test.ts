@@ -27,6 +27,23 @@ const until = async (check: () => boolean, ms = 2000) => {
 };
 
 describe('defineSignal', () => {
+    it('keeps an optional secret secret, so it goes to the keychain and not the config', () => {
+        const kind = defineSignal({
+            name: 'broker',
+            summary: 'messages',
+            settings: {
+                url: field.text('where'),
+                password: field.optional(secret('a password')),
+            },
+            every: '1 minute',
+            check: () => [],
+        });
+        expect(kind.fields.map((f) => [f.name, f.secret, f.optional])).toEqual([
+            ['url', false, false],
+            ['password', true, true],
+        ]);
+    });
+
     it('checks on a schedule, with secrets as plain strings, and reports what each check finds', async () => {
         const seen: Array<string> = [];
         let round = 0;
